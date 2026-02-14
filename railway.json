@@ -1,0 +1,15 @@
+{
+    "$schema": "https://railway.app/railway.schema.json",
+    "build": {
+        "nixpacksPlan": {
+            "phases": {
+                "install": {
+                    "cmds": []
+                },
+                "build": {
+                    "cmds": []
+                }
+            }
+        }
+    }
+}
