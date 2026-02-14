@@ -67,7 +67,7 @@ const IntegrationItem: React.FC<IntegrationItemProps> = ({
         detail={detail}
         hideActions={!disabled}
         testId={testId}
-        title={active ? <span className='inline-flex items-center gap-1'>{title} <span className='inline-flex items-center rounded-full bg-[rgba(48,207,67,0.15)] px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-green'>Active</span></span> : title}
+        title={active ? <span className='inline-flex items-center gap-1'>{title} <span className='inline-flex items-center rounded-full bg-[rgba(73,69,255,0.15)] px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide text-green'>Active</span></span> : title}
         onClick={handleClick}
     />;
 };

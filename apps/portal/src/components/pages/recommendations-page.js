@@ -124,7 +124,7 @@ export const RecommendationsPageStyles = `
         height: 16px;
         width: 16px;
         padding: 0 2px;
-        color: #30cf43;
+        color: #4945ff;
     }
 
     .gh-portal-recommendation-item .gh-portal-loadingicon {

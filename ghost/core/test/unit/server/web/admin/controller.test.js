@@ -44,5 +44,25 @@ describe('Admin App', function () {
                 sinon.match.hasNested('headers.X-Frame-Options')
             ), false);
         });
+
+        it('adds Content-Security-Policy frame-ancestors when adminFrameProtection is a string', function () {
+            configUtils.set('adminFrameProtection', 'https://external-app.example.com');
+            controller(req, res);
+
+            assert.equal(res.sendFile.called, true);
+            const headers = res.sendFile.firstCall.args[1].headers;
+            assert.equal(headers['Content-Security-Policy'], "frame-ancestors 'self' https://external-app.example.com");
+            assert.equal(headers['X-Frame-Options'], undefined);
+        });
+
+        it('adds Content-Security-Policy frame-ancestors when adminFrameProtection is an array', function () {
+            configUtils.set('adminFrameProtection', ['https://app1.example.com', 'https://app2.example.com']);
+            controller(req, res);
+
+            assert.equal(res.sendFile.called, true);
+            const headers = res.sendFile.firstCall.args[1].headers;
+            assert.equal(headers['Content-Security-Policy'], "frame-ancestors 'self' https://app1.example.com https://app2.example.com");
+            assert.equal(headers['X-Frame-Options'], undefined);
+        });
     });
 });

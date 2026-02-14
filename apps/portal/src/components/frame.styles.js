@@ -1235,7 +1235,7 @@ const MultipleProductsGlobalStyles = `
 
 .gh-portal-checkmark-icon {
     height: 22px;
-    color: #30cf43;
+    color: #4945ff;
 }
 
 @keyframes fadeIn {

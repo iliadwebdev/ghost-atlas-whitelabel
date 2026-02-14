@@ -1,36 +1,36 @@
 // # Ghost Server
 // Handles the creation of an HTTP Server for Ghost
-const debug = require('@tryghost/debug')('server');
-const errors = require('@tryghost/errors');
-const tpl = require('@tryghost/tpl');
-const logging = require('@tryghost/logging');
-const metrics = require('@tryghost/metrics');
-const notify = require('./notify');
-const moment = require('moment');
-const stoppable = require('stoppable');
+const debug = require("@tryghost/debug")("server");
+const errors = require("@tryghost/errors");
+const tpl = require("@tryghost/tpl");
+const logging = require("@tryghost/logging");
+const metrics = require("@tryghost/metrics");
+const notify = require("./notify");
+const moment = require("moment");
+const stoppable = require("stoppable");
 
 const messages = {
-    cantTouchThis: 'Can\'t touch this',
-    ghostIsRunning: 'Ghost is running...',
-    yourBlogIsAvailableOn: 'Your site is now available on {url}',
-    ctrlCToShutDown: 'Ctrl+C to shut down',
-    ghostIsRunningIn: 'Ghost is running in {env}...',
-    listeningOn: 'Listening on: {host}:{port}',
-    urlConfiguredAs: 'Url configured as: {url}',
-    ghostIsShuttingDown: 'Ghost is shutting down',
-    ghostHasShutdown: 'Ghost has shut down',
-    yourBlogIsNowOffline: 'Your site is now offline',
-    ghostWasRunningFor: 'Ghost was running for',
+    cantTouchThis: "Can't touch this",
+    ghostIsRunning: "Ghost is running...",
+    yourBlogIsAvailableOn: "Your site is now available on {url}",
+    ctrlCToShutDown: "Ctrl+C to shut down",
+    ghostIsRunningIn: "Ghost (+ Atlas) is running in {env}...",
+    listeningOn: "Listening on: {host}:{port}",
+    urlConfiguredAs: "Url configured as: {url}",
+    ghostIsShuttingDown: "Ghost is shutting down",
+    ghostHasShutdown: "Ghost has shut down",
+    yourBlogIsNowOffline: "Your site is now offline",
+    ghostWasRunningFor: "Ghost was running for",
     addressInUse: {
-        error: '(EADDRINUSE) Cannot start Ghost.',
-        context: 'Port {port} is already in use by another program.',
-        help: 'Is another Ghost instance already running?'
+        error: "(EADDRINUSE) Cannot start Ghost.",
+        context: "Port {port} is already in use by another program.",
+        help: "Is another Ghost instance already running?",
     },
     otherError: {
-        error: '(Code: {errorNumber})',
-        context: 'There was an error starting your server.',
-        help: 'Please use the error code above to search for a solution.'
-    }
+        error: "(Code: {errorNumber})",
+        context: "There was an error starting your server.",
+        help: "Please use the error code above to search for a solution.",
+    },
 };
 
 /**
@@ -48,7 +48,7 @@ class GhostServer {
      * @param {Number}  options.serverConfig.shutdownTimeout
      * @param {Boolean} options.serverConfig.testmode
      */
-    constructor({url, env, serverConfig}) {
+    constructor({ url, env, serverConfig }) {
         this.url = url;
         this.env = env;
         this.serverConfig = serverConfig;
@@ -71,44 +71,42 @@ class GhostServer {
      * @return {Promise} Resolves once Ghost has started
      */
     start(rootApp) {
-        debug('Starting...');
+        debug("Starting...");
         this.rootApp = rootApp;
 
-        const {host, port, testmode, shutdownTimeout} = this.serverConfig;
+        const { host, port, testmode, shutdownTimeout } = this.serverConfig;
         const self = this;
 
         return new Promise(function (resolve, reject) {
-            self.httpServer = rootApp.listen(
-                port,
-                host
-            );
+            self.httpServer = rootApp.listen(port, host);
 
-            self.httpServer.on('error', function (error) {
+            self.httpServer.on("error", function (error) {
                 let ghostError;
 
-                if (error.code === 'EADDRINUSE') {
+                if (error.code === "EADDRINUSE") {
                     ghostError = new errors.InternalServerError({
                         message: tpl(messages.addressInUse.error),
-                        context: tpl(messages.addressInUse.context, {port}),
-                        help: tpl(messages.addressInUse.help)
+                        context: tpl(messages.addressInUse.context, { port }),
+                        help: tpl(messages.addressInUse.help),
                     });
                 } else {
                     ghostError = new errors.InternalServerError({
-                        message: tpl(messages.otherError.error, {errorNumber: error.errno}),
+                        message: tpl(messages.otherError.error, {
+                            errorNumber: error.errno,
+                        }),
                         context: tpl(messages.otherError.context),
-                        help: tpl(messages.otherError.help)
+                        help: tpl(messages.otherError.help),
                     });
                 }
 
-                debug('Notifying server started (error)');
-                return notify.notifyServerStarted()
-                    .finally(() => {
-                        reject(ghostError);
-                    });
+                debug("Notifying server started (error)");
+                return notify.notifyServerStarted().finally(() => {
+                    reject(ghostError);
+                });
             });
 
-            self.httpServer.on('listening', function () {
-                debug('...Started');
+            self.httpServer.on("listening", function () {
+                debug("...Started");
                 self._logStartMessages();
 
                 // Debug logs output in testmode only
@@ -116,19 +114,20 @@ class GhostServer {
                     self._startTestMode();
                 }
 
-                debug('Notifying server ready (success)');
-                return notify.notifyServerStarted()
-                    .finally(() => {
-                        resolve(self);
-                    });
+                debug("Notifying server ready (success)");
+                return notify.notifyServerStarted().finally(() => {
+                    resolve(self);
+                });
             });
 
             stoppable(self.httpServer, shutdownTimeout);
 
             // ensure that Ghost exits correctly on Ctrl+C and SIGTERM
             process
-                .removeAllListeners('SIGINT').on('SIGINT', () => self.shutdown())
-                .removeAllListeners('SIGTERM').on('SIGTERM', () => self.shutdown());
+                .removeAllListeners("SIGINT")
+                .on("SIGINT", () => self.shutdown())
+                .removeAllListeners("SIGTERM")
+                .on("SIGTERM", () => self.shutdown());
         });
     }
 
@@ -178,7 +177,7 @@ class GhostServer {
 
                 const shutdownDuration = Date.now() - startTime;
                 if (shutdownDuration > 15000) {
-                    metrics.metric('long-shutdown', shutdownDuration);
+                    metrics.metric("long-shutdown", shutdownDuration);
                 }
             }
             // Do all of the cleanup tasks
@@ -216,13 +215,13 @@ class GhostServer {
      * If server.shutdownTimeout is reached, requests are terminated in-flight
      */
     async _stopServer() {
-        const util = require('util');
+        const util = require("util");
         return util.promisify(this.httpServer.stop)();
     }
 
     async _cleanup() {
         // Wait for all cleanup tasks to finish
-        return Promise.all(this.cleanupTasks.map(task => task()));
+        return Promise.all(this.cleanupTasks.map((task) => task()));
     }
 
     /**
@@ -230,14 +229,18 @@ class GhostServer {
      */
     _startTestMode() {
         // Output how many connections are open every 5 seconds
-        const connectionInterval = setInterval(() => this.httpServer.getConnections(
-            (err, connections) => logging.warn(`${connections} connections currently open`)
-        ), 5000);
+        const connectionInterval = setInterval(
+            () =>
+                this.httpServer.getConnections((err, connections) =>
+                    logging.warn(`${connections} connections currently open`)
+                ),
+            5000
+        );
 
         // Output a notice when the server closes
-        this.httpServer.on('close', function () {
+        this.httpServer.on("close", function () {
             clearInterval(connectionInterval);
-            logging.warn('Server has fully closed');
+            logging.warn("Server has fully closed");
         });
     }
 
@@ -245,16 +248,20 @@ class GhostServer {
      * Log Start Messages
      */
     _logStartMessages() {
-        logging.info(tpl(messages.ghostIsRunningIn, {env: this.env}));
+        logging.info(tpl(messages.ghostIsRunningIn, { env: this.env }));
 
-        if (this.env === 'production') {
-            logging.info(tpl(messages.yourBlogIsAvailableOn, {url: this.url}));
+        if (this.env === "production") {
+            logging.info(
+                tpl(messages.yourBlogIsAvailableOn, { url: this.url })
+            );
         } else {
-            logging.info(tpl(messages.listeningOn, {
-                host: this.serverConfig.host,
-                port: this.serverConfig.port
-            }));
-            logging.info(tpl(messages.urlConfiguredAs, {url: this.url}));
+            logging.info(
+                tpl(messages.listeningOn, {
+                    host: this.serverConfig.host,
+                    port: this.serverConfig.port,
+                })
+            );
+            logging.info(tpl(messages.urlConfiguredAs, { url: this.url }));
         }
 
         logging.info(tpl(messages.ctrlCToShutDown));
@@ -267,14 +274,14 @@ class GhostServer {
         logging.warn(tpl(messages.ghostHasShutdown));
 
         // Extra clear message for production mode
-        if (this.env === 'production') {
+        if (this.env === "production") {
             logging.warn(tpl(messages.yourBlogIsNowOffline));
         }
 
         // Always output uptime
         logging.warn(
             tpl(messages.ghostWasRunningFor),
-            moment.duration(process.uptime(), 'seconds').humanize()
+            moment.duration(process.uptime(), "seconds").humanize()
         );
     }
 }

@@ -17,7 +17,7 @@ function getColorHex(color: string): string {
     const colorMap: Record<string, string> = {
         'midgrey': '#7C8B9A',
         'blue': '#14b8ff',
-        'green': '#30cf43',
+        'green': '#4945ff',
         'red': '#f50b23',
         'teal': '#4dcddc',
         'purple': '#8e42ff',

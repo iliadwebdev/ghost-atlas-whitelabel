@@ -2077,7 +2077,7 @@ Dashboard Resource */
     content: "New";
     font-size: 1.2rem;
     white-space: nowrap;
-    background: #30cf43;
+    background: #4945ff;
     text-transform: uppercase;
     color: #fff;
     line-height: 1;
@@ -2990,11 +2990,11 @@ Onboarding checklist */
 }
 
 .gh-onboarding-help a {
-    color: #30cf43
+    color: #4945ff
 }
 
 .gh-onboarding-help a:hover {
-    color: #2bba3c;
+    color: #3B38D9;
 }
 
 .gh-onboarding-skip {

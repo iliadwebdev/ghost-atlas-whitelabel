@@ -550,7 +550,7 @@ li.nav-list-item .for-switch.xs label {
 .settings-menu-container .gh-date-time-picker-time:focus-within {
     background-color: var(--white);
     border: 1px solid var(--green);
-    box-shadow: 0 0 0 2px rgba(48,207,67,.25);
+    box-shadow: 0 0 0 2px rgba(73,69,255,.25);
     outline: none;
 }
 

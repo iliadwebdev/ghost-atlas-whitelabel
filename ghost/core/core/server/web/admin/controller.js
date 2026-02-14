@@ -42,8 +42,14 @@ module.exports = function adminController(req, res) {
         hashSum.update(fileBuffer);
         headers.ETag = hashSum.digest('hex');
 
-        if (config.get('adminFrameProtection')) {
+        const frameProtection = config.get('adminFrameProtection');
+        if (frameProtection === true) {
             headers['X-Frame-Options'] = 'sameorigin';
+        } else if (typeof frameProtection === 'string' || Array.isArray(frameProtection)) {
+            const origins = Array.isArray(frameProtection)
+                ? frameProtection.join(' ')
+                : frameProtection;
+            headers['Content-Security-Policy'] = `frame-ancestors 'self' ${origins}`;
         }
 
         res.sendFile(templatePath, {headers, lastModified: false});

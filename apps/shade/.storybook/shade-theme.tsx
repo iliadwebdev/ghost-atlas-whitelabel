@@ -11,7 +11,7 @@ export default create({
     brandTarget: '_self',
 
     //
-    colorPrimary: '#30CF43',
+    colorPrimary: '#4945FF',
     colorSecondary: '#15171A',
 
     // UI

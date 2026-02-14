@@ -378,7 +378,7 @@ th {
 }
 
 .green {
-    color: #30cf43;
+    color: #4945ff;
 }
 
 /* Colour classes (hover)
@@ -408,7 +408,7 @@ th {
 }
 
 .green-hover:hover {
-    color: #30cf43;
+    color: #4945ff;
 }
 
 /* Layout
@@ -856,8 +856,8 @@ h2 {
 }
 
 .gh-signin .gh-input:focus {
-    border-color: #30cf43;
-    box-shadow: 0 0 0 3px rgba(48,207,67,.25);
+    border-color: #4945ff;
+    box-shadow: 0 0 0 3px rgba(73,69,255,.25);
 }
 
 .gh-signin .gh-btn {

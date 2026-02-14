@@ -19,7 +19,7 @@ export function countDownCharacters(params) {
         el.style.color = '#E25440';
         el.style.fontWeight = 'bold';
     } else {
-        el.style.color = '#30CF43';
+        el.style.color = '#4945FF';
         el.style.fontWeight = 'bold';
     }
 

@@ -3072,14 +3072,14 @@ a.gh-members-emailpreview-subscription-link {
 
 .gh-member-details-attribution .gh-member-details-attribution-docs {
     margin-top: 6px;
-    color: #2bba3c;
+    color: var(--green);
     font-weight: 500;
     font-size: 1.3rem;
 }
 
 .gh-member-details-attribution .gh-member-details-attribution-docs:hover {
     margin-top: 6px;
-    color: rgb(38, 154, 52);
+    color: var(--green-d2);
     font-weight: 500;
     font-size: 1.3rem;
 }

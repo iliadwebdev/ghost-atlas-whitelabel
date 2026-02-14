@@ -67,7 +67,22 @@ module.exports.createSessionFromToken = () => {
     const ssoAdapter = adapterManager.getAdapter('sso');
     return sessionFromToken({
         callNextWithError: false,
-        createSession: sessionService.createVerifiedSessionForUser,
+        createSession: async function (req, res, user) {
+            // For SSO token exchange (e.g., iframe embedding), the request's
+            // Origin/Referer points to the embedding page, not Ghost. Override
+            // to Ghost's own URL so the session's stored origin matches
+            // subsequent same-origin API requests from the admin client.
+            const originalReferer = req.headers.referer;
+            const originalOrigin = req.headers.origin;
+            req.headers.referer = urlUtils.getAdminUrl() || urlUtils.getSiteUrl();
+            req.headers.origin = undefined;
+            try {
+                await sessionService.createVerifiedSessionForUser(req, res, user);
+            } finally {
+                req.headers.referer = originalReferer;
+                req.headers.origin = originalOrigin;
+            }
+        },
         findUserByLookup: ssoAdapter.getUserForIdentity.bind(ssoAdapter),
         getLookupFromToken: ssoAdapter.getIdentityFromCredentials.bind(ssoAdapter),
         getTokenFromRequest: ssoAdapter.getRequestCredentials.bind(ssoAdapter)

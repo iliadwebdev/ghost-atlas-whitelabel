@@ -160,8 +160,8 @@
 .gh-signin .gh-input:focus:not(.gh-signin .gh-input.reset-password:focus),
 .gh-signup .gh-input:focus {
     background-color: #fff;
-    border-color: #30cf43;
-    box-shadow: 0 0 0 3px rgba(48,207,67,.25);
+    border-color: #4945ff;
+    box-shadow: 0 0 0 3px rgba(73,69,255,.25);
 }
 
 /* Email notification */

@@ -2017,7 +2017,7 @@ span.dropdown .gh-post-list-cta > span {
 .gh-post-activity-feed-pagination svg {
     width: 7px;
     height: 12px;
-    fill: #2BBA3C;
+    fill: var(--green);
 }
 
 .gh-post-activity-feed-footer {

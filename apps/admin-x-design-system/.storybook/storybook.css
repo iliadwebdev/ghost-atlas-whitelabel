@@ -58,7 +58,7 @@ html, body, #root {
 }
 
 .sb-doc a {
-    color: #30CF43;
+    color: #4945FF;
 }
 
 .sb-doc h1 {
@@ -203,7 +203,7 @@ html, body, #root {
 }
 
 .swatch.green {
-    background: #30CF43;
+    background: #4945FF;
 }
 
 .swatch.black {
@@ -243,5 +243,5 @@ html, body, #root {
 }
 
 .sbdocs-a {
-    color: #30CF43 !important;
+    color: #4945FF !important;
 }

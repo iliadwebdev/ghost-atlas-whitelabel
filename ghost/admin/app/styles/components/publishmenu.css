@@ -668,34 +668,34 @@
 
 .gh-publish-cta .gh-btn-pulse {
     fill: #fff;
-    background: linear-gradient(90deg,#4dd831,#1DC32E);
+    background: linear-gradient(90deg,#6D6AFF,#4945FF);
     color: #fff;
     font-weight: 500;
-    box-shadow: 0 0 0 0 rgba(48, 207, 67, 1);
+    box-shadow: 0 0 0 0 rgba(73, 69, 255, 1);
 	animation: pulse-green 2s infinite;
 }
 
 @keyframes pulse-green {
 	0% {
 		transform: scale(0.98);
-		box-shadow: 0 0 0 0 rgba(48, 207, 67, 0.7);
+		box-shadow: 0 0 0 0 rgba(73, 69, 255, 0.7);
 	}
 
 	70% {
 		transform: scale(1);
-		box-shadow: 0 0 0 8px rgba(48, 207, 67, 0);
+		box-shadow: 0 0 0 8px rgba(73, 69, 255, 0);
 	}
 
 	100% {
 		transform: scale(0.98);
-		box-shadow: 0 0 0 0 rgba(48, 207, 67, 0);
+		box-shadow: 0 0 0 0 rgba(73, 69, 255, 0);
 	}
 }
 
 .gh-publish-cta .gh-btn-green,
 .gh-publish-cta .gh-btn-green:hover,
 .gh-publish-cta .gh-btn-green:active {
-    background: linear-gradient(90deg,#4dd831,#1DC32E) !important;
+    background: linear-gradient(90deg,#6360ff,#4945ff) !important;
 }
 
 .gh-publish-cta .gh-btn-green + .gh-publish-cta-secondary {
@@ -708,11 +708,11 @@
 
 @keyframes pulse-click {
 	0% {
-		box-shadow: 0 0 0 0 rgba(48, 207, 67, 0.7);
+		box-shadow: 0 0 0 0 rgba(73, 69, 255, 0.7);
 	}
 
 	100% {
-		box-shadow: 0 0 0 16px rgba(48, 207, 67, 0);
+		box-shadow: 0 0 0 16px rgba(73, 69, 255, 0);
 	}
 }
 

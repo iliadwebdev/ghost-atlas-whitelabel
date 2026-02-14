@@ -36,7 +36,7 @@
 .gh-notification-icon {
     margin-top: 1px;
     line-height: 0;
-    color: #30CF43;
+    color: #4945FF;
 }
 
 :is(.gh-notification-error, .gh-notification-warn) .gh-notification-icon {

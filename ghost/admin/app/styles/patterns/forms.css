@@ -296,7 +296,7 @@ textarea {
 .gh-input-x:focus-visible:not(.ember-basic-dropdown-trigger) {
     background-color: var(--white);
     border: 1px solid var(--green);
-    box-shadow: 0 0 0 2px rgba(48,207,67,.25);
+    box-shadow: 0 0 0 2px rgba(73,69,255,.25);
     outline: none;
 }
 

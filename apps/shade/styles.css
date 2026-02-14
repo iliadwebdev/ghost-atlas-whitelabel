@@ -183,7 +183,7 @@
 
 /* Prose classes are for formatting arbitrary HTML that comes from the API */
 .gh-prose-links a {
-    color: #30cf43;
+    color: #4945ff;
 }
 @layer base {
     * {

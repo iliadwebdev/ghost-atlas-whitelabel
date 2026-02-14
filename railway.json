@@ -1,15 +1,6 @@
 {
     "$schema": "https://railway.app/railway.schema.json",
     "build": {
-        "nixpacksPlan": {
-            "phases": {
-                "install": {
-                    "cmds": ["yarn setup"]
-                },
-                "build": {
-                    "cmds": ["yarn dev"]
-                }
-            }
-        }
+        "dockerfilePath": "Dockerfile.railway"
     }
 }

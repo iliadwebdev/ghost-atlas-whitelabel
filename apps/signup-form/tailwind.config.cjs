@@ -31,11 +31,11 @@ module.exports = {
                 900: '#394047'
             },
             green: {
-                DEFAULT: '#30CF43',
-                100: '#E1F9E4',
-                400: '#58DA67',
-                500: '#30CF43',
-                600: '#2AB23A'
+                DEFAULT: '#4945FF',
+                100: '#ECEAFF',
+                400: '#6D6AFF',
+                500: '#4945FF',
+                600: '#3B38D9'
             },
             blue: {
                 DEFAULT: '#14B8FF',
