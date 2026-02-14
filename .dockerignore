@@ -27,6 +27,7 @@ compose.yml
 docker
 !docker/**/*.entrypoint.sh
 !docker/**/*entrypoint.sh
+!docker/railway/Caddyfile
 
 ghost/core/core/built/admin
 
