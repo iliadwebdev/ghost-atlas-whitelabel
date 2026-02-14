@@ -4,10 +4,10 @@
         "nixpacksPlan": {
             "phases": {
                 "install": {
-                    "cmds": []
+                    "cmds": ["yarn setup"]
                 },
                 "build": {
-                    "cmds": []
+                    "cmds": ["yarn dev"]
                 }
             }
         }
