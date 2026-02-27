@@ -1,18 +1,19 @@
-const debug = require('@tryghost/debug')('web:admin:controller');
-const errors = require('@tryghost/errors');
-const tpl = require('@tryghost/tpl');
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
-const config = require('../../../shared/config');
-const updateCheck = require('../../services/update-check');
+const debug = require("@tryghost/debug")("web:admin:controller");
+const errors = require("@tryghost/errors");
+const tpl = require("@tryghost/tpl");
+const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
+const config = require("../../../shared/config");
+const updateCheck = require("../../services/update-check");
 
 const messages = {
     templateError: {
-        message: 'Unable to find admin template file {templatePath}',
-        context: 'These template files are generated as part of the build process',
-        help: 'Please see {link}'
-    }
+        message: "Unable to find admin template file {templatePath}",
+        context:
+            "These template files are generated as part of the build process",
+        help: "Please see {link}",
+    },
 };
 
 /**
@@ -24,12 +25,15 @@ const messages = {
  * @param {import('express').Response} res
  */
 module.exports = function adminController(req, res) {
-    debug('index called');
+    debug("index called");
 
     // CASE: trigger update check unit and let it run in background, don't block the admin rendering
     updateCheck();
 
-    const templatePath = path.resolve(config.get('paths').adminAssets, 'index.html');    
+    const templatePath = path.resolve(
+        config.get("paths").adminAssets,
+        "index.html"
+    );
     const headers = {};
 
     try {
@@ -38,28 +42,30 @@ module.exports = function adminController(req, res) {
         //   That doesn't work for admin templates because the filesize doesn't change between versions
         //   and `npm pack` sets a fixed lastmod date for every file meaning the default etag never changes
         const fileBuffer = fs.readFileSync(templatePath);
-        const hashSum = crypto.createHash('md5');
+        const hashSum = crypto.createHash("md5");
         hashSum.update(fileBuffer);
-        headers.ETag = hashSum.digest('hex');
+        headers.ETag = hashSum.digest("hex");
 
-        const frameProtection = config.get('adminFrameProtection');
-        if (frameProtection === true) {
-            headers['X-Frame-Options'] = 'sameorigin';
-        } else if (typeof frameProtection === 'string' || Array.isArray(frameProtection)) {
-            const origins = Array.isArray(frameProtection)
-                ? frameProtection.join(' ')
-                : frameProtection;
-            headers['Content-Security-Policy'] = `frame-ancestors 'self' ${origins}`;
-        }
+        // const frameProtection = config.get('adminFrameProtection');
+        // if (frameProtection === true) {
+        //     headers['X-Frame-Options'] = 'sameorigin';
+        // } else if (typeof frameProtection === 'string' || Array.isArray(frameProtection)) {
+        //     const origins = Array.isArray(frameProtection)
+        //         ? frameProtection.join(' ')
+        //         : frameProtection;
+        //     headers['Content-Security-Policy'] = `frame-ancestors 'self' ${origins}`;
+        // }
 
-        res.sendFile(templatePath, {headers, lastModified: false});
+        res.sendFile(templatePath, { headers, lastModified: false });
     } catch (err) {
-        if (err.code === 'ENOENT') {
+        if (err.code === "ENOENT") {
             throw new errors.IncorrectUsageError({
-                message: tpl(messages.templateError.message, {templatePath}),
+                message: tpl(messages.templateError.message, { templatePath }),
                 context: tpl(messages.templateError.context),
-                help: tpl(messages.templateError.help, {link: 'https://ghost.org/docs/install/source/'}),
-                err
+                help: tpl(messages.templateError.help, {
+                    link: "https://ghost.org/docs/install/source/",
+                }),
+                err,
             });
         }
         throw err;

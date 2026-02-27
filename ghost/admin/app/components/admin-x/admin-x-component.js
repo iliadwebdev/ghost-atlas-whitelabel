@@ -132,6 +132,7 @@ export default class AdminXComponent extends Component {
     @service router;
     @service membersUtils;
     @service stateBridge;
+    @service embedding;
 
     @inject config;
 
@@ -197,7 +198,8 @@ export default class AdminXComponent extends Component {
                                 sentryDSN: this.config.sentry_dsn ?? null,
                                 onUpdate: this.stateBridge.onUpdate,
                                 onInvalidate: this.stateBridge.onInvalidate,
-                                onDelete: this.stateBridge.onDelete
+                                onDelete: this.stateBridge.onDelete,
+                                isEmbedded: this.embedding.isEmbedded
                             }}
                             designSystem={{
                                 fetchKoenigLexical: fetchKoenigLexical,

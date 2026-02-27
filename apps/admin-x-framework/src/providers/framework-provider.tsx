@@ -33,6 +33,9 @@ export interface FrameworkProviderProps {
     onInvalidate: (dataType: string) => void;
     onDelete: (dataType: string, id: string) => void;
 
+    // Whether the admin UI is rendered inside an iframe (e.g., embedded in an external app)
+    isEmbedded?: boolean;
+
     // Optional QueryClient configuration for apps that need different defaults
     queryClientOptions?: {
         staleTime?: number;
@@ -60,7 +63,8 @@ const FrameworkContext = createContext<FrameworkContextType>({
     sentryDSN: null,
     onUpdate: () => {},
     onInvalidate: () => {},
-    onDelete: () => {}
+    onDelete: () => {},
+    isEmbedded: false
 });
 
 export function FrameworkProvider({children, queryClientOptions, ...props}: FrameworkProviderProps) {

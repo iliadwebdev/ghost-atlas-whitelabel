@@ -10,6 +10,7 @@ import {inject as service} from '@ember/service';
 export default class Footer extends Component {
     @service session;
     @service feature;
+    @service embedding;
 
     @inject config;
 
