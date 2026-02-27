@@ -9,6 +9,14 @@ import { routes } from "./routes.tsx";
 import { navigateTo } from "./utils/navigation";
 import { AppProvider } from "./providers/app-provider";
 
+function detectIsEmbedded(): boolean {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
+    }
+}
+
 const framework = {
     ghostVersion: "",
     externalNavigate: (link: { route: string; isExternal: boolean }) => {
@@ -22,6 +30,7 @@ const framework = {
         "X-Unsplash-Cache": true,
     },
     sentryDSN: null,
+    isEmbedded: detectIsEmbedded(),
     onUpdate: (dataType: string, response: unknown) => {
         window.EmberBridge?.state.onUpdate(dataType, response);
     },
