@@ -54,16 +54,18 @@ const ChangeTheme: React.FC<{ keywords: string[] }> = ({keywords}) => {
     );
 
     return (
-        <TopLevelGroup
-            customButtons={<Button className='mt-[-5px]' color='clear' label='Change theme' size='sm' onClick={openPreviewModal}/>}
-            description="Browse and install official themes or upload one"
-            keywords={keywords}
-            navid='theme'
-            testId='theme'
-            title="Theme"
-        >
-            {values}
-        </TopLevelGroup>
+        <div className="opacity-50 pointer-events-none cursor-not-allowed">
+            <TopLevelGroup
+                customButtons={<Button className='mt-[-5px]' color='clear' label='Change theme' size='sm' onClick={openPreviewModal}/>}
+                description="Browse and install official themes or upload one"
+                keywords={keywords}
+                navid='theme'
+                testId='theme'
+                title="Theme"
+            >
+                {values}
+            </TopLevelGroup>
+        </div>
     );
 };
 
