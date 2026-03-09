@@ -179,6 +179,21 @@
         }
     }
 
+    # SSO token exchange - must go to Ghost backend to create the session
+    # before redirecting to the admin dev server
+    @sso_token {
+        path /ghost /ghost/
+        query token=*
+    }
+    handle @sso_token {
+        reverse_proxy {env.GHOST_BACKEND} {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # Admin interface - served from admin dev server
     # This includes /ghost/, etc. (but /ghost/assets/* is handled above)
     # Also handles WebSocket upgrade requests for HMR

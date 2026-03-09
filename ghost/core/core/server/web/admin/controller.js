@@ -46,15 +46,23 @@ module.exports = function adminController(req, res) {
         hashSum.update(fileBuffer);
         headers.ETag = hashSum.digest("hex");
 
-        // const frameProtection = config.get('adminFrameProtection');
-        // if (frameProtection === true) {
-        //     headers['X-Frame-Options'] = 'sameorigin';
-        // } else if (typeof frameProtection === 'string' || Array.isArray(frameProtection)) {
-        //     const origins = Array.isArray(frameProtection)
-        //         ? frameProtection.join(' ')
-        //         : frameProtection;
-        //     headers['Content-Security-Policy'] = `frame-ancestors 'self' ${origins}`;
-        // }
+        // In production, only allow iframing from allowed domains.
+        // In development, no restrictions (iframe from anywhere).
+        if (process.env.NODE_ENV === 'production') {
+            const allowedPatterns = [
+                /^https?:\/\/[a-z0-9-]+\.atlas-cms\.rest$/i,
+                /^https?:\/\/[a-z0-9-]+\.iliad\.dev$/i,
+                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.atlas-cms\.rest$/i,
+                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.iliad\.dev$/i
+            ];
+            const reqOrigin = req.headers.origin || '';
+            const isAllowed = reqOrigin && allowedPatterns.some(p => p.test(reqOrigin));
+            if (isAllowed) {
+                headers['Content-Security-Policy'] = `frame-ancestors 'self' ${reqOrigin}`;
+            } else {
+                headers['X-Frame-Options'] = 'SAMEORIGIN';
+            }
+        }
 
         res.sendFile(templatePath, { headers, lastModified: false });
     } catch (err) {

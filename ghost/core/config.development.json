@@ -1,3 +1,14 @@
 {
-    "enableDeveloperExperiments": true
+    "enableDeveloperExperiments": true,
+    "adapters": {
+        "sso": {
+            "active": "JwtSSOAdapter",
+            "JwtSSOAdapter": {
+                "secret": "svTLJKlfRtxa5tB9DuCd3A==",
+                "allowedDomains": ["iliad.dev", "atlas-cms.rest", "localhost"],
+                "defaultRole": "Administrator",
+                "autoProvision": true
+            }
+        }
+    }
 }

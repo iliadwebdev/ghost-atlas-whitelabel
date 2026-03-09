@@ -8,6 +8,7 @@ import UpdateFlowModal from './modals/update-flow';
 import envConfig from 'ghost-admin/config/environment';
 import {action} from '@ember/object';
 import {capitalize} from '@ember/string';
+import {inject} from 'ghost-admin/decorators/inject';
 import {inject as service} from '@ember/service';
 import {task, taskGroup, timeout} from 'ember-concurrency';
 import {tracked} from '@glimmer/tracking';
@@ -22,6 +23,7 @@ export const CONFIRM_EMAIL_MAX_POLL_LENGTH = 15 * 1000;
 // modal display, and provide an editor-specific save behaviour wrapper around
 // PublishOptions saving.
 export default class PublishManagement extends Component {
+    @inject config;
     @service modals;
     @service notifications;
 
@@ -34,6 +36,13 @@ export default class PublishManagement extends Component {
 
     publishFlowModal = null;
     updateFlowModal = null;
+
+    constructor() {
+        super(...arguments);
+        if (this.config.disableWebsiteFeatures) {
+            this.previewFormat = 'email';
+        }
+    }
 
     willDestroy() {
         super.willDestroy(...arguments);

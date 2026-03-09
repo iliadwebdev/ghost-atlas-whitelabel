@@ -14,7 +14,7 @@
                         <div class="form-group">
                             <label for="url">{{capitalize this.post.displayName}} URL</label>
                             {{!-- new posts don't have a preview link --}}
-                            {{#unless this.post.isNew}}
+                            {{#unless (or this.post.isNew this.config.disableWebsiteFeatures)}}
                                 {{#if (or this.post.isPublished this.post.isSent)}}
                                 <a class="post-view-link" target="_blank" href="{{this.post.url}}" rel="noopener noreferrer">
                                     View {{this.post.displayName}} {{svg-jar "arrow-top-right"}}
@@ -118,9 +118,11 @@
                             </GhFormGroup>
                         {{/unless}}
 
-                        <GhPsmTemplateSelect
-                            @post={{this.post}}
-                            @onTemplateSelect={{action (mut this.post.customTemplate)}} />
+                        {{#unless this.config.disableWebsiteFeatures}}
+                            <GhPsmTemplateSelect
+                                @post={{this.post}}
+                                @onTemplateSelect={{action (mut this.post.customTemplate)}} />
+                        {{/unless}}
                     </section>
 
                     <ul class="nav-list">
@@ -152,7 +154,7 @@
                                 </div>
                             </li>
                         {{/if}}
-                        {{#unless this.session.user.isAuthorOrContributor}}
+                        {{#unless (or this.session.user.isAuthorOrContributor this.config.disableWebsiteFeatures)}}
                             <li class="nav-list-item">
                                 <div class="for-switch xs">
                                     <label class="switch" for="featured" {{action "toggleFeatured" bubbles="false"}}>
@@ -186,30 +188,32 @@
                                 {{svg-jar "arrow-right" class="arrow-right"}}
                             </li>
                         {{/if}}
-                        <li class="nav-list-item">
-                            <button type="button" {{action "showSubview" "codeinjection"}} data-test-button="codeinjection">
-                                <span>{{svg-jar "brackets"}} Code injection</span>
-                            </button>
-                            {{svg-jar "arrow-right" class="arrow-right"}}
-                        </li>
-                        <li class="nav-list-item">
-                            <button type="button" {{action "showSubview" "meta-data"}} data-test-button="meta-data">
-                                <span>{{svg-jar "google-icon"}} Meta data</span>
-                            </button>
-                            {{svg-jar "arrow-right" class="arrow-right"}}
-                        </li>
-                        <li class="nav-list-item nav-list-item-twitter">
-                            <button type="button"  {{action "showSubview" "twitter-data"}} data-test-button="twitter-data">
-                                <span>{{svg-jar "x-logo"}} X card</span>
-                            </button>
-                            {{svg-jar "arrow-right" class="arrow-right"}}
-                        </li>
-                        <li class="nav-list-item">
-                            <button type="button" {{action "showSubview" "facebook-data"}} data-test-button="facebook-data">
-                                <span>{{svg-jar "social-facebook"}} Facebook card</span>
-                            </button>
-                            {{svg-jar "arrow-right" class="arrow-right"}}
-                        </li>
+                        {{#unless this.config.disableWebsiteFeatures}}
+                            <li class="nav-list-item">
+                                <button type="button" {{action "showSubview" "codeinjection"}} data-test-button="codeinjection">
+                                    <span>{{svg-jar "brackets"}} Code injection</span>
+                                </button>
+                                {{svg-jar "arrow-right" class="arrow-right"}}
+                            </li>
+                            <li class="nav-list-item">
+                                <button type="button" {{action "showSubview" "meta-data"}} data-test-button="meta-data">
+                                    <span>{{svg-jar "google-icon"}} Meta data</span>
+                                </button>
+                                {{svg-jar "arrow-right" class="arrow-right"}}
+                            </li>
+                            <li class="nav-list-item nav-list-item-twitter">
+                                <button type="button"  {{action "showSubview" "twitter-data"}} data-test-button="twitter-data">
+                                    <span>{{svg-jar "x-logo"}} X card</span>
+                                </button>
+                                {{svg-jar "arrow-right" class="arrow-right"}}
+                            </li>
+                            <li class="nav-list-item">
+                                <button type="button" {{action "showSubview" "facebook-data"}} data-test-button="facebook-data">
+                                    <span>{{svg-jar "social-facebook"}} Facebook card</span>
+                                </button>
+                                {{svg-jar "arrow-right" class="arrow-right"}}
+                            </li>
+                        {{/unless}}
                         <li class="nav-list-item">
                             <button type="button" {{action "showSubview" "keyboard-shortcuts"}} data-test-button="keyboard-shortcuts">
                                 <span>{{svg-jar "keyboard"}} Keyboard shortcuts</span>

@@ -89,6 +89,7 @@ export type Config = {
         enabled?: boolean;
         organization?: string;
     };
+    disableWebsiteFeatures?: boolean;
     // Config is relatively fluid, so we only type used properties above and still support arbitrary property access when needed
     [key: string]: JSONValue | undefined;
 };

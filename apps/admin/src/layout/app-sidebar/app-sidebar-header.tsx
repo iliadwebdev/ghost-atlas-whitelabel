@@ -7,6 +7,7 @@ import {
 } from "@tryghost/shade"
 import { useBrowseSite } from "@tryghost/admin-x-framework/api/site";
 import { useCurrentUser } from "@tryghost/admin-x-framework/api/current-user";
+import { useBrowseConfig } from "@tryghost/admin-x-framework/api/config";
 import { isContributorUser } from "@tryghost/admin-x-framework/api/users";
 
 const ctrlOrCmd = navigator.userAgent.indexOf('Mac') !== -1 ? 'command' : 'ctrl';
@@ -26,10 +27,16 @@ const openSearchModal = (event: React.MouseEvent<HTMLButtonElement>) => {
 
 function AppSidebarHeader({ ...props }: React.ComponentProps<typeof SidebarHeader>) {
     const { data: currentUser } = useCurrentUser();
+    const { data: configData } = useBrowseConfig();
+    const disableWebsiteFeatures = configData?.config.disableWebsiteFeatures ?? false;
     const site = useBrowseSite();
     const title = site.data?.site.title ?? "";
     const siteIcon = site.data?.site.icon ?? "https://static.ghost.org/v4.0.0/images/ghost-orb-1.png";
     const showSearch = currentUser && !isContributorUser(currentUser);
+
+    if (disableWebsiteFeatures) {
+        return null;
+    }
 
     return (
         <SidebarHeader {...props}>

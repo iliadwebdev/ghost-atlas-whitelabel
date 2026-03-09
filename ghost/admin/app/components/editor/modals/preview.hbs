@@ -5,7 +5,7 @@
         </div>
         <div class="gh-post-preview-btn-group">
             <div class="gh-contentfilter gh-btn-group">
-                <button type="button" class="gh-btn gh-post-preview-mode {{if (eq this.previewFormat "browser") "gh-btn-group-selected"}}" {{on "click" (fn this.changePreviewFormat "browser")}} data-test-button="browser-preview" data-test-selected={{eq this.previewFormat "browser"}}><span>Web</span></button>
+                {{#unless this.config.disableWebsiteFeatures}}<button type="button" class="gh-btn gh-post-preview-mode {{if (eq this.previewFormat "browser") "gh-btn-group-selected"}}" {{on "click" (fn this.changePreviewFormat "browser")}} data-test-button="browser-preview" data-test-selected={{eq this.previewFormat "browser"}}><span>Web</span></button>{{/unless}}
                 {{#if (and this.settings.membersEnabled (not-eq this.settings.editorDefaultEmailRecipients "disabled"))}}
                     {{#if (and @data.publishOptions.post.isPost (not @data.publishOptions.user.isContributor))}}
                         <button type="button" class="gh-btn {{if (eq this.previewFormat "email") "gh-btn-group-selected"}} gh-post-preview-mode" {{on "click" (fn this.changePreviewFormat "email")}} data-test-button="email-preview" data-test-selected={{eq this.previewFormat "email"}}><span>Email</span></button>
@@ -37,6 +37,7 @@
             {{/if}}
         </div>
         <div class="right">
+            {{#unless this.config.disableWebsiteFeatures}}
             <div class="gh-post-test-email-group">
                 <GhDropdownButton
                     @dropdownName="post-preview-share"
@@ -67,6 +68,7 @@
                     </div>
                 </GhDropdown>
             </div>
+            {{/unless}}
             <div class="gh-contentfilter-divider"></div>
             <button
                 type="button"

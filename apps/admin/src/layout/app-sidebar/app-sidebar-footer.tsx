@@ -1,32 +1,31 @@
-import React, { useState } from "react"
+import React, { useState } from "react";
 
 import {
     SidebarFooter,
     SidebarGroup,
     SidebarMenu,
-    SidebarMenuItem
-} from "@tryghost/shade"
+    SidebarMenuItem,
+} from "@tryghost/shade";
 import WhatsNewDialog from "@/whats-new/components/whats-new-dialog";
 import { UserMenu } from "./user-menu";
 import { useSidebarBannerState } from "./hooks/use-sidebar-banner-state";
-import { useFramework } from "@tryghost/admin-x-framework";
 
-function AppSidebarFooter({ ...props }: React.ComponentProps<typeof SidebarFooter>) {
+function AppSidebarFooter({
+    ...props
+}: React.ComponentProps<typeof SidebarFooter>) {
     const [isWhatsNewDialogOpen, setIsWhatsNewDialogOpen] = useState(false);
-    const {hasBanner} = useSidebarBannerState();
-    const {isEmbedded} = useFramework();
-
-    if (isEmbedded) {
-        return null;
-    }
-
+    const { hasBanner } = useSidebarBannerState();
     return (
         <>
             <SidebarFooter {...props}>
-                <SidebarGroup className={hasBanner ? 'pt-3' : ''}>
+                <SidebarGroup className={hasBanner ? "pt-3" : ""}>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <UserMenu onOpenWhatsNew={() => setIsWhatsNewDialogOpen(true)} />
+                            <UserMenu
+                                onOpenWhatsNew={() =>
+                                    setIsWhatsNewDialogOpen(true)
+                                }
+                            />
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>

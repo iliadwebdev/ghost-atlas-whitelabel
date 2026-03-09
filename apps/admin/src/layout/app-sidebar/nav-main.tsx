@@ -11,6 +11,7 @@ import { useBrowseSite } from "@tryghost/admin-x-framework/api/site";
 import { useCurrentUser } from "@tryghost/admin-x-framework/api/current-user";
 import { useBrowseSettings } from "@tryghost/admin-x-framework/api/settings";
 import { getSettingValue } from "@tryghost/admin-x-framework/api/settings";
+import { useBrowseConfig } from "@tryghost/admin-x-framework/api/config";
 import { hasAdminAccess } from "@tryghost/admin-x-framework/api/users";
 import { useNotificationsCountForUser } from "@tryghost/activitypub/src/index";
 import NetworkIcon from "./icons/network-icon";
@@ -19,6 +20,8 @@ import { useIsActiveLink } from "./use-is-active-link";
 
 function NavMain({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
     const { data: currentUser } = useCurrentUser();
+    const { data: configData } = useBrowseConfig();
+    const disableWebsiteFeatures = configData?.config.disableWebsiteFeatures ?? false;
     const { data: settings } = useBrowseSettings();
     const networkEnabled = getSettingValue<boolean>(settings?.settings, 'social_web_enabled') ?? false;
     const site = useBrowseSite();
@@ -40,13 +43,15 @@ function NavMain({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
         <SidebarGroup {...props}>
             <SidebarGroupContent>
                 <SidebarMenu>
-                    <NavMenuItem>
-                        <NavMenuItem.Link to="analytics" activeOnSubpath>
-                            <LucideIcon.TrendingUp />
-                            <NavMenuItem.Label>Analytics</NavMenuItem.Label>
-                        </NavMenuItem.Link>
-                    </NavMenuItem>
-                    {networkEnabled && (
+                    {!disableWebsiteFeatures && (
+                        <NavMenuItem>
+                            <NavMenuItem.Link to="analytics" activeOnSubpath>
+                                <LucideIcon.TrendingUp />
+                                <NavMenuItem.Label>Analytics</NavMenuItem.Label>
+                            </NavMenuItem.Link>
+                        </NavMenuItem>
+                    )}
+                    {!disableWebsiteFeatures && networkEnabled && (
                         <NavMenuItem>
                             <NavMenuItem.Link to="network" isActive={isNetworkRouteActive || isActivitypubRouteActive}>
                                 <NetworkIcon />
@@ -57,20 +62,22 @@ function NavMain({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
                             )}
                         </NavMenuItem>
                     )}
-                    <NavMenuItem className="relative group/viewsite">
-                        <NavMenuItem.Link to="site">
-                            <LucideIcon.AppWindow />
-                            <NavMenuItem.Label>View site</NavMenuItem.Label>
-                        </NavMenuItem.Link>
-                        <a
-                            href={url}
-                            target="_blank"
-                            aria-label="View site in new tab"
-                            rel="noopener noreferrer"
-                            className="absolute opacity-0 group-hover/viewsite:opacity-100 right-0 top-0 size-8 hover:bg-sidebar-accent flex items-center justify-center rounded-full text-gray-700 hover:text-sidebar-accent-foreground transition-all">
-                                <LucideIcon.ExternalLink size={16} />
-                        </a>
-                    </NavMenuItem>
+                    {!disableWebsiteFeatures && (
+                        <NavMenuItem className="relative group/viewsite">
+                            <NavMenuItem.Link to="site">
+                                <LucideIcon.AppWindow />
+                                <NavMenuItem.Label>View site</NavMenuItem.Label>
+                            </NavMenuItem.Link>
+                            <a
+                                href={url}
+                                target="_blank"
+                                aria-label="View site in new tab"
+                                rel="noopener noreferrer"
+                                className="absolute opacity-0 group-hover/viewsite:opacity-100 right-0 top-0 size-8 hover:bg-sidebar-accent flex items-center justify-center rounded-full text-gray-700 hover:text-sidebar-accent-foreground transition-all">
+                                    <LucideIcon.ExternalLink size={16} />
+                            </a>
+                        </NavMenuItem>
+                    )}
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>

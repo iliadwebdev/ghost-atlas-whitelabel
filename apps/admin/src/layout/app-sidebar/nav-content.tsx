@@ -10,6 +10,7 @@ import {
     SidebarMenuBadge
 } from "@tryghost/shade"
 import { useCurrentUser } from "@tryghost/admin-x-framework/api/current-user";
+import { useBrowseConfig } from "@tryghost/admin-x-framework/api/config";
 import { canManageMembers, canManageTags } from "@tryghost/admin-x-framework/api/users";
 import { NavMenuItem } from "./nav-menu-item";
 import NavSubMenu from "./nav-sub-menu";
@@ -21,6 +22,8 @@ import { useFeatureFlag } from "@/hooks/use-feature-flag";
 
 function NavContent({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
     const { data: currentUser } = useCurrentUser();
+    const { data: configData } = useBrowseConfig();
+    const disableWebsiteFeatures = configData?.config.disableWebsiteFeatures ?? false;
     const [postsExpanded, setPostsExpanded] = useNavigationExpanded('posts');
     const memberCount = useMemberCount();
     const routing = useEmberRouting();
@@ -104,15 +107,17 @@ function NavContent({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
                         <NavCustomViews />
                     </NavSubMenu>
 
-                    <NavMenuItem>
-                        <NavMenuItem.Link
-                            to={routing.getRouteUrl('pages')}
-                            isActive={routing.isRouteActive('pages')}
-                        >
-                            <LucideIcon.File />
-                            <NavMenuItem.Label>Pages</NavMenuItem.Label>
-                        </NavMenuItem.Link>
-                    </NavMenuItem>
+                    {!disableWebsiteFeatures && (
+                        <NavMenuItem>
+                            <NavMenuItem.Link
+                                to={routing.getRouteUrl('pages')}
+                                isActive={routing.isRouteActive('pages')}
+                            >
+                                <LucideIcon.File />
+                                <NavMenuItem.Label>Pages</NavMenuItem.Label>
+                            </NavMenuItem.Link>
+                        </NavMenuItem>
+                    )}
 
                     {showTags && (
                         <NavMenuItem>
@@ -141,7 +146,7 @@ function NavContent({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
                         </NavMenuItem>
                     )}
 
-                    {showMembers && commentModerationEnabled && (
+                    {showMembers && commentModerationEnabled && !disableWebsiteFeatures && (
                         <NavMenuItem>
                             <NavMenuItem.Link
                                 to="comments"

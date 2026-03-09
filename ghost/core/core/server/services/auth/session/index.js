@@ -1,4 +1,5 @@
 const adapterManager = require('../../adapter-manager');
+const logging = require('@tryghost/logging');
 const createSessionService = require('./session-service');
 const sessionFromToken = require('./session-from-token');
 const createSessionMiddleware = require('./middleware');
@@ -78,6 +79,7 @@ module.exports.createSessionFromToken = () => {
     return sessionFromToken({
         callNextWithError: false,
         createSession: async function (req, res, user) {
+            logging.info(`JWT SSO: Creating session for user ${user && user.get ? user.get('email') : '(unknown)'}`);
             // For SSO token exchange (e.g., iframe embedding), the request's
             // Origin/Referer points to the embedding page, not Ghost. Override
             // to Ghost's own URL so the session's stored origin matches
@@ -88,6 +90,9 @@ module.exports.createSessionFromToken = () => {
             req.headers.origin = undefined;
             try {
                 await sessionService.createVerifiedSessionForUser(req, res, user);
+            } catch (err) {
+                logging.error('JWT SSO: Session creation failed: ' + err.message);
+                throw err;
             } finally {
                 req.headers.referer = originalReferer;
                 req.headers.origin = originalOrigin;

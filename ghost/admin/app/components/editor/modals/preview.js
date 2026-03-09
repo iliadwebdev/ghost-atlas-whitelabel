@@ -1,11 +1,13 @@
 import Component from '@glimmer/component';
 import copyTextToClipboard from 'ghost-admin/utils/copy-text-to-clipboard';
 import {action} from '@ember/object';
+import {inject} from 'ghost-admin/decorators/inject';
 import {inject as service} from '@ember/service';
 import {task} from 'ember-concurrency';
 import {tracked} from '@glimmer/tracking';
 
 export default class EditorPostPreviewModal extends Component {
+    @inject config;
     @service dropdown;
     @service settings;
     @service session;
@@ -16,7 +18,7 @@ export default class EditorPostPreviewModal extends Component {
         ignoreBackdropClick: true
     };
 
-    @tracked previewFormat = this.args.data.initialPreviewFormat || 'browser';
+    @tracked previewFormat = this.args.data.initialPreviewFormat || (this.config.disableWebsiteFeatures ? 'email' : 'browser');
     @tracked previewSize = this.args.data.initialPreviewSize || 'desktop';
     @tracked isChangingTab = false;
     @tracked previewEmailAddress = this.session.user.email;

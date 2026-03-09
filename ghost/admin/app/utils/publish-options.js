@@ -99,8 +99,12 @@ export default class PublishOptions {
     @tracked publishType = 'publish+send';
     @tracked emailDisabledError;
 
+    get disableWebsiteFeatures() {
+        return !!this.config.disableWebsiteFeatures;
+    }
+
     get publishTypeOptions() {
-        return [{
+        const allOptions = [{
             value: 'publish+send', // internal
             label: 'Publish and email', // shown in expanded options
             display: 'Publish and email', // shown in option title
@@ -115,6 +119,12 @@ export default class PublishOptions {
             display: 'Email',
             disabled: this.emailDisabled
         }];
+
+        if (this.disableWebsiteFeatures) {
+            return allOptions.filter(o => o.value === 'send');
+        }
+
+        return allOptions;
     }
 
     get selectedPublishTypeOption() {
@@ -260,7 +270,9 @@ export default class PublishOptions {
 
         this.newsletter = this.defaultNewsletter;
 
-        if (this.emailUnavailable || this.emailDisabled) {
+        if (this.disableWebsiteFeatures) {
+            this.publishType = 'send';
+        } else if (this.emailUnavailable || this.emailDisabled) {
             this.publishType = 'publish';
         }
 
@@ -268,6 +280,7 @@ export default class PublishOptions {
         // Set publish type to "Publish" but keep email recipients matching post visibility
         // to avoid multiple clicks to turn on emailing
         if (
+            !this.disableWebsiteFeatures &&
             this.settings.editorDefaultEmailRecipients === 'filter' &&
             this.settings.editorDefaultEmailRecipientsFilter === null
         ) {

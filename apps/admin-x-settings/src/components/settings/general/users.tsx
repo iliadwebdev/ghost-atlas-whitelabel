@@ -225,7 +225,7 @@ const Users: React.FC<{ keywords: string[], highlight?: boolean }> = ({keywords,
         updateRoute('staff/invite');
     };
 
-    const buttons = (
+    const buttons = config.disableWebsiteFeatures ? undefined : (
         <Button className='mt-[-5px]' color='clear' label='Invite people' size='sm' linkWithPadding onClick={() => {
             showInviteModal();
         }} />
