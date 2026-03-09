@@ -100,6 +100,7 @@ class OEmbedService {
 
     /**
      * @param {string} url
+     * @returns {Promise<never>}
      */
     async unknownProvider(url) {
         throw new errors.ValidationError({
@@ -264,11 +265,12 @@ class OEmbedService {
      * @returns {Promise<Object>}
      */
     async fetchBookmarkData(url, html, type) {
-        const gotOpts = {
+        const got = require('got');
+        const gotOpts = got.mergeOptions(this.externalRequest.defaults?.options || {}, {
             headers: {
                 'User-Agent': USER_AGENT
             }
-        };
+        });
 
         if (process.env.NODE_ENV?.startsWith('test')) {
             gotOpts.retry = 0;
