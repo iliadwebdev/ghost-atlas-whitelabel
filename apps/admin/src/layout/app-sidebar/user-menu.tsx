@@ -94,6 +94,10 @@ function UserMenu(props: UserMenuProps) {
     const currentUser = useCurrentUser();
     const { data: whatsNewData } = useWhatsNew();
     const { showUpgradeBanner } = useUpgradeStatus();
+    const isEmbedded = (() => {
+        if (new URLSearchParams(window.location.search).get('dev') === 'true') return false;
+        try { return window.self !== window.top; } catch { return true; }
+    })();
 
     return (
         <DropdownMenu {...props}>
@@ -105,7 +109,7 @@ function UserMenu(props: UserMenuProps) {
                 >
                     <div className="relative">
                         <UserMenuAvatar />
-                        {whatsNewData?.hasNew && (
+                        {!isEmbedded && whatsNewData?.hasNew && (
                             <span className="absolute -top-0.5 -right-0.5">
                                 <Indicator
                                     variant="success"
@@ -119,7 +123,7 @@ function UserMenu(props: UserMenuProps) {
                     <div className="grid flex-1 text-left text-base leading-tight">
                         <span className="truncate font-semibold">{currentUser.data?.name}</span>
                         <span className="text-muted-foreground truncate text-xs -mt-px">
-                            {currentUser.data?.email}
+                            {isEmbedded ? 'Atlas Managed Profile' : currentUser.data?.email}
                         </span>
                     </div>
                     <LucideIcon.ChevronsUpDown className="ml-auto size-4 text-grey-700" data-test-nav="arrow-down" />
@@ -132,31 +136,33 @@ function UserMenu(props: UserMenuProps) {
             >
                 <UserMenuHeader
                     name={currentUser.data?.name}
-                    email={currentUser.data?.email}
+                    email={isEmbedded ? 'Atlas Managed Profile' : currentUser.data?.email}
                 >
                     <UserMenuAvatar />
                 </UserMenuHeader>
                 <DropdownMenuSeparator />
-                <UserMenuItem
-                    data-test-nav="whatsnew"
-                    asChild={false}
-                    onSelect={() => {
-                        props.onOpenWhatsNew?.();
-                    }}
-                >
-                    <LucideIcon.Sparkles />
-                    <UserMenuItem.Label>What’s new?</UserMenuItem.Label>
-                    {whatsNewData?.hasNew && (
-                        <div className="flex-1 flex justify-end">
-                            <Indicator
-                                variant="success"
-                                size="sm"
-                                label="New updates available"
-                                data-test-whats-new-menu-badge
-                                />
-                        </div>
-                    )}
-                </UserMenuItem>
+                {!isEmbedded && (
+                    <UserMenuItem
+                        data-test-nav="whatsnew"
+                        asChild={false}
+                        onSelect={() => {
+                            props.onOpenWhatsNew?.();
+                        }}
+                    >
+                        <LucideIcon.Sparkles />
+                        <UserMenuItem.Label>What’s new?</UserMenuItem.Label>
+                        {whatsNewData?.hasNew && (
+                            <div className="flex-1 flex justify-end">
+                                <Indicator
+                                    variant="success"
+                                    size="sm"
+                                    label="New updates available"
+                                    data-test-whats-new-menu-badge
+                                    />
+                            </div>
+                        )}
+                    </UserMenuItem>
+                )}
                 <UserMenuProfile />
                 <DropdownMenuSeparator />
                 <UserMenuItem>
@@ -169,9 +175,13 @@ function UserMenu(props: UserMenuProps) {
                         <UserMenuItem.Label>Resources & guides</UserMenuItem.Label>
                     </a>
                 </UserMenuItem>
-                <UserMenuDarkMode />
-                <DropdownMenuSeparator />
-                <UserMenuSignOut />
+                {!isEmbedded && <UserMenuDarkMode />}
+                {!isEmbedded && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <UserMenuSignOut />
+                    </>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -197,6 +207,10 @@ function ContributorUserMenu() {
     const currentUser = useCurrentUser();
     const site = useBrowseSite();
     const siteUrl = site.data?.site.url ?? "";
+    const isEmbedded = (() => {
+        if (new URLSearchParams(window.location.search).get('dev') === 'true') return false;
+        try { return window.self !== window.top; } catch { return true; }
+    })();
 
     return (
         <DropdownMenu>
@@ -216,7 +230,7 @@ function ContributorUserMenu() {
             >
                 <UserMenuHeader
                     name={currentUser.data?.name}
-                    email={currentUser.data?.email}
+                    email={isEmbedded ? 'Atlas Managed Profile' : currentUser.data?.email}
                 >
                     <UserMenuAvatar />
                 </UserMenuHeader>
@@ -235,9 +249,13 @@ function ContributorUserMenu() {
                 </UserMenuItem>
                 <DropdownMenuSeparator />
                 <UserMenuProfile />
-                <UserMenuDarkMode />
-                <DropdownMenuSeparator />
-                <UserMenuSignOut />
+                {!isEmbedded && <UserMenuDarkMode />}
+                {!isEmbedded && (
+                    <>
+                        <DropdownMenuSeparator />
+                        <UserMenuSignOut />
+                    </>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );

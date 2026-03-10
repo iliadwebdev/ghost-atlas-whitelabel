@@ -23,7 +23,9 @@ import { useFeatureFlag } from "@/hooks/use-feature-flag";
 function NavContent({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
     const { data: currentUser } = useCurrentUser();
     const { data: configData } = useBrowseConfig();
-    const disableWebsiteFeatures = configData?.config.disableWebsiteFeatures ?? false;
+    // Default to true (hidden) while config is loading to prevent a flash of
+    // website-feature items (Pages, Comments) before the API response arrives.
+    const disableWebsiteFeatures = configData?.config.disableWebsiteFeatures ?? true;
     const [postsExpanded, setPostsExpanded] = useNavigationExpanded('posts');
     const memberCount = useMemberCount();
     const routing = useEmberRouting();

@@ -23,6 +23,8 @@
         "testimonials_url": "https://explore.ghost.org/api/testimonials"
     },
 
+    "disableWebsiteFeatures": true,
+
     "adapters": {
         "sso": {
             "active": "JwtSSOAdapter",

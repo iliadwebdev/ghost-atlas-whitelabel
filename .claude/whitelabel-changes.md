@@ -1,0 +1,202 @@
+# Ghost Atlas Whitelabel — Custom Changes Catalogue
+
+This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
+**Update this file whenever new changes are made so upgrades are easier.**
+
+Last updated: 2026-03-09 (catalogued against 6.x base, targeting 6.21.0 upgrade)
+
+---
+
+## 1. `disableWebsiteFeatures` Flag
+
+**Purpose:** Hides all website/publishing UI when Ghost is used as a pure email/newsletter platform (e.g. embedded in Atlas CMS).
+**Mechanism:** Backend reads `DISABLE_WEBSITE_FEATURES=true` env var (or `disableWebsiteFeatures: true` in config JSON), exposes it via public config API. Frontend checks `config.disableWebsiteFeatures` to conditionally hide UI.
+
+### Backend
+
+#### `ghost/core/core/server/services/public-config/config.js`
+- Added `disableWebsiteFeatures` to the returned config object.
+- Reads from `process.env.DISABLE_WEBSITE_FEATURES === 'true'` OR `config.get('disableWebsiteFeatures') === true`.
+
+#### `ghost/core/core/server/api/endpoints/utils/serializers/output/config.js`
+- Added `'disableWebsiteFeatures'` to the list of allowed config keys exposed via the Admin API.
+
+### Frontend — React Admin (`apps/`)
+
+#### `apps/admin-x-framework/src/api/config.ts`
+- Added `disableWebsiteFeatures?: boolean` to the `Config` TypeScript type.
+
+#### `apps/admin-x-settings/src/components/sidebar.tsx`
+- Hides nav items when `disableWebsiteFeatures` is true:
+  - **General section:** Meta data, Social accounts, Make site private
+  - **Site section:** Entire section (Design & branding, Theme, Navigation, Announcement bar)
+  - **Growth section:** Network, Ghost Explore, Recommendations
+  - **Advanced section:** Code injection
+
+#### `apps/admin-x-settings/src/components/settings/general/users.tsx`
+- Hides the "Invite people" button when `disableWebsiteFeatures` is true.
+
+#### `apps/admin-x-settings/src/components/settings/general/about.tsx`
+- Adds an Iliad.dev branding paragraph above the Ghost copyright notice: "This is a modified installation of Ghost, built by Iliad.dev."
+- Also formatting-only changes (single → double quotes, JSX reformatting — no functional change beyond the branding paragraph).
+
+#### `apps/admin/src/layout/app-sidebar/app-sidebar-header.tsx`
+- Hides the site icon + title branding when `disableWebsiteFeatures` is true, but keeps the search button visible.
+- Imports `useBrowseConfig` to read config.
+
+#### `apps/admin/src/layout/app-sidebar/app-sidebar-footer.tsx`
+- Removed the `isEmbedded` check that previously returned `null` for embedded views (sidebar footer always renders now).
+- Minor formatting cleanup (quotes, trailing commas).
+
+#### `apps/admin/src/layout/app-sidebar/nav-content.tsx`
+- Hides **Pages** nav item when `disableWebsiteFeatures` is true.
+- Hides **Comments** nav item when `disableWebsiteFeatures` is true.
+
+#### `apps/admin/src/layout/app-sidebar/nav-main.tsx`
+- Returns `null` entirely when `disableWebsiteFeatures` is true (avoids empty SidebarGroup adding unwanted spacing).
+- Also returns `null` while config is loading (`!configData`) to prevent flash of website-feature items.
+
+#### `apps/admin/src/layout/app-sidebar/nav-content.tsx`
+- `disableWebsiteFeatures` defaults to `true` (hidden) while config is loading, to prevent Pages/Comments flashing before API response arrives.
+
+#### `apps/admin-x-settings/src/components/settings/general/users/profile-tab.tsx`
+- Email field is **disabled** when embedded (reads `isEmbedded` via `useFramework()`).
+- Hint text changes to **"Email is managed by Atlas"** when embedded.
+
+#### `apps/admin/src/layout/app-sidebar/user-menu.tsx`
+- Hides **What's new?** menu item and avatar badge when embedded (`window.self !== window.top`).
+- Hides **Dark mode** toggle when embedded.
+- Hides **Sign out** when embedded (both admin and contributor menus).
+- Replaces the user's email with **"Atlas Managed Profile"** in both the sidebar button and the dropdown header when embedded (both `UserMenu` and `ContributorUserMenu`).
+- All `isEmbedded` checks return `false` when `?dev=true` is in the URL (dev mode override).
+
+#### `apps/admin/src/main.tsx`
+- `detectIsEmbedded()` returns `false` when `?dev=true` is in the URL.
+
+#### `ghost/admin/app/services/embedding.js`
+- `isEmbedded` getter returns `false` when `?dev=true` is in the URL (dev mode override).
+
+### Frontend — Ember Admin (`ghost/admin/`)
+
+#### `ghost/admin/app/components/gh-post-settings-menu.hbs`
+- Hides "View post" link in post settings when `disableWebsiteFeatures` is true.
+- Hides "Template" selector when `disableWebsiteFeatures` is true.
+- Hides "Featured" toggle when `disableWebsiteFeatures` is true.
+- Hides Code injection, Meta data, X card, Facebook card menu items when `disableWebsiteFeatures` is true.
+
+#### `ghost/admin/app/components/editor/modals/preview.hbs`
+- Hides "Web" preview button when `disableWebsiteFeatures` is true.
+- Hides share/test email group on the right when `disableWebsiteFeatures` is true.
+
+#### `ghost/admin/app/components/editor/modals/preview.js`
+- Injects `config` via `@inject config` decorator.
+- Defaults `previewFormat` to `'email'` (instead of `'browser'`) when `disableWebsiteFeatures` is true.
+
+#### `ghost/admin/app/components/editor/publish-management.js`
+- Injects `config` via `@inject config` decorator.
+- Sets `previewFormat = 'email'` in constructor when `disableWebsiteFeatures` is true.
+
+#### `ghost/admin/app/utils/publish-options.js`
+- Added `disableWebsiteFeatures` getter.
+- `publishTypeOptions` filtered to only `'send'` when `disableWebsiteFeatures` is true (removes Publish and Publish+Send options).
+- Default `publishType` set to `'send'` when `disableWebsiteFeatures` is true.
+- Skips "email-from-filter" defaulting logic when `disableWebsiteFeatures` is true.
+
+#### `ghost/admin/app/routes/home.js`
+- Redirects admin users to `'posts'` instead of `'stats-x'` when `disableWebsiteFeatures` is true.
+- Redirects non-contributor users to `'posts'` instead of `'site'` when `disableWebsiteFeatures` is true.
+
+---
+
+## 2. JWT SSO Authentication
+
+**Purpose:** Allows Atlas CMS to authenticate users into Ghost via signed JWT tokens (iframe embedding with auto-login).
+
+### New File (custom, not in upstream): `ghost/core/core/server/adapters/sso/JwtSSOAdapter.js`
+- Actually exists in upstream but heavily modified.
+- Verifies JWT tokens using a shared secret (HS256).
+- Auto-provisions users with configurable default role.
+- Domain restriction check is **currently disabled** (commented out) — needs re-enabling for production security.
+- Added extensive `logging.info` / `console.log` debug statements (can be cleaned up).
+
+### `ghost/core/core/server/services/auth/session/index.js`
+- Added `logging` import.
+- Added `logging.info` for session creation logging.
+- Added `catch` block in `createSession` to log session creation errors before re-throwing.
+
+### `ghost/core/core/server/web/parent/backend.js`
+- Wires up `createSessionFromToken()` middleware on `/ghost` route.
+- Added `redirectAfterTokenExchange` middleware: after successful SSO, redirects to strip `?token=` from URL.
+- Added debug log when redirect is skipped.
+- Minor formatting changes (single → double quotes).
+
+### `ghost/core/core/server/web/admin/controller.js`
+- In production: sets `Content-Security-Policy: frame-ancestors 'self' <origin>` for requests from `*.atlas-cms.rest`, `*.iliad.dev`, or `localhost` (any port).
+- Falls back to `X-Frame-Options: SAMEORIGIN` for other origins.
+- (Previous `adminFrameProtection` config was commented out; replaced with this hardcoded logic.)
+- Origin detection checks `req.headers.origin` first, then falls back to parsing `req.headers['referer']` — browsers do NOT send `Origin` on iframe navigational GET requests, but do send `Referer`.
+
+---
+
+## 3. React Admin Root Route Fix
+
+### `apps/admin/src/routes.tsx`
+- Added `{ index: true, Component: EmberFallback }` inside the `path: ""` (ActivityPub wrapper) route's children.
+- **Why:** Ghost v6.21.0's `path: ""` route catches `/ghost/` before the sibling `path: "*"` (EmberFallback) can trigger. Without this fix, visiting `/ghost/` directly shows a blank content area because the ActivityPub child routes don't match the root. With the index route, `/ghost/` now triggers EmberFallback → Ember home route → redirects to `/ghost/posts`.
+- **Affects:** JWT SSO flow (which lands on `/ghost/` after stripping the token) and any direct navigation to `/ghost/`.
+
+---
+
+## 4. Docker / Dev Infrastructure
+
+### `compose.dev.yaml`
+- Passes `DISABLE_WEBSITE_FEATURES` env var through to the Ghost container (with empty default).
+
+### `docker/dev-gateway/Caddyfile`
+- Added `@sso_token` matcher: any request to `/ghost` or `/ghost/` with a `?token=` query param.
+- Routes SSO token requests to the Ghost **backend** (not the admin dev server) so the session is established before the frontend loads.
+
+---
+
+## 5. Configuration Files
+
+### `ghost/core/config.development.json`
+- Added SSO adapter config for local development:
+  - `active: "JwtSSOAdapter"`
+  - `secret: "svTLJKlfRtxa5tB9DuCd3A=="`
+  - `allowedDomains: ["iliad.dev", "atlas-cms.rest", "localhost"]`
+  - `defaultRole: "Administrator"`, `autoProvision: true`
+
+### `ghost/core/core/shared/config/env/config.production.json`
+- Added SSO adapter config for production (same structure, no autoProvision override).
+- Minor formatting cleanup (consistent JSON indentation).
+
+---
+
+## 6. Package Scripts
+
+### `package.json`
+- Added `dev:kill` script: kills nx/yarn dev processes and brings down Docker containers.
+
+---
+
+## 7. `yarn.lock`
+- Added `bluebird@3.5.4` and `cloudinary@~1.14.0` (pulled in by a dependency, not a direct install).
+
+---
+
+## Upgrade Checklist
+
+When upgrading to a new Ghost version:
+
+1. **Merge/rebase** onto new upstream tag.
+2. **Check conflicts** in all files listed above — especially:
+   - `ghost/admin/app/utils/publish-options.js` (publish flow logic changes frequently)
+   - `ghost/admin/app/routes/home.js` (routing changes)
+   - `apps/admin/src/layout/app-sidebar/*` (sidebar refactors)
+   - `apps/admin-x-settings/src/components/sidebar.tsx` (new nav items added upstream)
+   - `apps/admin/src/routes.tsx` (route structure changes)
+3. **Re-apply domain restriction disable** comment in `JwtSSOAdapter.js` if needed, or re-enable and test.
+4. **Verify `disableWebsiteFeatures` config key** is still in the serializer allowlist (`config.js`).
+5. **Test SSO flow** end-to-end after upgrade.
+6. **Test `disableWebsiteFeatures=true`** mode to ensure no new website-feature UI slipped through.

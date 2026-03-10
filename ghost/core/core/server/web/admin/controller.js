@@ -53,12 +53,22 @@ module.exports = function adminController(req, res) {
                 /^https?:\/\/[a-z0-9-]+\.atlas-cms\.rest$/i,
                 /^https?:\/\/[a-z0-9-]+\.iliad\.dev$/i,
                 /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.atlas-cms\.rest$/i,
-                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.iliad\.dev$/i
+                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.iliad\.dev$/i,
+                /^https?:\/\/localhost(:\d+)?$/i
             ];
-            const reqOrigin = req.headers.origin || '';
-            const isAllowed = reqOrigin && allowedPatterns.some(p => p.test(reqOrigin));
+            // Browsers send Origin for CORS/fetch requests but NOT for iframe navigational GETs.
+            // Fall back to parsing Referer, which browsers do send for cross-origin navigations.
+            let effectiveOrigin = req.headers.origin || '';
+            if (!effectiveOrigin && req.headers['referer']) {
+                try {
+                    effectiveOrigin = new URL(req.headers['referer']).origin;
+                } catch (e) {
+                    effectiveOrigin = '';
+                }
+            }
+            const isAllowed = effectiveOrigin && allowedPatterns.some(p => p.test(effectiveOrigin));
             if (isAllowed) {
-                headers['Content-Security-Policy'] = `frame-ancestors 'self' ${reqOrigin}`;
+                headers['Content-Security-Policy'] = `frame-ancestors 'self' ${effectiveOrigin}`;
             } else {
                 headers['X-Frame-Options'] = 'SAMEORIGIN';
             }

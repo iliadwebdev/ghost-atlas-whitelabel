@@ -34,13 +34,10 @@ function AppSidebarHeader({ ...props }: React.ComponentProps<typeof SidebarHeade
     const siteIcon = site.data?.site.icon ?? "https://static.ghost.org/v4.0.0/images/ghost-orb-1.png";
     const showSearch = currentUser && !isContributorUser(currentUser);
 
-    if (disableWebsiteFeatures) {
-        return null;
-    }
-
     return (
         <SidebarHeader {...props}>
             <div className="flex flex-col items-stretch gap-6">
+                {!disableWebsiteFeatures && (
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-md bg-transparent border-0 flex-shrink-0">
@@ -55,6 +52,7 @@ function AppSidebarHeader({ ...props }: React.ComponentProps<typeof SidebarHeade
                         </div>
                     </div>
                 </div>
+                )}
                 {showSearch && (
                     <Button
                         variant="outline"
@@ -63,7 +61,7 @@ function AppSidebarHeader({ ...props }: React.ComponentProps<typeof SidebarHeade
                     >
                         <div className="flex items-center gap-2">
                             <LucideIcon.Search className="text-muted-foreground" />
-                            Search site
+                            {disableWebsiteFeatures ? 'Search' : 'Search site'}
                         </div>
                         <Kbd className="text-gray-500 bg-transparent shadow-none dark:text-gray-800" style={{textShadow: 'none'}}>{searchShortcut}</Kbd>
                     </Button>

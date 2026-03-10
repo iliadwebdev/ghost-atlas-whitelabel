@@ -35,8 +35,9 @@ function NavMain({ ...props }: React.ComponentProps<typeof SidebarGroup>) {
     const isActivitypubRouteActive = useIsActiveLink({ path: 'activitypub', activeOnSubpath: true });
     const showNetworkBadge = networkNotificationCount > 0 && !isNetworkRouteActive && !isActivitypubRouteActive;
 
-    // Only show NavMain for admin users
-    if (!currentUser || !hasAdminAccess(currentUser)) {
+    // Only show NavMain for admin users, and only when there are items to show.
+    // Also hide while config is loading to prevent a flash of website-feature items.
+    if (!currentUser || !hasAdminAccess(currentUser) || !configData || disableWebsiteFeatures) {
         return null;
     }
     return (
