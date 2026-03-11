@@ -46,32 +46,12 @@ module.exports = function adminController(req, res) {
         hashSum.update(fileBuffer);
         headers.ETag = hashSum.digest("hex");
 
-        // In production, only allow iframing from allowed domains.
+        // In production, only allow iframing from Atlas CMS and Iliad.dev domains.
         // In development, no restrictions (iframe from anywhere).
+        // Use static frame-ancestors — detecting framing context from headers is unreliable
+        // because proxies often strip Origin/Referer before they reach Ghost.
         if (process.env.NODE_ENV === 'production') {
-            const allowedPatterns = [
-                /^https?:\/\/[a-z0-9-]+\.atlas-cms\.rest$/i,
-                /^https?:\/\/[a-z0-9-]+\.iliad\.dev$/i,
-                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.atlas-cms\.rest$/i,
-                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.iliad\.dev$/i,
-                /^https?:\/\/localhost(:\d+)?$/i
-            ];
-            // Browsers send Origin for CORS/fetch requests but NOT for iframe navigational GETs.
-            // Fall back to parsing Referer, which browsers do send for cross-origin navigations.
-            let effectiveOrigin = req.headers.origin || '';
-            if (!effectiveOrigin && req.headers['referer']) {
-                try {
-                    effectiveOrigin = new URL(req.headers['referer']).origin;
-                } catch (e) {
-                    effectiveOrigin = '';
-                }
-            }
-            const isAllowed = effectiveOrigin && allowedPatterns.some(p => p.test(effectiveOrigin));
-            if (isAllowed) {
-                headers['Content-Security-Policy'] = `frame-ancestors 'self' ${effectiveOrigin}`;
-            } else {
-                headers['X-Frame-Options'] = 'SAMEORIGIN';
-            }
+            headers['Content-Security-Policy'] = "frame-ancestors 'self' https://*.atlas-cms.rest https://*.iliad.dev";
         }
 
         res.sendFile(templatePath, { headers, lastModified: false });
