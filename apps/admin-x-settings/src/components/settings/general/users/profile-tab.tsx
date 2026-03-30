@@ -5,20 +5,17 @@ import {SettingGroup, SettingGroupContent, TextArea, TextField} from '@tryghost/
 import {type UserDetailProps} from '../user-detail-modal';
 import {getHomepageUrl} from '@tryghost/admin-x-framework/api/site';
 import {hasAdminAccess} from '@tryghost/admin-x-framework/api/users';
-import {useFramework} from '@tryghost/admin-x-framework';
 import {useGlobalData} from '../../../providers/global-data-provider';
 
 const BasicInputs: React.FC<UserDetailProps> = ({errors, clearError, user, setUserData}) => {
     const {currentUser, siteData} = useGlobalData();
-    const {isEmbedded} = useFramework();
     const homepageUrl = getHomepageUrl(siteData!);
 
     return (
         <SettingGroupContent>
             <TextField
-                disabled={isEmbedded}
                 error={!!errors?.email}
-                hint={isEmbedded ? 'Email is managed by Atlas' : (errors?.email || 'Used for notifications')}
+                hint={errors?.email || 'Used for notifications'}
                 maxLength={191}
                 title="Email"
                 value={user.email}

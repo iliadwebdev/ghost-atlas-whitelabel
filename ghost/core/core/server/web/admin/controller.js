@@ -46,12 +46,22 @@ module.exports = function adminController(req, res) {
         hashSum.update(fileBuffer);
         headers.ETag = hashSum.digest("hex");
 
-        // In production, only allow iframing from Atlas CMS and Iliad.dev domains.
+        // In production, only allow iframing from allowed domains.
         // In development, no restrictions (iframe from anywhere).
-        // Use static frame-ancestors — detecting framing context from headers is unreliable
-        // because proxies often strip Origin/Referer before they reach Ghost.
         if (process.env.NODE_ENV === 'production') {
-            headers['Content-Security-Policy'] = "frame-ancestors 'self' https://*.atlas-cms.rest https://*.iliad.dev";
+            const allowedPatterns = [
+                /^https?:\/\/[a-z0-9-]+\.atlas-cms\.rest$/i,
+                /^https?:\/\/[a-z0-9-]+\.iliad\.dev$/i,
+                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.atlas-cms\.rest$/i,
+                /^https?:\/\/[a-z0-9-]+\.[a-z0-9-]+\.iliad\.dev$/i
+            ];
+            const reqOrigin = req.headers.origin || '';
+            const isAllowed = reqOrigin && allowedPatterns.some(p => p.test(reqOrigin));
+            if (isAllowed) {
+                headers['Content-Security-Policy'] = `frame-ancestors 'self' ${reqOrigin}`;
+            } else {
+                headers['X-Frame-Options'] = 'SAMEORIGIN';
+            }
         }
 
         res.sendFile(templatePath, { headers, lastModified: false });

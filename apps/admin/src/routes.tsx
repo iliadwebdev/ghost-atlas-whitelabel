@@ -65,14 +65,7 @@ export const routes: RouteObject[] = [
                         <Outlet />
                     </FeatureFlagsProvider>
                 ),
-                children: [
-                    {
-                        index: true,
-                        Component: EmberFallback,
-                        handle: { allowInForceUpgrade: true } satisfies RouteHandle,
-                    },
-                    ...activityPubRoutes,
-                ],
+                children: activityPubRoutes,
             },
             {
                 path: `settings/*`,

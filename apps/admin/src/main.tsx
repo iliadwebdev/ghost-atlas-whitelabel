@@ -10,9 +10,6 @@ import { navigateTo } from "./utils/navigation";
 import { AppProvider } from "./providers/app-provider";
 
 function detectIsEmbedded(): boolean {
-    if (new URLSearchParams(window.location.search).get('dev') === 'true') {
-        return false;
-    }
     try {
         return window.self !== window.top;
     } catch (e) {

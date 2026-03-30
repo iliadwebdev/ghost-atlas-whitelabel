@@ -157,8 +157,6 @@ COPY ghost/admin ghost/admin
 # Admin's asset-delivery pipeline needs the ghost module to resolve
 COPY ghost/core/package.json ghost/core/package.json
 COPY ghost/core/index.js ghost/core/index.js
-COPY --from=admin-x-design-system-builder /home/ghost/apps/admin-x-design-system/es apps/admin-x-design-system/es
-COPY --from=admin-x-framework-builder /home/ghost/apps/admin-x-framework/dist apps/admin-x-framework/dist
 COPY --from=stats-builder /home/ghost/apps/stats/dist apps/stats/dist
 COPY --from=posts-builder /home/ghost/apps/posts/dist apps/posts/dist
 COPY --from=admin-x-settings-builder /home/ghost/apps/admin-x-settings/dist apps/admin-x-settings/dist

@@ -11,7 +11,6 @@ import {
     Switch
 } from "@tryghost/shade"
 import { useCurrentUser } from "@tryghost/admin-x-framework/api/current-user";
-import { getGhostPaths } from "@tryghost/admin-x-framework/helpers";
 import { useUserPreferences, useEditUserPreferences } from "@/hooks/user-preferences";
 import { useWhatsNew } from "@/whats-new/hooks/use-whats-new";
 import { useUpgradeStatus } from "./hooks/use-upgrade-status";
@@ -66,11 +65,10 @@ function UserMenuDarkMode() {
 
 function UserMenuSignOut() {
     const handleSignOut = () => {
-        const {apiRoot, adminRoot} = getGhostPaths();
-        fetch(`${apiRoot}/session`, {
+        fetch("/ghost/api/admin/session", {
             method: "DELETE",
         }).then(() => {
-            window.location.href = adminRoot;
+            window.location.href = "/ghost";
         }).catch((error) => {
             console.error(error);
         });
@@ -94,10 +92,6 @@ function UserMenu(props: UserMenuProps) {
     const currentUser = useCurrentUser();
     const { data: whatsNewData } = useWhatsNew();
     const { showUpgradeBanner } = useUpgradeStatus();
-    const isEmbedded = (() => {
-        if (new URLSearchParams(window.location.search).get('dev') === 'true') return false;
-        try { return window.self !== window.top; } catch { return true; }
-    })();
 
     return (
         <DropdownMenu {...props}>
@@ -109,7 +103,7 @@ function UserMenu(props: UserMenuProps) {
                 >
                     <div className="relative">
                         <UserMenuAvatar />
-                        {!isEmbedded && whatsNewData?.hasNew && (
+                        {whatsNewData?.hasNew && (
                             <span className="absolute -top-0.5 -right-0.5">
                                 <Indicator
                                     variant="success"
@@ -123,7 +117,7 @@ function UserMenu(props: UserMenuProps) {
                     <div className="grid flex-1 text-left text-base leading-tight">
                         <span className="truncate font-semibold">{currentUser.data?.name}</span>
                         <span className="text-muted-foreground truncate text-xs -mt-px">
-                            {isEmbedded ? 'Atlas Managed Profile' : currentUser.data?.email}
+                            {currentUser.data?.email}
                         </span>
                     </div>
                     <LucideIcon.ChevronsUpDown className="ml-auto size-4 text-grey-700" data-test-nav="arrow-down" />
@@ -136,33 +130,31 @@ function UserMenu(props: UserMenuProps) {
             >
                 <UserMenuHeader
                     name={currentUser.data?.name}
-                    email={isEmbedded ? 'Atlas Managed Profile' : currentUser.data?.email}
+                    email={currentUser.data?.email}
                 >
                     <UserMenuAvatar />
                 </UserMenuHeader>
                 <DropdownMenuSeparator />
-                {!isEmbedded && (
-                    <UserMenuItem
-                        data-test-nav="whatsnew"
-                        asChild={false}
-                        onSelect={() => {
-                            props.onOpenWhatsNew?.();
-                        }}
-                    >
-                        <LucideIcon.Sparkles />
-                        <UserMenuItem.Label>What’s new?</UserMenuItem.Label>
-                        {whatsNewData?.hasNew && (
-                            <div className="flex-1 flex justify-end">
-                                <Indicator
-                                    variant="success"
-                                    size="sm"
-                                    label="New updates available"
-                                    data-test-whats-new-menu-badge
-                                    />
-                            </div>
-                        )}
-                    </UserMenuItem>
-                )}
+                <UserMenuItem
+                    data-test-nav="whatsnew"
+                    asChild={false}
+                    onSelect={() => {
+                        props.onOpenWhatsNew?.();
+                    }}
+                >
+                    <LucideIcon.Sparkles />
+                    <UserMenuItem.Label>What’s new?</UserMenuItem.Label>
+                    {whatsNewData?.hasNew && (
+                        <div className="flex-1 flex justify-end">
+                            <Indicator
+                                variant="success"
+                                size="sm"
+                                label="New updates available"
+                                data-test-whats-new-menu-badge
+                                />
+                        </div>
+                    )}
+                </UserMenuItem>
                 <UserMenuProfile />
                 <DropdownMenuSeparator />
                 <UserMenuItem>
@@ -175,13 +167,9 @@ function UserMenu(props: UserMenuProps) {
                         <UserMenuItem.Label>Resources & guides</UserMenuItem.Label>
                     </a>
                 </UserMenuItem>
-                {!isEmbedded && <UserMenuDarkMode />}
-                {!isEmbedded && (
-                    <>
-                        <DropdownMenuSeparator />
-                        <UserMenuSignOut />
-                    </>
-                )}
+                <UserMenuDarkMode />
+                <DropdownMenuSeparator />
+                <UserMenuSignOut />
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -207,10 +195,6 @@ function ContributorUserMenu() {
     const currentUser = useCurrentUser();
     const site = useBrowseSite();
     const siteUrl = site.data?.site.url ?? "";
-    const isEmbedded = (() => {
-        if (new URLSearchParams(window.location.search).get('dev') === 'true') return false;
-        try { return window.self !== window.top; } catch { return true; }
-    })();
 
     return (
         <DropdownMenu>
@@ -230,13 +214,13 @@ function ContributorUserMenu() {
             >
                 <UserMenuHeader
                     name={currentUser.data?.name}
-                    email={isEmbedded ? 'Atlas Managed Profile' : currentUser.data?.email}
+                    email={currentUser.data?.email}
                 >
                     <UserMenuAvatar />
                 </UserMenuHeader>
                 <DropdownMenuSeparator />
                 <UserMenuItem>
-                    <Link to="/posts">
+                    <Link to="/">
                         <LucideIcon.FileText />
                         <UserMenuItem.Label>Posts</UserMenuItem.Label>
                     </Link>
@@ -249,13 +233,9 @@ function ContributorUserMenu() {
                 </UserMenuItem>
                 <DropdownMenuSeparator />
                 <UserMenuProfile />
-                {!isEmbedded && <UserMenuDarkMode />}
-                {!isEmbedded && (
-                    <>
-                        <DropdownMenuSeparator />
-                        <UserMenuSignOut />
-                    </>
-                )}
+                <UserMenuDarkMode />
+                <DropdownMenuSeparator />
+                <UserMenuSignOut />
             </DropdownMenuContent>
         </DropdownMenu>
     );
