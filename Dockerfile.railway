@@ -161,7 +161,10 @@ COPY --from=stats-builder /home/ghost/apps/stats/dist apps/stats/dist
 COPY --from=posts-builder /home/ghost/apps/posts/dist apps/posts/dist
 COPY --from=admin-x-settings-builder /home/ghost/apps/admin-x-settings/dist apps/admin-x-settings/dist
 COPY --from=activitypub-builder /home/ghost/apps/activitypub/dist apps/activitypub/dist
-RUN mkdir -p ghost/core/core/built/admin && cd ghost/admin && yarn build
+COPY --from=admin-x-framework-builder /home/ghost/apps/admin-x-framework/dist apps/admin-x-framework/dist
+COPY --from=admin-x-design-system-builder /home/ghost/apps/admin-x-design-system/es apps/admin-x-design-system/es
+COPY --from=shade-builder /home/ghost/apps/shade/es apps/shade/es
+RUN mkdir -p ghost/core/core/built/admin && cd ghost/admin && NODE_OPTIONS="--max-old-space-size=4096" npx ember build --environment=production 2>&1 || (cat /tmp/error.dump.*.log 2>/dev/null; exit 1)
 
 # --------------------
 # Admin React Builder
@@ -182,6 +185,7 @@ COPY --from=activitypub-builder /home/ghost/apps/activitypub apps/activitypub
 COPY ghost/i18n ghost/i18n
 
 # React admin needs the built Ember admin (vite-ember-assets plugin reads it at build time)
+COPY --from=admin-ember-builder /home/ghost/ghost/admin/dist ghost/admin/dist
 COPY --from=admin-ember-builder /home/ghost/ghost/core/core/built/admin ghost/core/core/built/admin
 RUN cd apps/admin && yarn build
 
