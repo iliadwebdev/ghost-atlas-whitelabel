@@ -22,13 +22,13 @@ function AppSidebarContent() {
     }
 
     return (
-        <SidebarContent className="px-3 pt-4 justify-between">
-            <div className="flex flex-col gap-2 sidebar:gap-4">
+        <SidebarContent className="justify-between px-3 pt-4">
+            <div className="sidebar:gap-4 flex flex-col gap-2">
                 <NavMain />
                 <NavContent />
                 <NavGhostPro />
             </div>
-            <div className={`flex flex-col gap-2 sidebar:gap-4 ${bannerContainerClassName}`}>
+            <div className={`sidebar:gap-4 flex flex-col gap-2 ${bannerContainerClassName}`}>
                 <AppSidebarBanner banner={banner} />
                 <NavSettings className="pb-0" />
             </div>

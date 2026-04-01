@@ -48,21 +48,25 @@ const features: Feature[] = [{
     description: 'Display a Feedback menu item in the admin sidebar. Requires the new admin experience.',
     flag: 'featurebaseFeedback'
 }, {
-    title: 'Transistor',
-    description: 'Enable Transistor podcast integration',
-    flag: 'transistor'
-}, {
-    title: 'Retention Offers',
-    description: 'Enable retention offers for canceling members',
-    flag: 'retentionOffers'
-}, {
-    title: 'Welcome Email Editor',
-    description: 'Enable the new welcome email editor experience',
-    flag: 'welcomeEmailEditor'
-}, {
     title: 'Members Forward',
     description: 'Use the new React-based members list instead of the Ember implementation',
     flag: 'membersForward'
+}, {
+    title: 'Welcome Emails Design Customization',
+    description: 'Enable design customization options for welcome emails',
+    flag: 'welcomeEmailsDesignCustomization'
+}, {
+    title: 'Picture Element',
+    description: 'Use the HTML picture element to serve modern image formats (AVIF, WebP) with automatic fallbacks',
+    flag: 'pictureImageFormats'
+}, {
+    title: 'Smarter Counts',
+    description: 'Use optimized COUNT queries for API pagination when safe',
+    flag: 'smarterCounts'
+}, {
+    title: 'Gift Subscriptions',
+    description: 'Allow site visitors to purchase gift subscriptions for others',
+    flag: 'giftSubscriptions'
 }];
 
 const AlphaFeatures: React.FC = () => {

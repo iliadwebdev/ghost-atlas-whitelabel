@@ -79,7 +79,7 @@ function CommentReportsModal({comment, open, onOpenChange}: CommentReportsModalP
                                                 memberId={report.member?.id}
                                             />
                                             {/* Red flag overlay */}
-                                            <div className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red text-white">
+                                            <div className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full bg-red text-white">
                                                 <LucideIcon.Flag className="size-2.5" fill="currentColor" />
                                             </div>
                                         </div>

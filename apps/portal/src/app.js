@@ -14,7 +14,7 @@ import {transformPortalAnchorToRelative} from './utils/transform-portal-anchor-t
 import {getActivePage, isAccountPage, isOfferPage} from './pages';
 import ActionHandler from './actions';
 import './app.css';
-import {hasRecommendations, createPopupNotification, hasAvailablePrices, getCurrencySymbol, getFirstpromoterId, getPriceIdFromPageQuery, getProductCadenceFromPrice, getProductFromId, getQueryPrice, getSiteDomain, isActiveOffer, isRetentionOffer, isComplimentaryMember, isInviteOnly, isPaidMember, isRecentMember, isSentryEventAllowed, removePortalLinkFromUrl} from './utils/helpers';
+import {hasRecommendations, hasGiftSubscriptions, createPopupNotification, hasAvailablePrices, getCurrencySymbol, getFirstpromoterId, getPriceIdFromPageQuery, getProductCadenceFromPrice, getProductFromId, getQueryPrice, getSiteDomain, isActiveOffer, isRetentionOffer, isComplimentaryMember, isInviteOnly, isPaidMember, isRecentMember, isSentryEventAllowed, removePortalLinkFromUrl} from './utils/helpers';
 import {validateHexColor} from './utils/sanitize-html';
 import {handleDataAttributes} from './data-attributes';
 
@@ -95,6 +95,9 @@ export default class App extends React.Component {
                     } else {
                         window.document.body.style.marginRight = this.bodyMargin;
                     }
+                    if (this.state.reloadOnPopupClose) {
+                        window.location.reload();
+                    }
                 }
             } catch (e) {
                 /** Ignore any errors for scroll handling */
@@ -164,6 +167,11 @@ export default class App extends React.Component {
             const pagePath = (target && target.dataset.portal);
             const {page, pageQuery, pageData} = this.getPageFromLinkPath(pagePath) || {};
             if (this.state.initStatus === 'success') {
+                if (page === 'gift' && !hasGiftSubscriptions({site: this.state.site})) {
+                    removePortalLinkFromUrl();
+
+                    return;
+                }
                 if (pageQuery && pageQuery !== 'free') {
                     this.handleSignupQuery({site: this.state.site, pageQuery});
                 } else {
@@ -574,6 +582,12 @@ export default class App extends React.Component {
                 };
             }
 
+            if (page === 'gift' && !hasGiftSubscriptions({site})) {
+                removePortalLinkFromUrl();
+
+                return {};
+            }
+
             const lastPage = ['accountPlan', 'accountProfile'].includes(page) ? 'accountHome' : null;
             const showPopup = (
                 ['monthly', 'yearly'].includes(pageQuery) ||
@@ -947,6 +961,10 @@ export default class App extends React.Component {
                     signup: false
                 }
             };
+        } else if (path === 'gift') {
+            return {
+                page: 'gift'
+            };
         } else if (path === 'account/newsletters/help') {
             return {
                 page: 'emailReceivingFAQ',
@@ -974,6 +992,44 @@ export default class App extends React.Component {
         return validateHexColor(accentColor);
     }
 
+    getRetentionPreviewMember({site, offers}) {
+        const retentionOffer = (offers || []).find(offer => isRetentionOffer({offer}));
+        const productId = retentionOffer?.tier?.id;
+        const product = productId ? getProductFromId({site, productId}) : null;
+        const price = product ? (retentionOffer.cadence === 'year' ? product.yearlyPrice : product.monthlyPrice) : null;
+        const previewMember = Fixtures.member.preview;
+        const previewSubscription = previewMember?.subscriptions?.[0];
+
+        if (!previewSubscription || !product || !price) {
+            return previewMember;
+        }
+
+        return {
+            ...previewMember,
+            subscriptions: [{
+                ...previewSubscription,
+                plan: {
+                    ...previewSubscription.plan,
+                    amount: price.amount,
+                    interval: price.interval,
+                    currency: price.currency.toUpperCase()
+                },
+                price: {
+                    ...previewSubscription.price,
+                    price_id: price.id,
+                    amount: price.amount,
+                    interval: price.interval,
+                    currency: price.currency,
+                    product: {
+                        ...previewSubscription.price?.product,
+                        product_id: product.id
+                    }
+                },
+                tier: {id: product.id, name: product.name}
+            }]
+        };
+    }
+
     /**Get final page set in App context from state data*/
     getContextPage({site, page, member}) {
         /**Set default page based on logged-in status */
@@ -986,13 +1042,17 @@ export default class App extends React.Component {
     }
 
     /**Get final member set in App context from state data*/
-    getContextMember({page, member, customSiteUrl}) {
+    getContextMember({site, page, member, offers, pageData, customSiteUrl}) {
         if (hasMode(['dev', 'preview'], {customSiteUrl})) {
             /** Use dummy member(free or paid) for account pages in dev/preview mode*/
             if (isAccountPage({page}) || isOfferPage({page})) {
                 if (hasMode(['dev'], {customSiteUrl})) {
                     return member || Fixtures.member.free;
                 } else if (hasMode(['preview'])) {
+                    if (page === 'accountPlan' && pageData?.action === 'cancel') {
+                        return this.getRetentionPreviewMember({site, offers});
+                    }
+
                     return Fixtures.member.preview;
                 } else {
                     return Fixtures.member.paid;
@@ -1009,7 +1069,7 @@ export default class App extends React.Component {
     getContextFromState() {
         const {site, member, offers, action, actionErrorMessage, page, lastPage, showPopup, pageQuery, pageData, popupNotification, customSiteUrl, dir, scrollbarWidth, otcRef, inboxLinks} = this.state;
         const contextPage = this.getContextPage({site, page, member});
-        const contextMember = this.getContextMember({page: contextPage, member, customSiteUrl});
+        const contextMember = this.getContextMember({site, page: contextPage, member, offers, pageData, customSiteUrl});
         return {
             api: this.GhostApi,
             site,

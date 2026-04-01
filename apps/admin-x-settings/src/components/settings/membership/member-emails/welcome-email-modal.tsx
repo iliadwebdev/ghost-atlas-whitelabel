@@ -3,7 +3,6 @@ import React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 import MemberEmailEditor from './member-email-editor';
-import useFeatureFlag from '../../../../hooks/use-feature-flag';
 import {Hint, Button as LegacyButton, Modal, TextField} from '@tryghost/admin-x-design-system';
 import {confirmIfDirty} from '@tryghost/admin-x-design-system';
 import {useForm, useHandleError} from '@tryghost/admin-x-framework/hooks';
@@ -40,7 +39,7 @@ const EmailPreviewModalContent = React.forwardRef<
             className
         )}
     >
-        <div className="border-gray-200 dark:border-gray-900 dark:bg-gray-975 flex shrink-0 items-center justify-between border-b bg-white px-5 py-3">
+        <div className="sticky top-0 flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-5 py-3 dark:border-gray-900 dark:bg-gray-975">
             <h3 className="text-xl font-semibold">
                 {title}
             </h3>
@@ -48,7 +47,7 @@ const EmailPreviewModalContent = React.forwardRef<
                 {headerActions}
             </div>
         </div>
-        <div className="flex min-h-0 grow flex-col overflow-y-auto">
+        <div className="flex h-[clamp(0px,calc(100dvh-320px),82vh)] min-h-0 grow flex-col overflow-y-auto">
             {children}
         </div>
     </div>
@@ -62,7 +61,7 @@ interface EmailPreviewEmailHeaderProps {
 
 const EmailPreviewEmailHeader: React.FC<EmailPreviewEmailHeaderProps> = ({children, className}) => (
     <div className={cn(
-        'mx-auto w-full max-w-[780px] rounded-t-lg border border-b-0 border-gray-200 bg-white px-6 py-4 transition-[max-width,padding] duration-300 ease-out motion-reduce:transition-none dark:border-grey-900 dark:bg-grey-975',
+        'relative z-20 isolate mx-auto w-full max-w-[780px] rounded-t-lg border border-b-0 border-gray-200 bg-white px-6 py-4 transition-[max-width,padding] duration-300 ease-out motion-reduce:transition-none dark:border-grey-900 dark:bg-grey-975',
         className
     )}>
         {children}
@@ -76,7 +75,7 @@ interface EmailPreviewBodyProps {
 
 const EmailPreviewBody: React.FC<EmailPreviewBodyProps> = ({children, className}) => (
     <div className={cn(
-        'mx-auto w-full h-[clamp(0px,calc(100dvh-320px),82vh)] overflow-y-auto rounded-b-lg border border-gray-200 bg-white shadow-sm transition-[max-width,height,padding] duration-300 ease-out motion-reduce:transition-none dark:border-grey-900 dark:bg-grey-975 dark:shadow-none grow max-w-[780px] px-6',
+        'flex mx-auto w-full rounded-b-lg bg-white shadow-sm transition-[max-width,height,padding] duration-300 ease-out motion-reduce:transition-none dark:border-grey-900 dark:bg-grey-975 dark:shadow-none grow max-w-[780px] px-6',
         className
     )}>
         {children}
@@ -125,7 +124,6 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
     const {settings} = useGlobalData();
     const [siteTitle] = getSettingValues<string>(settings, ['title']);
     const {resolvedSenderName, resolvedSenderEmail, resolvedReplyToEmail, hasDistinctReplyTo} = useWelcomeEmailSenderDetails(automatedEmail);
-    const welcomeEmailEditorEnabled = useFeatureFlag('welcomeEmailEditor');
     const emailTypeLabel = emailType === 'paid' ? 'Paid' : 'Free';
     const modalTitle = `${emailTypeLabel} members welcome email`;
 
@@ -220,98 +218,6 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
         }
     }, [setFormState, updateForm]);
 
-    if (!welcomeEmailEditorEnabled) {
-        return (
-            <Modal
-                afterClose={() => {
-                    updateRoute('memberemails');
-                }}
-                dirty={isDirty}
-                footer={false}
-                header={false}
-                testId='welcome-email-modal'
-                width={672}
-            >
-                <div className='-mx-8 flex h-[calc(100vh-16vmin)] flex-col overflow-y-auto dark:!bg-grey-975'>
-                    <div className='sticky top-0 z-10 flex flex-col gap-2 border-b border-grey-100 bg-white p-5 dark:border-grey-900 dark:bg-grey-975'>
-                        <div className='mb-2 flex items-center justify-between'>
-                            <h3 className='text-lg font-semibold'>{modalTitle}</h3>
-                            <div className='flex items-center gap-2'>
-                                <div ref={dropdownRef} className='relative'>
-                                    <LegacyButton
-                                        className='border border-grey-200 font-semibold hover:border-grey-300 hover:!bg-white dark:border-grey-900 dark:hover:border-grey-800 dark:hover:!bg-grey-950'
-                                        color="clear"
-                                        icon='send'
-                                        label="Test"
-                                        onClick={() => setShowTestDropdown(!showTestDropdown)}
-                                    />
-                                    {showTestDropdown && (
-                                        <TestEmailDropdown automatedEmailId={automatedEmail.id} lexical={formState.lexical} subject={formState.subject} validateForm={validate} onClose={() => setShowTestDropdown(false)} />
-                                    )}
-                                </div>
-                                <LegacyButton
-                                    color={okProps.color}
-                                    disabled={okProps.disabled}
-                                    label={saveButtonLabel}
-                                    onClick={async () => await handleSave({fakeWhenUnchanged: true})}
-                                />
-                            </div>
-                        </div>
-                        <div className='flex items-center'>
-                            <div className='w-20 shrink-0 font-semibold'>From:</div>
-                            <div className='min-w-0 grow'>
-                                <span className='flex gap-1 truncate whitespace-nowrap'>
-                                    <span>{resolvedSenderName}</span>
-                                    <span className='text-grey-700 dark:text-grey-400'>{`<${resolvedSenderEmail}>`}</span>
-                                </span>
-                            </div>
-                        </div>
-                        {hasDistinctReplyTo && (
-                            <div className='flex items-center py-0.5'>
-                                <div className='w-20 shrink-0 font-semibold'>Reply-to:</div>
-                                <div className='grow text-grey-700 dark:text-grey-400'>
-                                    {resolvedReplyToEmail}
-                                </div>
-                            </div>
-                        )}
-                        <div className='flex items-center'>
-                            <div className='w-20 shrink-0 font-semibold'>Subject:</div>
-                            <div className='grow'>
-                                <TextField
-                                    className='w-full'
-                                    error={Boolean(errors.subject)}
-                                    hint={errors.subject || ''}
-                                    maxLength={300}
-                                    placeholder={`Welcome to ${siteTitle}`}
-                                    value={formState.subject}
-                                    onChange={e => updateForm(state => ({...state, subject: e.target.value}))}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div className='flex grow flex-col bg-grey-50 p-8 dark:bg-grey-975'>
-                        <div
-                            className={`mx-auto w-full max-w-[600px] grow rounded border bg-white p-8 shadow-sm dark:bg-grey-950/25 dark:shadow-none ${errors.lexical ? 'border-red' : 'border-grey-200 dark:border-grey-925'}`}
-                            onFocus={() => {
-                                hasEditorBeenFocused.current = true;
-                            }}
-                        >
-                            <MemberEmailEditor
-                                key={automatedEmail?.id || 'new'}
-                                className='welcome-email-editor'
-                                placeholder='Write your welcome email content...'
-                                singleParagraph={false}
-                                value={formState.lexical}
-                                onChange={handleEditorChange}
-                            />
-                        </div>
-                        {errors.lexical && <Hint className='ml-8 mr-auto mt-2 max-w-[600px]' color='red'>{errors.lexical}</Hint>}
-                    </div>
-                </div>
-            </Modal>
-        );
-    }
-
     return (
         <Modal
             afterClose={() => {
@@ -322,11 +228,13 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
             footer={false}
             header={false}
             padding={false}
+            scrolling={false}
             size='full'
             testId='welcome-email-modal'
             width='full'
         >
             <EmailPreviewModalContent
+                className='dark:bg-[#151719]'
                 headerActions={
                     <>
                         <Button variant="outline" onClick={handleClose}>Close</Button>
@@ -341,7 +249,7 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
                 title={modalTitle}
             >
                 <div className='flex grow flex-col items-center p-6'>
-                    <EmailPreviewEmailHeader>
+                    <EmailPreviewEmailHeader className='border-x-0 border-t-0 border-b'>
                         <div className='flex flex-col gap-2'>
                             <div className='flex items-center py-1'>
                                 <div className='w-20 shrink-0 text-sm font-semibold'>From:</div>
@@ -353,7 +261,7 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
                                 </div>
                                 <div ref={dropdownRef} className='relative'>
                                     <LegacyButton
-                                        className='border border-grey-200 font-semibold hover:border-grey-300 hover:!bg-white dark:border-grey-900 dark:hover:border-grey-800 dark:hover:!bg-grey-950'
+                                        className='border border-grey-200 font-semibold hover:border-grey-300 hover:bg-white! dark:border-grey-900 dark:hover:border-grey-800 dark:hover:bg-grey-950!'
                                         color="clear"
                                         icon='send'
                                         label="Test"
@@ -367,7 +275,7 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
                             {hasDistinctReplyTo && (
                                 <div className='flex items-center'>
                                     <div className='w-20 shrink-0 text-sm font-semibold'>Reply-to:</div>
-                                    <div className='text-gray-500 dark:text-gray-400 grow text-sm'>
+                                    <div className='grow text-sm text-gray-500 dark:text-gray-400'>
                                         {resolvedReplyToEmail}
                                     </div>
                                 </div>
@@ -388,9 +296,10 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
                             </div>
                         </div>
                     </EmailPreviewEmailHeader>
-                    <EmailPreviewBody className={errors.lexical ? 'border-red-500' : ''}>
+                    <EmailPreviewBody className={errors.lexical ? 'border border-red-500' : ''}>
                         <div
-                            className='mx-auto w-full max-w-[600px] pb-8 pt-10 transition-[max-width,padding] duration-300 ease-out motion-reduce:transition-none'
+                            className='mx-auto w-full max-w-[600px] pt-10 pb-8 transition-[max-width,padding] duration-300 ease-out motion-reduce:transition-none'
+                            data-testid='welcome-email-editor'
                             onFocus={() => {
                                 hasEditorBeenFocused.current = true;
                             }}
@@ -399,8 +308,8 @@ const WelcomeEmailModal = NiceModal.create<WelcomeEmailModalProps>(({emailType =
                                 key={automatedEmail?.id || 'new'}
                                 className='welcome-email-editor'
                                 placeholder='Write your welcome email content...'
-                                singleParagraph={false}
-                                value={formState.lexical}
+
+                                value={automatedEmail?.lexical || ''}
                                 onChange={handleEditorChange}
                             />
                         </div>

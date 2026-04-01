@@ -17,7 +17,7 @@ export default class HomeRoute extends AuthenticatedRoute {
         }
 
         if (this.session.user?.isAdmin) {
-            this.router.transitionTo(this.config.disableWebsiteFeatures ? 'posts' : 'stats-x');
+            this.router.transitionTo(this.config.disableWebsiteFeatures ? 'posts' : '/analytics');
         } else if (this.session.user?.isContributor) {
             this.router.transitionTo('posts');
         } else {

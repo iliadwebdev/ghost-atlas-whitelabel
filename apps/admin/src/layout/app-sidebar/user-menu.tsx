@@ -19,6 +19,7 @@ import { UserMenuItem } from "./user-menu-item";
 import { UserMenuAvatar } from "./user-menu-avatar";
 import { UserMenuHeader } from "./user-menu-header";
 import { Link } from "@tryghost/admin-x-framework";
+import { getGhostPaths } from "@tryghost/admin-x-framework/helpers";
 
 function getIsEmbedded(): boolean {
     if (new URLSearchParams(window.location.search).has("dev")) {
@@ -26,7 +27,7 @@ function getIsEmbedded(): boolean {
     }
     try {
         return window.self !== window.top;
-    } catch (e) {
+    } catch {
         return true;
     }
 }
@@ -77,11 +78,12 @@ function UserMenuDarkMode() {
 }
 
 function UserMenuSignOut() {
+    const ghostPaths = getGhostPaths();
     const handleSignOut = () => {
-        fetch("/ghost/api/admin/session", {
+        fetch(`${ghostPaths.apiRoot}/session`, {
             method: "DELETE",
         }).then(() => {
-            window.location.href = "/ghost";
+            window.location.href = ghostPaths.adminRoot;
         }).catch((error) => {
             console.error(error);
         });
@@ -117,7 +119,7 @@ function UserMenu(props: UserMenuProps) {
                     <div className="relative">
                         <UserMenuAvatar />
                         {!isEmbedded && whatsNewData?.hasNew && (
-                            <span className="absolute -top-0.5 -right-0.5">
+                            <span className="absolute -right-0.5 -top-0.5">
                                 <Indicator
                                     variant="success"
                                     size="sm"
@@ -129,11 +131,11 @@ function UserMenu(props: UserMenuProps) {
                     </div>
                     <div className="grid flex-1 text-left text-base leading-tight">
                         <span className="truncate font-semibold">{currentUser.data?.name}</span>
-                        <span className="text-muted-foreground truncate text-xs -mt-px">
+                        <span className="text-muted-foreground -mt-px truncate text-xs">
                             {isEmbedded ? "Atlas Managed Profile" : currentUser.data?.email}
                         </span>
                     </div>
-                    <LucideIcon.ChevronsUpDown className="ml-auto size-4 text-grey-700" data-test-nav="arrow-down" />
+                    <LucideIcon.ChevronsUpDown className="text-grey-700 ml-auto size-4" data-test-nav="arrow-down" />
                 </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -159,7 +161,7 @@ function UserMenu(props: UserMenuProps) {
                         <LucideIcon.Sparkles />
                         <UserMenuItem.Label>What’s new?</UserMenuItem.Label>
                         {whatsNewData?.hasNew && (
-                            <div className="flex-1 flex justify-end">
+                            <div className="flex flex-1 justify-end">
                                 <Indicator
                                     variant="success"
                                     size="sm"
@@ -215,17 +217,17 @@ function ContributorUserMenu() {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button
-                    className="rounded-full shadow-lg hover:shadow-xl transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 p-0.5 flex items-center justify-center border border-border dark:bg-muted bg-background"
+                    className="border-border bg-background focus:outline-hidden focus-visible:ring-ring dark:bg-muted flex items-center justify-center rounded-full border p-0.5 shadow-lg transition-shadow hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2"
                     aria-label="Open user menu"
                 >
-                    <UserMenuAvatar className="w-11 h-11" />
+                    <UserMenuAvatar className="h-11 w-11" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 align="start"
                 side="top"
                 sideOffset={10}
-                className="min-w-56 mb-2"
+                className="mb-2 min-w-56"
             >
                 <UserMenuHeader
                     name={currentUser.data?.name}

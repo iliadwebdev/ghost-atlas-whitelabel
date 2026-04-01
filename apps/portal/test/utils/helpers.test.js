@@ -1,4 +1,5 @@
 import {
+    hasGiftSubscriptions,
     hasAvailablePrices,
     getAllProductsForSite,
     getAvailableProducts,
@@ -27,7 +28,8 @@ import {
     getUpdatedOfferPrice,
     isComplimentaryMember,
     subscriptionHasFreeTrial,
-    addMonths
+    addMonths,
+    formatPrice
 } from '../../src/utils/helpers';
 import * as Fixtures from '../../src/utils/fixtures-generator';
 import {site as FixturesSite, member as FixtureMember, offer as FixtureOffer, transformTierFixture as TransformFixtureTiers} from './test-fixtures';
@@ -280,6 +282,25 @@ describe('Helpers - ', () => {
             });
 
             expect(updatedPrice).toBe('$4.79');
+        });
+    });
+
+    describe('formatPrice - ', () => {
+        test('returns whole numbers without decimal padding', () => {
+            expect(formatPrice(5)).toBe('5');
+        });
+
+        test('returns fractional numbers with two decimals', () => {
+            expect(formatPrice(5.4)).toBe('5.40');
+        });
+
+        test('returns fractional numbers with locale grouping', () => {
+            expect(formatPrice(1234.5, 'en-US')).toBe('1,234.50');
+        });
+
+        test('returns empty string for null/undefined input', () => {
+            expect(formatPrice(null)).toBe('');
+            expect(formatPrice(undefined)).toBe('');
         });
     });
 
@@ -797,6 +818,24 @@ describe('Helpers - ', () => {
         it('returns the original date when month count is not an integer', () => {
             const date = '2024-03-15T00:00:00.000Z';
             expect(addMonths(date, 1.5)).toEqual(new Date(date));
+        });
+    });
+
+    describe('hasGiftSubscriptions', () => {
+        test('returns true when labs flag is enabled', () => {
+            expect(hasGiftSubscriptions({site: {labs: {giftSubscriptions: true}}})).toBe(true);
+        });
+
+        test('returns false when labs flag is disabled', () => {
+            expect(hasGiftSubscriptions({site: {labs: {giftSubscriptions: false}}})).toBe(false);
+        });
+
+        test('returns false when labs flag is missing', () => {
+            expect(hasGiftSubscriptions({site: {labs: {}}})).toBe(false);
+        });
+
+        test('returns false when labs is undefined', () => {
+            expect(hasGiftSubscriptions({site: {}})).toBe(false);
         });
     });
 

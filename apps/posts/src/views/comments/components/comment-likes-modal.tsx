@@ -80,7 +80,7 @@ function CommentLikesModal({comment, open, onOpenChange}: CommentLikesModalProps
                                                 memberId={like.member?.id}
                                             />
                                             {/* Heart overlay */}
-                                            <div className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-pink-500 text-white">
+                                            <div className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full bg-pink-500 text-white">
                                                 <LucideIcon.Heart className="size-2.5" fill="currentColor" />
                                             </div>
                                         </div>
