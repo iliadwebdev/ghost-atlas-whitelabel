@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-03-09 (catalogued against 6.x base, targeting 6.21.0 upgrade)
+Last updated: 2026-04-01 (catalogued against 6.21.0 base)
 
 ---
 
@@ -185,6 +185,20 @@ Last updated: 2026-03-09 (catalogued against 6.x base, targeting 6.21.0 upgrade)
 
 ---
 
+## 8. iframe postMessage Navigation Sync
+
+**Purpose:** Notifies the parent iframe of Ghost admin navigation events so the embedding Atlas CMS can keep its own URL bar / breadcrumbs in sync with Ghost's hash-based routing.
+
+### `ghost/admin/app/index.html`
+- Added inline `<script>` in `<head>` (after `{{content-for "head-footer"}}`) that listens to `hashchange` events and posts `{ type: 'ghost-nav', hash: location.hash }` to `window.parent`.
+- Script is a no-op when Ghost is not embedded in an iframe (`window.parent === window`).
+
+### `ghost/core/core/built/admin/index.html`
+- Same script injected into the pre-built admin HTML (this is the file actually served in production).
+- **Must be re-applied** after any Ember build or Ghost upgrade that regenerates this file.
+
+---
+
 ## Upgrade Checklist
 
 When upgrading to a new Ghost version:
@@ -196,6 +210,8 @@ When upgrading to a new Ghost version:
    - `apps/admin/src/layout/app-sidebar/*` (sidebar refactors)
    - `apps/admin-x-settings/src/components/sidebar.tsx` (new nav items added upstream)
    - `apps/admin/src/routes.tsx` (route structure changes)
+   - `ghost/admin/app/index.html` (postMessage navigation script)
+   - `ghost/core/core/built/admin/index.html` (postMessage script in built file — rebuild may overwrite)
 3. **Re-apply domain restriction disable** comment in `JwtSSOAdapter.js` if needed, or re-enable and test.
 4. **Verify `disableWebsiteFeatures` config key** is still in the serializer allowlist (`config.js`).
 5. **Test SSO flow** end-to-end after upgrade.
