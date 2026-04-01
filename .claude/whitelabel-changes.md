@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-04-01 (catalogued against 6.21.0 base)
+Last updated: 2026-04-01 (catalogued against 6.25.1 base)
 
 ---
 
@@ -141,9 +141,9 @@ Last updated: 2026-04-01 (catalogued against 6.21.0 base)
 ## 3. React Admin Root Route Fix
 
 ### `apps/admin/src/routes.tsx`
-- Added `{ index: true, Component: EmberFallback }` inside the `path: ""` (ActivityPub wrapper) route's children.
-- **Why:** Ghost v6.21.0's `path: ""` route catches `/ghost/` before the sibling `path: "*"` (EmberFallback) can trigger. Without this fix, visiting `/ghost/` directly shows a blank content area because the ActivityPub child routes don't match the root. With the index route, `/ghost/` now triggers EmberFallback → Ember home route → redirects to `/ghost/posts`.
-- **Affects:** JWT SSO flow (which lands on `/ghost/` after stripping the token) and any direct navigation to `/ghost/`.
+- **v6.25.1 update:** Upstream replaced the catch-all `path: "*"` EmberFallback with an explicit `EMBER_ROUTES` array that includes `"/"`, which subsumes our original fix. Our custom index route was dropped during the merge — upstream's solution handles the same problem.
+- ~~Added `{ index: true, Component: EmberFallback }` inside the `path: ""` (ActivityPub wrapper) route's children.~~
+- **Original issue:** Ghost v6.21.0's `path: ""` route catches `/ghost/` before EmberFallback. Upstream fixed this in v6.25.1.
 
 ---
 
@@ -196,6 +196,16 @@ Last updated: 2026-04-01 (catalogued against 6.21.0 base)
 ### `ghost/core/core/built/admin/index.html`
 - Same script injected into the pre-built admin HTML (this is the file actually served in production).
 - **Must be re-applied** after any Ember build or Ghost upgrade that regenerates this file.
+
+---
+
+## 9. Pre-commit Hook — Lint-staged Disabled
+
+**Purpose:** Upstream Ghost's lint-staged config catches hundreds of pre-existing lint errors (mostly Tailwind class ordering) when merging upstream changes, blocking commits.
+
+### `.github/hooks/pre-commit`
+- Commented out the `yarn lint-staged --relative` call and its exit-on-failure check.
+- Submodule removal and ActivityPub version bump prompts are still active.
 
 ---
 
