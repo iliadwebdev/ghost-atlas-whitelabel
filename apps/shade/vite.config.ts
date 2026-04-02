@@ -1,6 +1,6 @@
 import path from 'path';
 import react from '@vitejs/plugin-react';
-import {glob} from 'glob';
+import {readdirSync} from 'node:fs';
 import {resolve} from 'path';
 import svgr from 'vite-plugin-svgr';
 import {defineConfig} from 'vitest/config';
@@ -32,7 +32,10 @@ export default (function viteConfig() {
             outDir: 'es',
             lib: {
                 formats: ['es'],
-                entry: glob.sync(resolve(__dirname, 'src/**/*.{ts,tsx}')).reduce((entries, libpath) => {
+                entry: readdirSync(resolve(__dirname, 'src'), {recursive: true})
+                    .map(f => resolve(__dirname, 'src', f.toString()))
+                    .filter(f => /\.(ts|tsx)$/.test(f))
+                    .reduce((entries, libpath) => {
                     if (libpath.includes('.stories.') || libpath.endsWith('.d.ts')) {
                         return entries;
                     }

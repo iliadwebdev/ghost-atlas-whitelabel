@@ -209,6 +209,58 @@ Last updated: 2026-04-01 (catalogued against 6.25.1 base)
 
 ---
 
+## 10. Atlas Brand Color Override (Green → Purple `#4945FF`)
+
+**Purpose:** Ghost uses green (`#30CF43`) as its primary accent color throughout the admin UI. The Atlas whitelabel overrides this to purple (`#4945FF`) derived from the Atlas brand color.
+
+### Ember Admin (pre-existing, predates v6.25.1)
+
+#### `ghost/admin/app/styles/patterns/global.css`
+- `--green: #4945ff` (overrides upstream `#30cf43`)
+
+#### `ghost/admin/app/styles/spirit/_colors-dark.css`
+- `--green: #7B78FF` (dark mode variant)
+
+### Shade / React Admin (new in v6.25.1 upgrade)
+
+v6.25.1 introduced a separate Tailwind v4 color palette in shade and hardcoded `rgba(48,207,67,...)` values across React components, all bypassing the Ember `--green` CSS variable. These are overridden to `#4945FF` / `rgba(73,69,255,...)`.
+
+#### `apps/shade/tailwind.theme.css`
+- `--color-green-100: #ECEAFF`, `--color-green-400: #7A77FF`, `--color-green-500: #4945FF`, `--color-green-600: #3633CC`, `--color-green: #4945FF`
+
+#### `apps/shade/src/docs/tokens.mdx`
+- Updated example color values to match.
+
+#### Hardcoded RGBA replacements (`rgba(48,207,67,...)` → `rgba(73,69,255,...)`):
+- `apps/shade/src/components/ui/input.tsx` — focus ring
+- `apps/shade/src/components/ui/textarea.tsx` — focus ring
+- `apps/shade/src/components/ui/input-group.tsx` — focus ring
+- `apps/admin-x-settings/src/components/sidebar.tsx` — search input focus
+- `apps/admin-x-settings/src/components/settings/advanced/integrations.tsx` — "Active" badge bg
+- `apps/admin-x-settings/src/components/settings/growth/offers/offers-index.tsx` — "Active" badge bg (2 instances)
+- `apps/admin-x-design-system/src/global/form/color-picker.tsx` — focus ring
+- `apps/admin-x-design-system/src/global/form/text-field.tsx` — focus ring
+- `apps/admin-x-design-system/src/global/form/text-area.tsx` — focus ring
+- `apps/activitypub/src/views/preferences/components/edit-profile.tsx` — handle input focus
+- `apps/posts/src/components/label-picker/label-picker.tsx` — focus ring
+
+#### Other hardcoded color replacements:
+- `apps/admin-x-design-system/styles.base.css` — `.gh-prose-links a` color
+- `apps/admin/src/layout/app-sidebar/shared-views.ts` — `green` in colorMap
+
+---
+
+## 11. Docker Build Fix — Shade `glob` Dependency
+
+**Purpose:** Fix Docker build failure caused by undeclared `glob` dependency in shade's vite config, which broke after the v6.25.1 upgrade due to yarn hoisting resolving an incompatible `brace-expansion` version.
+
+### `apps/shade/vite.config.ts`
+- Replaced `import {glob} from 'glob'` with `import {readdirSync} from 'node:fs'`.
+- Entry file discovery now uses Node's built-in `readdirSync({recursive: true})` instead of the undeclared `glob` package.
+- No functional change to build output — same set of entry files is resolved.
+
+---
+
 ## Upgrade Checklist
 
 When upgrading to a new Ghost version:
