@@ -34,5 +34,27 @@
                 "defaultRole": "Administrator"
             }
         }
+    },
+    "storage": {
+        "active": "ghost-cloudinary-store",
+        "ghost-cloudinary-store": {
+            "auth": {
+                "cloud_name": "gcollective-cloud",
+                "api_key": "553536588261785",
+                "api_secret": "1Ja2BfrH4Kkz8VzCWGUoOjJgSHc"
+            },
+            "upload": {
+                "use_filename": true,
+                "unique_filename": false,
+                "overwrite": false,
+                "folder": "blog-images",
+                "tags": ["blog"]
+            },
+            "display": {
+                "quality": "auto",
+                "secure": true,
+                "cdn_subdomain": true
+            }
+        }
     }
 }

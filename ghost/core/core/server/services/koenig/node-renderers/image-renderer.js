@@ -9,6 +9,13 @@ const {renderEmptyContainer} = require('../render-utils/render-empty-container')
 
 const MODERN_IMAGE_FORMATS = ['avif', 'webp'];
 
+const PERCENT_BY_CARD_WIDTH = {
+    quarter: 0.25,
+    third: 1 / 3,
+    half: 0.5,
+    threequarters: 0.75
+};
+
 function isAnimatedImage(url = '') {
     try {
         const parsedUrl = new URL(url, 'http://localhost');
@@ -156,12 +163,16 @@ function renderImageNode(node, options = {}) {
     // so we add that at the expected size in emails (600px) and use a higher
     // resolution image to keep images looking good on retina screens
     if (options.target === 'email' && node.width && node.height) {
+        const emailMaxWidth = 600;
+        const percent = PERCENT_BY_CARD_WIDTH[node.cardWidth];
+        const targetWidth = percent ? Math.round(emailMaxWidth * percent) : emailMaxWidth;
+
         let imageDimensions = {
             width: node.width,
             height: node.height
         };
-        if (node.width >= 600) {
-            imageDimensions = getResizedImageDimensions(imageDimensions, {width: 600});
+        if (node.width >= targetWidth) {
+            imageDimensions = getResizedImageDimensions(imageDimensions, {width: targetWidth});
         }
         img.setAttribute('width', imageDimensions.width);
         img.setAttribute('height', imageDimensions.height);

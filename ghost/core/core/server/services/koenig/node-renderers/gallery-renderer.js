@@ -53,13 +53,52 @@ function renderGalleryNode(node, options = {}) {
 
     const rows = buildStructure(validImages);
 
-    rows.forEach((row) => {
-        const rowDiv = document.createElement('div');
-        rowDiv.setAttribute('class', 'kg-gallery-row');
+    const isEmail = options.target === 'email';
 
-        row.forEach((image) => {
-            const imgDiv = document.createElement('div');
-            imgDiv.setAttribute('class', 'kg-gallery-image');
+    rows.forEach((row) => {
+        let rowContainer;
+        let rowInsertionPoint;
+
+        if (isEmail) {
+            // Email-safe layout: use <table> with proportional-width <td> cells.
+            // Flex/grid aren't reliable across email clients (esp. Outlook).
+            const table = document.createElement('table');
+            table.setAttribute('class', 'kg-gallery-row');
+            table.setAttribute('role', 'presentation');
+            table.setAttribute('cellspacing', '0');
+            table.setAttribute('cellpadding', '0');
+            table.setAttribute('border', '0');
+            table.setAttribute('width', '100%');
+            table.setAttribute('style', 'width:100%;border-collapse:collapse;table-layout:fixed;');
+            const tr = document.createElement('tr');
+            table.appendChild(tr);
+            rowContainer = table;
+            rowInsertionPoint = tr;
+        } else {
+            const rowDiv = document.createElement('div');
+            rowDiv.setAttribute('class', 'kg-gallery-row');
+            rowContainer = rowDiv;
+            rowInsertionPoint = rowDiv;
+        }
+
+        // Column widths proportional to each image's aspect ratio, matching
+        // the web's `flex: ratio` behavior so editor proportions are preserved.
+        const aspectRatios = row.map(image => (image.width && image.height) ? (image.width / image.height) : 1);
+        const aspectSum = aspectRatios.reduce((sum, r) => sum + r, 0) || row.length;
+
+        row.forEach((image, colIdx) => {
+            let imgCell;
+            if (isEmail) {
+                imgCell = document.createElement('td');
+                imgCell.setAttribute('class', 'kg-gallery-image');
+                const pct = (aspectRatios[colIdx] / aspectSum) * 100;
+                imgCell.setAttribute('width', `${pct.toFixed(2)}%`);
+                imgCell.setAttribute('valign', 'top');
+                imgCell.setAttribute('style', 'padding:0 4px;vertical-align:top;');
+            } else {
+                imgCell = document.createElement('div');
+                imgCell.setAttribute('class', 'kg-gallery-image');
+            }
 
             const img = document.createElement('img');
             img.setAttribute('src', image.src);
@@ -130,20 +169,24 @@ function renderGalleryNode(node, options = {}) {
                     unsplashUrl.searchParams.set('w', '1200');
                     img.setAttribute('src', unsplashUrl.href);
                 }
+
+                // Inline styles for Outlook/Gmail — Juice inlines our sheet
+                // but belt-and-braces ensures the image scales inside the <td>.
+                img.setAttribute('style', 'display:block;width:100%;height:auto;max-width:100%;');
             }
 
             if (image.href) {
                 const a = document.createElement('a');
                 a.setAttribute('href', image.href);
                 a.appendChild(img);
-                imgDiv.appendChild(a);
+                imgCell.appendChild(a);
             } else {
-                imgDiv.appendChild(img);
+                imgCell.appendChild(img);
             }
-            rowDiv.appendChild(imgDiv);
+            rowInsertionPoint.appendChild(imgCell);
         });
 
-        container.appendChild(rowDiv);
+        container.appendChild(rowContainer);
     });
 
     if (node.caption) {

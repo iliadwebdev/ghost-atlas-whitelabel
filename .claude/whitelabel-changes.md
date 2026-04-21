@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-04-01 (catalogued against 6.25.1 base)
+Last updated: 2026-04-21 (catalogued against 6.25.1 base)
 
 ---
 
@@ -261,6 +261,165 @@ v6.25.1 introduced a separate Tailwind v4 color palette in shade and hardcoded `
 
 ---
 
+## 12. Email-Safe Gallery Layout
+
+**Purpose:** Upstream Ghost renders gallery cards with `<div>` rows using `display: flex`. Email clients (Outlook especially, but also Gmail web, Yahoo, many dark-mode preprocessors) don't reliably honor flex/grid, so gallery images collapse to a single stacked column in delivered emails. This change makes galleries render as proportional `<table>` layouts when `target === 'email'` so the editor's multi-column layout is preserved in newsletters. Web/HTML rendering is unchanged.
+
+**Mechanism:** The local Koenig gallery renderer (already overridden in this fork — registered at `ghost/core/core/server/services/koenig/node-renderers/index.js:21`) branches on `options.target === 'email'`. For email, each gallery row is emitted as a `<table class="kg-gallery-row">` with one `<td class="kg-gallery-image">` per image. Each cell's `width` attribute is computed from that image's aspect ratio divided by the row's total aspect sum (matching the web's `flex: ratio` behavior). The inlined email stylesheet is updated so multi-image rows don't force each image to full width.
+
+### `ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`
+
+Inside the `rows.forEach` loop (the code that builds each gallery row):
+
+1. **Added `const isEmail = options.target === 'email';`** before the loop.
+2. **Branched row-container creation** inside the loop:
+   - If `isEmail`: create a `<table>` with attributes `class="kg-gallery-row"`, `role="presentation"`, `cellspacing="0"`, `cellpadding="0"`, `border="0"`, `width="100%"`, and inline `style="width:100%;border-collapse:collapse;table-layout:fixed;"`. Append a `<tr>` to it. Set `rowContainer = table` and `rowInsertionPoint = tr`.
+   - Else: build the original `<div class="kg-gallery-row">` and set both `rowContainer` and `rowInsertionPoint` to it.
+3. **Computed aspect-based column widths** before the inner `row.forEach`:
+   ```js
+   const aspectRatios = row.map(image => (image.width && image.height) ? (image.width / image.height) : 1);
+   const aspectSum = aspectRatios.reduce((sum, r) => sum + r, 0) || row.length;
+   ```
+4. **Branched image-cell creation** inside `row.forEach`:
+   - If `isEmail`: create a `<td class="kg-gallery-image">` with `width="${pct.toFixed(2)}%"` (pct = `aspectRatios[colIdx] / aspectSum * 100`), `valign="top"`, and inline `style="padding:0 4px;vertical-align:top;"`.
+   - Else: create the original `<div class="kg-gallery-image">`.
+   - Renamed the variable from `imgDiv` → `imgCell` throughout so it works for both branches.
+5. **Added inline `<img>` style for email** at the end of the existing `if (options.target === 'email')` block (just after the Unsplash URL branch):
+   ```js
+   img.setAttribute('style', 'display:block;width:100%;height:auto;max-width:100%;');
+   ```
+6. **Updated `.appendChild` calls** at the end of `row.forEach` to use `imgCell` instead of `imgDiv`, and `rowInsertionPoint` instead of `rowDiv`.
+7. **Updated the container append** at the end of `rows.forEach` to `container.appendChild(rowContainer)`.
+
+All existing email-only logic (image resize to 600px, retina `/size/w{1200}/` src, Unsplash `?w=1200`, skipping srcset for email) was left untouched — it still runs on the `<img>` before it's inserted into the `<td>`.
+
+### `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs`
+
+Replaced the `.kg-gallery-container` and `.kg-gallery-image img` rules (previously lines 145–158) with table-aware rules:
+
+- `.kg-gallery-container { margin-top: 0; }` (was `-20px`; spacing is now handled by `table.kg-gallery-row { margin-top: 20px }`).
+- Added `table.kg-gallery-row { margin-top: 20px; border-collapse: collapse; table-layout: fixed; width: 100%; }`.
+- Added `td.kg-gallery-image { padding: 0 4px; vertical-align: top; }`.
+- Changed `.kg-gallery-image img` from `width: 100% !important; height: auto !important; padding-top: 20px;` to `display: block; max-width: 100%; height: auto;` so the table cell controls width.
+- Kept the `hasRoundedImageCorners` branch (now simplified to just `border-radius: 6px`).
+
+### Upgrade guidance
+
+On each upstream Ghost merge, diff these files and re-port any upstream changes into our email branch:
+
+- `node_modules/@tryghost/kg-default-nodes/lib/nodes/gallery/gallery-renderer.js` — the upstream reference. If upstream adds new image attributes or retina logic, mirror them into our local override's `isEmail` path.
+- `ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js` — our local override. Conflicts here are expected on upgrade; keep the `isEmail` table branch intact.
+- `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs` — if upstream changes the `.kg-gallery-*` selectors, re-apply the table-cell variant above.
+
+### Verification
+
+1. `yarn dev` and create a post with a gallery containing mixed-aspect-ratio images (e.g. a 3-image row + a 2-image row + a portrait/landscape mix).
+2. Publish as an email newsletter to a test member; open in Mailpit (`http://localhost:8025`) → "View HTML" to confirm `<table class="kg-gallery-row">` with proportional `<td width="...%">` cells.
+3. Forward the Mailpit email to Gmail (web + iOS) and Outlook (desktop or OWA) — images should sit side-by-side matching editor proportions, not stacked.
+4. Open the same post on the public site — gallery should still render as the original flex `<div>` layout (unchanged).
+
+---
+
+## 13. Docker Build Fix — Drop `transform-encoder` Caddy Module
+
+**Purpose:** Unblock `yarn dev` when caddyserver.com's on-demand build API (`/api/download`) is hanging. Upstream's Dockerfile runs `caddy add-package github.com/caddyserver/transform-encoder`, which depends on that API compiling a custom Caddy binary on their servers. When the API stalls (confirmed hanging for both arm64 and amd64 from direct host curl, April 2026), the image build times out after ~180s with `unexpected EOF`.
+
+The module was used by exactly one line in the Caddyfile — a dev-only Apache-style access log format — so the cheapest fix is to drop it and use Caddy's built-in `console` log format.
+
+### `docker/dev-gateway/Dockerfile`
+- Removed line: `RUN caddy add-package github.com/caddyserver/transform-encoder`.
+- Image now uses `caddy:2-alpine` as-is (no on-demand binary rebuild).
+
+### `docker/dev-gateway/Caddyfile`
+- Changed log format from `format transform "{common_log}"` to `format console` (built-in, no extra module required).
+
+### Upgrade guidance
+
+If upstream re-adds `caddy add-package` for transform-encoder or any other module:
+- Leave it removed unless the module becomes functionally required (not just cosmetic logging).
+- If a module becomes required, switch the Dockerfile to a multi-stage `xcaddy build` to avoid the caddyserver.com dependency entirely.
+
+---
+
+## 14. Image Width Percentages in Koenig Editor
+
+**Purpose:** Adds four percentage-based width options (25%, 33%, 50%, 75%) to the image card toolbar, on top of upstream's Regular / Wide / Full presets. The primary target is email newsletters where writers want more granular control over image sizing.
+
+**Mechanism:** `patch-package` patch of the compiled `@tryghost/koenig-lexical` bundle (first use of patch-package in this fork), plus in-repo changes to the email image renderer and email CSS.
+
+### Chosen `cardWidth` values
+
+| Setting       | `cardWidth` value | Email width |
+| ------------- | ----------------- | ----------- |
+| Quarter       | `quarter`         | 150px       |
+| Third         | `third`           | 200px       |
+| Half          | `half`            | 300px       |
+| Three-quarter | `threequarters`   | 450px       |
+
+Existing `regular` / `wide` / `full` remain untouched for back-compat.
+
+### Infrastructure (first patch-package use in this fork)
+- `package.json` — added `patch-package@^8.0.1` + `postinstall-postinstall@^2.1.0` devDeps and `"postinstall": "patch-package"` script.
+- `patches/` — tracked in git; contains all koenig patches going forward.
+
+### Patch
+- `patches/@tryghost+koenig-lexical+1.7.28.patch` — three files patched in node_modules:
+  - **`dist/koenig-lexical.js`** (ESM build, 3 hunks):
+    - Extends the internal `JW` allowlist in `src/utils/image-card-widths.js` with `quarter`, `third`, `half`, `threequarters`.
+    - Adds four inline SVG icon components to the `UF` icon map in `src/components/ui/ToolbarMenu.jsx` (`imgQuarter` / `imgThird` / `imgHalf` / `imgThreeQuarters`). Icons are 24×24 viewBox with an outline rectangle + a centered filled bar whose width visually represents the percentage.
+    - Adds four toolbar buttons after the "Full width" button. Each auto-hides if `cardConfig.image.allowedWidths` is set and does not include the value.
+  - **`dist/koenig-lexical.umd.js`** (UMD build, 3 hunks) — **critical: this is the bundle actually served to the browser.** Ghost's Ember admin imports the UMD via `app.import('node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js', ...)` at `ghost/admin/ember-cli-build.js:271` and Vite's admin dev server serves the same file. The UMD has **different minified variable names** and uses **backtick string literals** (not quoted), so the ESM patch doesn't apply to it automatically.
+    - UMD variable mapping at the time of this patch: allowlist `KW` (was `JW`), icon map `Gae` (was `UF`), toolbar-button component `KF` (was `GF`), separator `qF` (was `KF`), setWidth callback `P` (was `ee`), current-width state `_` (was `y`), allowed-widths array `O` (was `A`).
+    - Patches the `KW` allowlist, the `cardWidth:W.default.oneOf([...])` PropTypes check, the icon map to add the 4 inline SVG icons (now using `(0,n.jsx)` / `(0,n.jsxs)` calls instead of `p` / `m`), and the toolbar-button JSX.
+    - Also patches the **inlined CSS string** at the top of the UMD — style.css is bundled inside the UMD and injected at runtime, so our 4 WYSIWYG rules must be added there too, not just to `dist/style.css`.
+  - **`dist/style.css`** (1 hunk, appended):
+    - Adds WYSIWYG width rules scoped to `.koenig-lexical figure[data-kg-card-width=...]` so the editor preview visually resizes when a new width is selected. Rules use `width: 25% / 33.333% / 50% / 75%` with `margin: 0 auto; display: block;` — no `max-width` cap so the image scales with the editor's column width (unlike email, which caps at the 600px content column). Only affects consumers that load the standalone CSS file; the Ember admin runtime uses the copy inlined into the UMD above.
+
+### Backend
+- `ghost/core/core/server/services/koenig/node-renderers/image-renderer.js`
+  - Added `PERCENT_BY_CARD_WIDTH` map at module top.
+  - Email output path now computes target width from percentage (`Math.round(600 * percent)`) rather than a fixed 600px cap. Non-percentage widths (`regular` / `wide` / `full` / undefined) fall through to the original 600px behavior.
+  - Retina-src logic (`srcWidth >= 1200`) unchanged — higher-resolution source files are still used even when display width is smaller.
+  - Web rendering is already free — the existing `kg-width-${node.cardWidth}` class emission at lines 34-36 handles any string, so `kg-width-half` etc. land on the figure automatically.
+
+### Email Styles
+- `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs` — added `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with `width: X% !important`, matching `max-width: {150,200,300,450}px`, centered, `display: block`. Class rules are belt-and-braces alongside the `width` attribute set by the renderer, since some email clients honor one but not the other.
+
+### Site Frontend Styles
+- `ghost/core/core/frontend/src/cards/css/image.css` (**new file**) — adds the four `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules to Ghost's bundled card CSS. Rules use plain `width: X%; margin: 0 auto; display: block;` (no `!important`, no `max-width`) so themes can override if they want different sizing.
+- **Delivery:** Ghost bundles `ghost/core/core/frontend/src/cards/css/*.css` into `cards.min.css` (see `ghost/core/core/frontend/services/assets-minification/card-assets.js`). Themes opt in via `"card_assets": true` in their `package.json`; if a theme uses an explicit `include` list, it must add `"image"` to pick these rules up. Ghost's default Casper/Source themes use `card_assets: true`.
+- **Upstream coordination risk:** Ghost does not currently ship an `image.css` — image card widths have always been theme responsibility. If upstream ever adds their own `image.css` with conflicting rules (e.g. for `.kg-width-full`), expect a file-add conflict on merge; favor concatenating their rules after ours so upstream's `regular`/`wide`/`full` styling wins while our percentage rules remain.
+
+### Upgrade guidance
+
+When bumping `@tryghost/koenig-lexical`, the patch will almost certainly not apply cleanly — the minified variable names it targets change on every build, and the ESM and UMD builds have different names. Workflow:
+
+1. Delete `patches/@tryghost+koenig-lexical+*.patch`.
+2. Run `yarn install` to pull the new version.
+3. **`dist/koenig-lexical.js`** (ESM) — find three positions by grepping stable strings:
+   - Allowlist: `grep -n '"regular",' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.js` — find the `[...,"wide","full"]` array.
+   - Icon map: `grep -n 'imgRegular:' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.js` — the identifier letter after the colon is the runtime icon component.
+   - Toolbar buttons: `grep -n '"Full width"' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.js` — the `p(GF, {...})` block insertion point is directly after.
+4. **`dist/koenig-lexical.umd.js`** (UMD — **this is the one the browser actually loads**) — find three positions using backtick literals:
+   - Allowlist: `grep -oE 'var [A-Z]+=\[\`regular\`,\`wide\`,\`full\`\]' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — the letters between `var` and `=[` is the allowlist variable name.
+   - Icon map: `grep -oE 'imgRegular:[a-zA-Z_$]+,imgWide:[a-zA-Z_$]+,imgFull:[a-zA-Z_$]+,imgReplace:[a-zA-Z_$]+' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — insertion point is between `imgFull:X` and `,imgReplace:Y`.
+   - Toolbar buttons: `perl -ne 'while(/icon:\`imgFull\`.{0,400}/g){print "$&\n"}' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — shows the Full button + following separator so you can map the UMD's KF-equivalent component name and the setWidth callback name (`P` in this patch's version).
+   - **Inlined CSS:** `grep -oE '\.koenig-lexical \.CodeMirror \.cm-spell-error[^{]{1,100}\{[^}]{1,60}\}' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — if this anchor rule is still the end of the bundled stylesheet, append the four `.koenig-lexical figure[data-kg-card-width=...] img{...}` rules right after it. If upstream adds new CSS rules after `.cm-spell-error`, pick a new anchor — grep the bundle for where the `.koenig-lexical` selectors end.
+5. **`dist/style.css`** — append the same four WYSIWYG rules at end of file. Single-line minified; use `printf ... >> style.css` rather than Edit.
+6. Regenerate: `npx patch-package @tryghost/koenig-lexical`. Verify the patch has hunks for all three files (`grep -E '^(\+\+\+|---)'`).
+7. **Copy the patched UMD into the three built locations** (since Ember/Vite builds cache):
+   ```
+   for dest in ghost/admin/dist/ghost/assets/koenig-lexical \
+               ghost/core/core/built/admin/assets/koenig-lexical \
+               apps/admin/dist/assets/koenig-lexical; do
+     cp node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js "$dest/"
+   done
+   ```
+   A full admin rebuild also fixes this (asset-delivery at `ghost/admin/lib/asset-delivery/index.js:112-120` copies the dist folder on every admin build), but the manual copy is instant.
+8. **Hard-refresh the browser** — the editor URL uses a `?v=HASH` query bust based on the baked-in Ember build hash; if the hash hasn't changed, the browser may serve a cached old UMD.
+
+---
+
 ## Upgrade Checklist
 
 When upgrading to a new Ghost version:
@@ -274,7 +433,9 @@ When upgrading to a new Ghost version:
    - `apps/admin/src/routes.tsx` (route structure changes)
    - `ghost/admin/app/index.html` (postMessage navigation script)
    - `ghost/core/core/built/admin/index.html` (postMessage script in built file — rebuild may overwrite)
+   - `patches/` directory — see section 14 upgrade guidance. `patch-package` will fail loudly during `yarn install` if a patch no longer applies, so regressions here surface immediately.
 3. **Re-apply domain restriction disable** comment in `JwtSSOAdapter.js` if needed, or re-enable and test.
+   - Also verify the email-safe gallery renderer (`ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`) still has its `isEmail` table branch, and `card-styles.hbs` still has the `table.kg-gallery-row` / `td.kg-gallery-image` rules (see section 12).
 4. **Verify `disableWebsiteFeatures` config key** is still in the serializer allowlist (`config.js`).
 5. **Test SSO flow** end-to-end after upgrade.
 6. **Test `disableWebsiteFeatures=true`** mode to ensure no new website-feature UI slipped through.

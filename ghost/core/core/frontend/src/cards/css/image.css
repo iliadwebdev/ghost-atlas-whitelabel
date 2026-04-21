@@ -1,0 +1,23 @@
+.kg-image-card.kg-width-quarter img {
+    width: 25%;
+    margin: 0 auto;
+    display: block;
+}
+
+.kg-image-card.kg-width-third img {
+    width: 33.333%;
+    margin: 0 auto;
+    display: block;
+}
+
+.kg-image-card.kg-width-half img {
+    width: 50%;
+    margin: 0 auto;
+    display: block;
+}
+
+.kg-image-card.kg-width-threequarters img {
+    width: 75%;
+    margin: 0 auto;
+    display: block;
+}
