@@ -1,4 +1,5 @@
 import {
+    getActiveInterval,
     hasGiftSubscriptions,
     hasAvailablePrices,
     getAllProductsForSite,
@@ -12,6 +13,7 @@ import {
     getSupportAddress,
     getDefaultNewsletterSender,
     getUrlHistory,
+    removePortalLinkFromUrl,
     hasMultipleProducts,
     isActiveOffer,
     isRetentionOffer,
@@ -22,7 +24,7 @@ import {
     transformApiTiersData,
     isSigninAllowed,
     isSignupAllowed,
-    getCompExpiry,
+    getSubscriptionExpiry,
     isInThePast,
     hasNewsletterSendingEnabled,
     getUpdatedOfferPrice,
@@ -636,6 +638,36 @@ describe('Helpers - ', () => {
         });
     });
 
+    describe('removePortalLinkFromUrl', () => {
+        test('clears #/portal links from URL hash', () => {
+            window.history.pushState({}, '', '/members?filter=all#/portal/account');
+
+            removePortalLinkFromUrl();
+
+            expect(window.location.pathname).toBe('/members');
+            expect(window.location.search).toBe('?filter=all');
+            expect(window.location.hash).toBe('');
+        });
+
+        test('clears #/share links from URL hash', () => {
+            window.history.pushState({}, '', '/post/test?ref=mail#/share');
+
+            removePortalLinkFromUrl();
+
+            expect(window.location.pathname).toBe('/post/test');
+            expect(window.location.search).toBe('?ref=mail');
+            expect(window.location.hash).toBe('');
+        });
+
+        test('does not clear unrelated hashes', () => {
+            window.history.pushState({}, '', '/post/test?ref=mail#/not-portal');
+
+            removePortalLinkFromUrl();
+
+            expect(window.location.hash).toBe('#/not-portal');
+        });
+    });
+
     describe('getAvailableProducts', () => {
         it('Does not include paid Tiers when stripe is not configured', () => {
             const actual = getAvailableProducts({
@@ -649,7 +681,7 @@ describe('Helpers - ', () => {
         });
     });
 
-    describe('getCompExpiry', () => {
+    describe('getSubscriptionExpiry', () => {
         let member = {};
 
         beforeEach(() => {
@@ -671,7 +703,7 @@ describe('Helpers - ', () => {
 
         it('returns the expiry date of a comped subscription', () => {
             const date = new Date('2023-10-13T00:00:00.000Z');
-            expect(getCompExpiry({member})).toEqual(date.toLocaleDateString('en-GB', {year: 'numeric', month: 'short', day: 'numeric'}));
+            expect(getSubscriptionExpiry({member})).toEqual(date.toLocaleDateString('en-GB', {year: 'numeric', month: 'short', day: 'numeric'}));
         });
 
         it('returns the expiry date of a comped subscription if the member has multiple subscriptions', () => {
@@ -685,13 +717,13 @@ describe('Helpers - ', () => {
                     expiry_at: '2023-10-14T00:00:00.000Z'
                 }
             });
-            expect(getCompExpiry({member})).toEqual(date.toLocaleDateString('en-GB', {year: 'numeric', month: 'short', day: 'numeric'}));
+            expect(getSubscriptionExpiry({member})).toEqual(date.toLocaleDateString('en-GB', {year: 'numeric', month: 'short', day: 'numeric'}));
         });
 
         it('returns an empty string if the subscription has no expiry date', () => {
             delete member.subscriptions[0].tier.expiry_at;
 
-            expect(getCompExpiry({member})).toEqual('');
+            expect(getSubscriptionExpiry({member})).toEqual('');
         });
     });
 
@@ -836,6 +868,44 @@ describe('Helpers - ', () => {
 
         test('returns false when labs is undefined', () => {
             expect(hasGiftSubscriptions({site: {}})).toBe(false);
+        });
+    });
+
+    describe('getActiveInterval', () => {
+        test('returns month when selectedInterval is month and monthly is available', () => {
+            expect(getActiveInterval({portalPlans: ['monthly', 'yearly'], portalDefaultPlan: 'yearly', selectedInterval: 'month'})).toBe('month');
+        });
+
+        test('returns year when selectedInterval is year and yearly is available', () => {
+            expect(getActiveInterval({portalPlans: ['monthly', 'yearly'], portalDefaultPlan: 'monthly', selectedInterval: 'year'})).toBe('year');
+        });
+
+        test('falls back to portalDefaultPlan when selectedInterval is null', () => {
+            expect(getActiveInterval({portalPlans: ['monthly', 'yearly'], portalDefaultPlan: 'monthly', selectedInterval: null})).toBe('month');
+        });
+
+        test('falls back to yearly when portalDefaultPlan is not monthly', () => {
+            expect(getActiveInterval({portalPlans: ['monthly', 'yearly'], portalDefaultPlan: 'yearly', selectedInterval: null})).toBe('year');
+        });
+
+        test('falls back to yearly when no default plan is set', () => {
+            expect(getActiveInterval({portalPlans: ['monthly', 'yearly'], portalDefaultPlan: null, selectedInterval: null})).toBe('year');
+        });
+
+        test('falls back to monthly when only monthly is available', () => {
+            expect(getActiveInterval({portalPlans: ['monthly'], portalDefaultPlan: null, selectedInterval: null})).toBe('month');
+        });
+
+        test('ignores selectedInterval month when monthly is not available', () => {
+            expect(getActiveInterval({portalPlans: ['yearly'], portalDefaultPlan: null, selectedInterval: 'month'})).toBe('year');
+        });
+
+        test('ignores selectedInterval year when yearly is not available', () => {
+            expect(getActiveInterval({portalPlans: ['monthly'], portalDefaultPlan: null, selectedInterval: 'year'})).toBe('month');
+        });
+
+        test('returns undefined when portalPlans is empty', () => {
+            expect(getActiveInterval({portalPlans: [], portalDefaultPlan: null, selectedInterval: null})).toBeUndefined();
         });
     });
 

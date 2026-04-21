@@ -681,6 +681,113 @@ describe('RouterController', function () {
             });
         });
 
+        describe('gift checkout', function () {
+            let getGiftLinkSpy;
+
+            beforeEach(function () {
+                getGiftLinkSpy = sinon.stub().resolves('https://checkout.stripe.com/gift');
+                paymentsService.getGiftPaymentLink = getGiftLinkSpy;
+            });
+
+            function createGiftController(overrides = {}) {
+                return new RouterController({
+                    tiersService,
+                    paymentsService,
+                    offersAPI,
+                    stripeAPIService,
+                    labsService,
+                    settingsCache,
+                    settingsHelpers,
+                    memberRepository: {get: sinon.stub().resolves(null)},
+                    urlUtils: {getSiteUrl: sinon.stub().returns('https://example.com/')},
+                    memberAttributionService: {getAttribution: sinon.stub().resolves({})},
+                    emailAddressService,
+                    ...overrides
+                });
+            }
+
+            const mockRes = {writeHead: () => {}, end: () => {}};
+
+            function paidTierService(price = 5000) {
+                return {
+                    api: {
+                        read: sinon.stub().resolves({
+                            id: {toHexString: () => 'tier_123'},
+                            status: 'active',
+                            getPrice: sinon.stub().returns(price)
+                        })
+                    }
+                };
+            }
+
+            it('calls getGiftPaymentLink with correct options', async function () {
+                const controller = createGiftController({tiersService: paidTierService()});
+
+                await controller.createCheckoutSession({
+                    body: {type: 'gift', tierId: 'tier_123', cadence: 'month', metadata: {}}
+                }, mockRes);
+
+                sinon.assert.calledOnce(getGiftLinkSpy);
+                sinon.assert.calledWith(getGiftLinkSpy, sinon.match({
+                    successUrl: 'https://example.com/',
+                    cancelUrl: 'https://example.com/'
+                }));
+            });
+
+            it('rejects when giftSubscriptions labs flag is disabled', async function () {
+                labsService.isSet = sinon.stub().returns(false);
+                const controller = createGiftController();
+
+                try {
+                    await controller.createCheckoutSession({
+                        body: {type: 'gift', tierId: 'tier_123', cadence: 'month', metadata: {}}
+                    }, mockRes);
+
+                    assert.fail('Should have thrown');
+                } catch (error) {
+                    assert(error instanceof errors.BadRequestError);
+                }
+            });
+
+            it('rejects when offerId is provided', async function () {
+                const controller = createGiftController();
+
+                try {
+                    await controller.createCheckoutSession({
+                        body: {type: 'gift', offerId: 'offer_123', metadata: {}}
+                    }, mockRes);
+                    assert.fail('Should have thrown');
+                } catch (error) {
+                    assert(error instanceof errors.BadRequestError);
+                    assert.equal(error.context, 'Offers cannot be applied to gift subscriptions');
+                }
+            });
+
+            it('does not block paid members from purchasing gifts', async function () {
+                const controller = createGiftController({
+                    tiersService: paidTierService(),
+                    tokenService: {decodeToken: sinon.stub().resolves({sub: 'member@example.com'})},
+                    memberRepository: {
+                        get: sinon.stub().resolves({
+                            id: 'member_123',
+                            get: sinon.stub().returns('paid'),
+                            related: sinon.stub().returns({
+                                query: sinon.stub().returns({
+                                    fetch: sinon.stub().resolves([])
+                                })
+                            })
+                        })
+                    }
+                });
+
+                await controller.createCheckoutSession({
+                    body: {type: 'gift', tierId: 'tier_123', cadence: 'month', identity: 'valid-token', metadata: {}}
+                }, mockRes);
+
+                sinon.assert.calledOnce(getGiftLinkSpy);
+            });
+        });
+
         it('adds welcomePageUrl to response for authenticated members when tier has welcomePageURL', async function () {
             const routerController = new RouterController({
                 tiersService: {
@@ -957,6 +1064,65 @@ describe('RouterController', function () {
                     controller.sendMagicLink(req, res),
                     {message: `Cannot subscribe to archived newsletters Newsletter 2`}
                 );
+            });
+        });
+
+        describe('gift token forwarding', function () {
+            let req, res, sendEmailWithMagicLinkStub, memberRepositoryStub;
+
+            const createRouterController = (deps = {}) => {
+                return new RouterController({
+                    allowSelfSignup: sinon.stub().returns(true),
+                    memberAttributionService: {
+                        getAttribution: sinon.stub().resolves({})
+                    },
+                    sendEmailWithMagicLink: sendEmailWithMagicLinkStub,
+                    settingsCache,
+                    settingsHelpers,
+                    emailAddressService,
+                    memberRepository: memberRepositoryStub,
+                    ...deps
+                });
+            };
+
+            beforeEach(function () {
+                req = {
+                    body: {
+                        email: 'jamie@example.com',
+                        emailType: 'subscribe',
+                        giftToken: 'gift-token-123'
+                    },
+                    get: sinon.stub()
+                };
+                res = {
+                    writeHead: sinon.stub(),
+                    end: sinon.stub()
+                };
+                sendEmailWithMagicLinkStub = sinon.stub().resolves({});
+                memberRepositoryStub = {
+                    get: sinon.stub().resolves({
+                        id: 'member_1'
+                    })
+                };
+            });
+
+            it('forwards giftToken for signup and subscribe flows', async function () {
+                const controller = createRouterController();
+
+                await controller.sendMagicLink(req, res);
+
+                sinon.assert.calledOnce(sendEmailWithMagicLinkStub);
+                assert.equal(sendEmailWithMagicLinkStub.firstCall.args[0].tokenData.giftToken, 'gift-token-123');
+            });
+
+            it('forwards giftToken for signin flows', async function () {
+                req.body.emailType = 'signin';
+                const controller = createRouterController();
+
+                await controller.sendMagicLink(req, res);
+
+                sinon.assert.calledOnce(sendEmailWithMagicLinkStub);
+                assert.equal(sendEmailWithMagicLinkStub.firstCall.args[0].tokenData.giftToken, 'gift-token-123');
             });
         });
 

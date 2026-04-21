@@ -46,6 +46,122 @@ describe('signup action', () => {
     });
 });
 
+describe('redeemGift action', () => {
+    test('redeems a gift directly for a logged-in member and refreshes member data', async () => {
+        const mockApi = {
+            gift: {
+                redeem: vi.fn(() => Promise.resolve({
+                    gifts: [{
+                        token: 'gift-token-123',
+                        status: 'redeemed'
+                    }]
+                }))
+            },
+            member: {
+                sessionData: vi.fn(() => Promise.resolve({
+                    name: 'Jamie Larson',
+                    email: 'jamie@example.com',
+                    paid: true,
+                    status: 'gift'
+                })),
+                getIntegrityToken: vi.fn(),
+                sendMagicLink: vi.fn()
+            }
+        };
+        const state = {
+            member: {
+                name: 'Jamie Larson',
+                email: 'jamie@example.com',
+                status: 'free'
+            },
+            pageData: {
+                token: 'gift-token-123',
+                gift: {
+                    cadence: 'year',
+                    duration: 1,
+                    tier: {
+                        name: 'Premium'
+                    }
+                }
+            }
+        };
+
+        const result = await ActionHandler({
+            action: 'redeemGift',
+            data: {
+                giftToken: 'gift-token-123'
+            },
+            state,
+            api: mockApi
+        });
+
+        expect(mockApi.gift.redeem).toHaveBeenCalledWith({token: 'gift-token-123'});
+        expect(mockApi.member.sessionData).toHaveBeenCalled();
+        expect(mockApi.member.getIntegrityToken).not.toHaveBeenCalled();
+        expect(mockApi.member.sendMagicLink).not.toHaveBeenCalled();
+        expect(result).toMatchObject({
+            action: 'redeemGift:success',
+            page: 'accountHome',
+            member: {
+                status: 'gift'
+            },
+            notification: {
+                type: 'giftRedeem',
+                status: 'success'
+            }
+        });
+    });
+
+    test('sends a subscribe magic link with the gift token and redirects back to Portal account', async () => {
+        const mockApi = {
+            member: {
+                getIntegrityToken: vi.fn(() => Promise.resolve('token-123')),
+                sendMagicLink: vi.fn(() => Promise.resolve({otc_ref: 'otc-ref-123'}))
+            }
+        };
+        const state = {
+            site: {
+                url: 'https://example.com/'
+            },
+            pageData: {
+                token: 'gift-token-123'
+            }
+        };
+
+        const result = await ActionHandler({
+            action: 'redeemGift',
+            data: {
+                email: 'jamie@example.com',
+                name: '  Jamie Larson  ',
+                giftToken: 'gift-token-123'
+            },
+            state,
+            api: mockApi
+        });
+
+        expect(mockApi.member.sendMagicLink).toHaveBeenCalledWith({
+            email: 'jamie@example.com',
+            emailType: 'subscribe',
+            integrityToken: 'token-123',
+            includeOTC: true,
+            redirect: 'https://example.com/#/portal/account?giftRedemption=true',
+            giftToken: 'gift-token-123',
+            name: 'Jamie Larson'
+        });
+
+        expect(result).toMatchObject({
+            page: 'magiclink',
+            lastPage: 'giftRedemption',
+            otcRef: 'otc-ref-123',
+            pageData: {
+                token: 'gift-token-123',
+                email: 'jamie@example.com',
+                redirect: 'https://example.com/#/portal/account?giftRedemption=true'
+            }
+        });
+    });
+});
+
 describe('startSigninOTCFromCustomForm action', () => {
     test('opens magic link popup with otcRef', async () => {
         const state = {
@@ -85,6 +201,59 @@ describe('startSigninOTCFromCustomForm action', () => {
         });
 
         expect(result).toEqual({});
+    });
+});
+
+describe('notification actions', () => {
+    test('increments notification count after a notification is dismissed', async () => {
+        const firstNotification = await ActionHandler({
+            action: 'openNotification',
+            data: {
+                action: 'giftRedemption:failed',
+                status: 'error',
+                autoHide: false,
+                message: 'Gift could not be redeemed'
+            },
+            state: {
+                notification: null,
+                notificationSequence: -1
+            },
+            api: {}
+        });
+
+        expect(firstNotification.notification.count).toBe(0);
+        expect(firstNotification.notificationSequence).toBe(0);
+
+        const dismissedNotification = await ActionHandler({
+            action: 'closeNotification',
+            data: {},
+            state: {
+                ...firstNotification
+            },
+            api: {}
+        });
+
+        expect(dismissedNotification).toEqual({
+            notification: null
+        });
+
+        const secondNotification = await ActionHandler({
+            action: 'openNotification',
+            data: {
+                action: 'giftRedemption:failed',
+                status: 'error',
+                autoHide: false,
+                message: 'Gift could not be redeemed'
+            },
+            state: {
+                ...firstNotification,
+                ...dismissedNotification
+            },
+            api: {}
+        });
+
+        expect(secondNotification.notification.count).toBe(1);
+        expect(secondNotification.notificationSequence).toBe(1);
     });
 });
 
@@ -341,5 +510,48 @@ describe('verifyOTC action', () => {
             expect(result.action).toBe('verifyOTC:failed');
             expect(result.actionErrorMessage).toBeDefined();
         });
+    });
+});
+
+describe('checkoutGift action', () => {
+    test('calls api.member.checkoutGift with correct data', async () => {
+        const mockApi = {
+            member: {
+                checkoutGift: vi.fn(() => Promise.resolve())
+            }
+        };
+
+        const result = await ActionHandler({
+            action: 'checkoutGift',
+            data: {tierId: 'tier_123', cadence: 'month'},
+            state: {},
+            api: mockApi
+        });
+
+        expect(mockApi.member.checkoutGift).toHaveBeenCalledWith({
+            tierId: 'tier_123',
+            cadence: 'month'
+        });
+        expect(result.action).toBe('checkoutGift:success');
+    });
+
+    test('returns failed action with notification on error', async () => {
+        const mockApi = {
+            member: {
+                checkoutGift: vi.fn(() => Promise.reject(new Error('Stripe error')))
+            }
+        };
+
+        const result = await ActionHandler({
+            action: 'checkoutGift',
+            data: {tierId: 'tier_123', cadence: 'month'},
+            state: {},
+            api: mockApi
+        });
+
+        expect(result.action).toBe('checkoutGift:failed');
+        expect(result.popupNotification).toBeDefined();
+        expect(result.popupNotification.type).toBe('checkoutGift:failed');
+        expect(result.popupNotification.status).toBe('error');
     });
 });

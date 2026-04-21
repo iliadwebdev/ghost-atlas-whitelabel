@@ -1,3 +1,4 @@
+import {ValueSource} from '@tryghost/shade/patterns';
 import {
     buildOfferOptions,
     fromOfferFilterDisplayValues,
@@ -7,7 +8,6 @@ import {
 import {describe, expect, it, vi} from 'vitest';
 import {memberFields} from './member-fields';
 import {renderHook} from '@testing-library/react';
-import type {ValueSource} from '@tryghost/shade';
 
 vi.mock('@tryghost/shade', () => ({
     LucideIcon: new Proxy({}, {
@@ -157,6 +157,31 @@ describe('useMemberFilterFields', () => {
         expect(weeklyField).toMatchObject({
             label: 'Weekly'
         });
+    });
+
+    it('excludes the gift status option by default', () => {
+        const {result} = renderHook(() => useMemberFilterFields({
+            paidMembersEnabled: true,
+            siteTimezone: 'UTC'
+        }));
+
+        const subscriptionFields = result.current.find(group => group.group === 'Subscription')?.fields ?? [];
+        const statusField = subscriptionFields.find(field => field.key === 'status');
+
+        expect(statusField?.options?.map(o => o.value)).toEqual(['paid', 'free', 'comped']);
+    });
+
+    it('includes the gift status option when giftSubscriptionsEnabled is true', () => {
+        const {result} = renderHook(() => useMemberFilterFields({
+            paidMembersEnabled: true,
+            giftSubscriptionsEnabled: true,
+            siteTimezone: 'UTC'
+        }));
+
+        const subscriptionFields = result.current.find(group => group.group === 'Subscription')?.fields ?? [];
+        const statusField = subscriptionFields.find(field => field.key === 'status');
+
+        expect(statusField?.options?.map(o => o.value)).toEqual(['paid', 'free', 'comped', 'gift']);
     });
 
     it('hydrates grouped retention offers on the offer field', () => {

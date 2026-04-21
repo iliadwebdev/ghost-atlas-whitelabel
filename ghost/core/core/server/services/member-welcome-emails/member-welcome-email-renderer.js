@@ -1,12 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 const lexicalLib = require('../../lib/lexical');
+const labs = require('../../../shared/labs');
 const {finalize} = require('../email-rendering/finalize');
 const errors = require('@tryghost/errors');
 const {MESSAGES} = require('./constants');
 const {wrapReplacementStrings} = require('../koenig/render-utils/replacement-strings');
 const linkReplacer = require('../lib/link-replacer');
 const {getEmailDesign} = require('../email-rendering/email-design');
+const {registerHelpers} = require('../email-service/helpers/register-helpers');
 
 const REPLACEMENT_REGEX = /%%\{(\w+?)(?:,? *"(.*?)")?\}%%/g;
 const UNMATCHED_TOKEN_REGEX = /%%\{.*?\}%%/g;
@@ -16,10 +18,7 @@ class MemberWelcomeEmailRenderer {
 
     constructor({t}) {
         this.Handlebars = require('handlebars').create();
-        this.Handlebars.registerHelper('t', function (key, options) {
-            let hash = options?.hash;
-            return t(key, hash || options || {});
-        });
+        registerHelpers(this.Handlebars, labs, t);
         const baseStylesSource = fs.readFileSync(
             path.join(__dirname, '../email-rendering/partials/base-styles.hbs'),
             'utf8'
@@ -35,9 +34,11 @@ class MemberWelcomeEmailRenderer {
         this.Handlebars.registerPartial('baseStyles', baseStylesSource);
         this.Handlebars.registerPartial('contentStyles', contentStylesSource);
         this.Handlebars.registerPartial('cardStyles', cardStylesSource);
-        this.Handlebars.registerPartial('styles',
-            '<style>\n{{>baseStyles}}\n{{>contentStyles}}\n{{>cardStyles}}\n</style>'
+        const emailStylesSource = fs.readFileSync(
+            path.join(__dirname, '../email-service/email-templates/partials/styles.hbs'),
+            'utf8'
         );
+        this.Handlebars.registerPartial('styles', emailStylesSource);
         const emailWrapperSource = fs.readFileSync(
             path.join(__dirname, '../email-rendering/partials/email-wrapper.hbs'),
             'utf8'
@@ -108,25 +109,28 @@ class MemberWelcomeEmailRenderer {
      * @param {Object} options
      * @param {string} options.lexical - Lexical JSON string to render
      * @param {string} options.subject - Email subject (may contain template variables)
+     * @param {undefined | null | Object} options.designSettings - Email design settings loaded from the database
      * @param {Object} options.member - Member data (name, email)
      * @param {Object} options.siteSettings - Site settings (title, url, accentColor)
      * @returns {Promise<{html: string, text: string, subject: string}>}
      */
-    async render({lexical, subject, member, siteSettings}) {
+    async render({lexical, subject, designSettings, member, siteSettings}) {
+        designSettings = designSettings || {};
+
         const design = getEmailDesign({
             accentColor: siteSettings.accentColor,
-            backgroundColor: '#ffffff',
-            buttonColor: 'accent',
-            buttonCorners: null,
-            buttonStyle: null,
-            dividerColor: null,
-            headerBackgroundColor: null,
-            imageCorners: null,
-            linkColor: 'accent',
-            linkStyle: null,
+            backgroundColor: designSettings.background_color,
+            buttonColor: designSettings.button_color,
+            buttonCorners: designSettings.button_corners,
+            buttonStyle: designSettings.button_style,
+            dividerColor: designSettings.divider_color,
+            headerBackgroundColor: designSettings.header_background_color,
+            imageCorners: designSettings.image_corners,
+            linkColor: designSettings.link_color,
+            linkStyle: designSettings.link_style,
             postTitleColor: null,
-            sectionTitleColor: null,
-            titleFontWeight: 'bold'
+            sectionTitleColor: designSettings.section_title_color,
+            titleFontWeight: designSettings.title_font_weight
         });
 
         let content;
@@ -158,18 +162,46 @@ class MemberWelcomeEmailRenderer {
 
         const managePreferencesUrl = new URL('#/portal/account/newsletters', siteSettings.url).href;
         const year = new Date().getFullYear();
+        const headerImage = designSettings.header_image || null;
+        const showHeaderIcon = designSettings.show_header_icon !== false && Boolean(siteSettings.iconUrl);
+        const showHeaderTitle = designSettings.show_header_title !== false;
+        const showBadge = designSettings.show_badge !== false;
+        const bodyFontCategory = designSettings.body_font_category === 'serif' ? 'serif' : 'sans_serif';
 
         const html = this.#wrapperTemplate({
             content: contentWithAbsoluteLinks,
             emailTitle: subjectWithReplacements,
             subject: subjectWithReplacements,
+            footerContent: designSettings.footer_content || null,
+            hasHeaderContent: Boolean(headerImage || showHeaderIcon || showHeaderTitle),
+            headerImage,
+            showBadge,
+            showHeaderIcon,
+            showHeaderName: false,
+            showHeaderTitle,
+            site: {
+                iconUrl: siteSettings.iconUrl || null,
+                title: siteSettings.title,
+                url: siteSettings.url
+            },
             siteTitle: siteSettings.title,
             siteUrl: siteSettings.url,
             managePreferencesUrl,
             year,
+            ctaBgColors: [
+                'grey',
+                'blue',
+                'green',
+                'yellow',
+                'red',
+                'pink',
+                'purple',
+                'white'
+            ],
             ...design,
             classes: {
-                container: 'container'
+                container: 'container',
+                content: bodyFontCategory !== 'serif' ? 'post-content-sans-serif' : 'post-content'
             }
         });
 

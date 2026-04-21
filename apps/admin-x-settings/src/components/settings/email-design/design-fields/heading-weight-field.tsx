@@ -1,11 +1,5 @@
 import {FONT_WEIGHT_OPTIONS, getValidWeight} from './font-constants';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@tryghost/shade';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@tryghost/shade/components';
 import {useEmailDesign} from '../email-design-context';
 
 export const HeadingWeightField = () => {
@@ -20,7 +14,11 @@ export const HeadingWeightField = () => {
                 <SelectTrigger className="w-[180px]">
                     <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                    onEscapeKeyDown={(event) => {
+                        event.stopPropagation();
+                    }}
+                >
                     {weightOptions.map(opt => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}

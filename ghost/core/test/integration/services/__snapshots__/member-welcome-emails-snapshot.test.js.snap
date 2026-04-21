@@ -130,7 +130,7 @@ table[class=body] a[class=small] {
   color: #15212A !important;
   font-family: inherit !important;
   font-size: 14px;
-  line-height: 1.3em;
+  line-height: 1.3;
   padding-top: 4px;
   padding-right: 20px;
   padding-left: 20px;
@@ -143,7 +143,7 @@ table[class=body] a[class=small] {
   font-family: inherit !important;
   font-size: 15px;
   padding: 8px;
-  line-height: 1.3em;
+  line-height: 1.3;
 }
 .kg-cta-link-accent .kg-cta-sponsor-label a {
   color: #15212A !important;
@@ -259,7 +259,293 @@ table[class=body] a[class=small] {
     line-height: inherit;
   }
 }
-</style>    </head>
+.post-title-link {
+  display: block;
+  margin-top: 32px;
+  color: #15212A;
+  text-align: center;
+  line-height: 1.1;
+}
+.post-title-link-left {
+  text-align: left;
+}
+.view-online-link {
+  word-wrap: none;
+  white-space: nowrap;
+  color: #15212a;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: underline !important;
+}
+.kg-audio-link {
+  color: #15212a !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+@media only screen and (max-width: 620px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .mobile-only {
+    display: initial !important;
+  }
+
+  .hide-desktop {
+    display: initial !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  table.body p,
+table.body ul,
+table.body ol,
+table.body td {
+    font-size: 16px;
+  }
+
+  table.header .post-excerpt {
+    font-size: 16px !important;
+  }
+
+  table.body .kg-callout-card {
+    padding: 16px 24px !important;
+  }
+
+  table.body .kg-callout-text {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  table.body pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  table.body .main,
+table.header .header-main {
+    border-spacing: 10px 0 !important;
+    border-left-width: 0 !important;
+    border-radius: 0 !important;
+    border-right-width: 0 !important;
+  }
+
+  table.header .site-icon {
+    padding-top: 0 !important;
+  }
+
+  table.header .site-info {
+    padding-top: 24px !important;
+  }
+
+  table.header .post-title-link {
+    margin-top: 24px !important;
+  }
+
+  table.header .post-meta-wrapper {
+    padding-bottom: 24px !important;
+  }
+
+  table.header .site-icon img {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  table.header .site-url a {
+    font-size: 13px !important;
+    padding-bottom: 16px !important;
+  }
+
+  table.header .post-meta,
+table.header .post-meta-date {
+    white-space: normal !important;
+    font-size: 13px !important;
+    line-height: 1.2;
+  }
+
+  table.header .post-meta,
+table.header .view-online {
+    width: 100% !important;
+  }
+
+  table.header .post-meta-left,
+table.header .post-meta-left.view-online {
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online-mobile {
+    display: table-row !important;
+  }
+
+  table.header .post-meta-left.view-online-mobile,
+table.header .post-meta-left.view-online-mobile .view-online {
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online.desktop {
+    display: none !important;
+  }
+
+  table.header .view-online {
+    text-decoration: underline;
+  }
+
+  table.body .footer p,
+table.body .footer p span {
+    font-size: 13px !important;
+  }
+
+  table.header .view-online-link,
+table.body .footer,
+table.body .footer a {
+    font-size: 13px !important;
+  }
+
+  table.header .post-title a {
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+  }
+
+  table.feedback-buttons {
+    display: table !important;
+    width: 100% !important;
+    max-width: 390px;
+  }
+
+  table.feedback-buttons img {
+    display: inherit !important;
+  }
+
+  table.body .feedback-button-text {
+    display: none!important;
+  }
+
+  table.body .latest-posts-header {
+    font-size: 12px !important;
+  }
+
+  table.body .latest-post-title {
+    padding-right: 8px !important;
+  }
+
+  table.body .latest-post h4,
+table.body .latest-post h4 span {
+    padding: 4px 0 6px !important;
+    font-size: 15px !important;
+  }
+
+  table.body .latest-post-excerpt,
+table.body .latest-post-excerpt a,
+table.body .latest-post-excerpt span {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+
+  table.body .subscription-box h3 {
+    font-size: 14px !important;
+  }
+
+  table.body .subscription-box p,
+table.body .subscription-box p span {
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details,
+table.body .manage-subscription {
+    display: inline-block;
+    width: 100%;
+    text-align: left !important;
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details {
+    padding-bottom: 12px;
+  }
+
+  table.body h1 {
+    font-size: 32px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h2,
+table.body h2 span {
+    font-size: 26px !important;
+    line-height: 1.22 !important;
+  }
+
+  table.body h3 {
+    font-size: 21px !important;
+    line-height: 1.25 !important;
+  }
+
+  table.body h4 {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h5 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body h6 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote {
+    font-size: 16px !important;
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+
+  table.body blockquote p {
+    margin-right: 15px !important;
+    margin-left: 15px !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt {
+    border-left: 0 none !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt p {
+    margin-right: 20px !important;
+    margin-left: 20px !important;
+  }
+
+  table.body hr {
+    margin: 2em 0 !important;
+  }
+
+  .feature-image-caption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption p,
+.kg-card-figcaption p span {
+    font-size: 13px!important;
+  }
+}
+@media all {
+  .subscription-details p.hidden {
+    display: none !important;
+  }
+}
+</style>
+        <!--[if mso]>
+        <style type=\\"text/css\\">
+            ul, ol { margin-left: 1.5em !important; } 
+        </style>
+        <![endif]-->
+    </head>
     <body data-testid=\\"email-preview-body\\" style=\\"background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 18px; line-height: 0; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; color: #15212A;\\">
         <span class=\\"preheader\\" style=\\"color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;\\"></span>
         <!-- SPACING TO AVOID BODY TEXT BEING DUPLICATED IN PREVIEW TEXT -->
@@ -268,6 +554,51 @@ table[class=body] a[class=small] {
         </div>
 
         <!-- HEADER WITH FULL-WIDTH BACKGROUND -->
+            <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header\\" width=\\"100%\\" style=\\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; line-height: 1.4; background-color: #ffffff; width: 100%; border-spacing: 0; border-collapse: collapse;\\" bgcolor=\\"#ffffff\\">
+                <!-- Outlook doesn't respect max-width so we need an extra centered table -->
+                <!--[if mso]>
+                <tr>
+                    <td>
+                        <center>
+                            <table border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"600\\">
+                <![endif]-->
+                <tr>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                    <td class=\\"container\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
+                        <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
+                        <!-- Header content constrained to 600px -->
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header-main\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: transparent;\\" width=\\"100%\\" bgcolor=\\"transparent\\">
+                            <tr>
+                                <td class=\\"header-content\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding: 0; margin: 0 auto;\\" valign=\\"top\\">
+                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+
+                                            <tr class=\\"site-info-row\\">
+                                                <td class=\\"site-info\\" width=\\"100%\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding-top: 32px; padding-bottom: 32px;\\" valign=\\"top\\">
+                                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\" width=\\"100%\\">
+                                                            <tr>
+                                                                <td class=\\"site-url site-url-bottom-padding\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212A; font-size: 16px; letter-spacing: -0.1px; font-weight: 700; text-transform: uppercase; text-align: center; padding-bottom: 12px;\\" valign=\\"top\\" align=\\"center\\"><div style=\\"width: 100% !important;\\"><a href=\\"http://example.com\\" class=\\"site-title\\" style=\\"text-decoration: none; color: #15212A; overflow-wrap: anywhere;\\">Test Site</a></div></td>
+                                                            </tr>
+
+                                                    </table>
+                                                </td>
+                                            </tr>
+
+
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        </div>
+                    </td>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                </tr>
+                <!--[if mso]>
+                            </table>
+                        </center>
+                    </td>
+                </tr>
+                <![endif]-->
+            </table>
 
         <!-- MAIN CONTENT AREA -->
         <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"body\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; line-height: 1.4; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
@@ -282,30 +613,32 @@ table[class=body] a[class=small] {
                 <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
                 <td class=\\"container\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; display: block; max-width: 600px; margin: 0 auto;\\" valign=\\"top\\">
                     <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
-                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
-                                          <tr>
-                                            <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
-                                                <tr>
-                                                  <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
-                                                    <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6em;\\">Welcome to our site!</p>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
-                                                <tr>
-                                                  <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5em; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
-                                                    Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                        </table>
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">              <tr>
+                <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+                    <tr class=\\"post-content-row\\">
+                      <td class=\\"post-content-sans-serif\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; font-size: 17px; line-height: 1.5; color: #15212A; padding-bottom: 20px; border-bottom: 1px solid #e0e7eb; max-width: 600px;\\" valign=\\"top\\">
+                        <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6; color: #15212A;\\">Welcome to our site!</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
+                    <tr>
+                      <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
+                        Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
+                      </td>
+                    </tr>
+                      <tr>
+                        <td class=\\"footer-powered\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; text-align: center; padding-top: 70px; padding-bottom: 40px;\\" valign=\\"top\\" align=\\"center\\"><a href=\\"https://ghost.org/?via=pbg-newsletter\\" style=\\"color: #15212A; text-decoration: none; overflow-wrap: anywhere;\\"><img src=\\"https://static.ghost.org/v4.0.0/images/powered.png\\" border=\\"0\\" width=\\"142\\" height=\\"30\\" class=\\"gh-powered\\" alt=\\"Powered by Ghost\\" style=\\"border: none; -ms-interpolation-mode: bicubic; max-width: 100%; width: 142px; height: 30px;\\"></a></td>
+                      </tr>
+                  </table>
+                </td>
+              </tr>
+</table>
                         <!-- END CENTERED WHITE CONTAINER -->
                     </div>
                 </td>
@@ -336,10 +669,54 @@ table[class=body] a[class=small] {
 
 
 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Test Site [http://example.com]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  
 
+
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -368,6 +745,9 @@ Welcome to our site!
 
 Test Site © 2020 — Manage your preferences [http://example.com/#/portal/account/newsletters]
 
+
+
+https://ghost.org/?via=pbg-newsletter
 
 
 
@@ -517,7 +897,7 @@ table[class=body] a[class=small] {
   color: #15212A !important;
   font-family: inherit !important;
   font-size: 14px;
-  line-height: 1.3em;
+  line-height: 1.3;
   padding-top: 4px;
   padding-right: 20px;
   padding-left: 20px;
@@ -530,7 +910,7 @@ table[class=body] a[class=small] {
   font-family: inherit !important;
   font-size: 15px;
   padding: 8px;
-  line-height: 1.3em;
+  line-height: 1.3;
 }
 .kg-cta-link-accent .kg-cta-sponsor-label a {
   color: #15212A !important;
@@ -646,7 +1026,293 @@ table[class=body] a[class=small] {
     line-height: inherit;
   }
 }
-</style>    </head>
+.post-title-link {
+  display: block;
+  margin-top: 32px;
+  color: #15212A;
+  text-align: center;
+  line-height: 1.1;
+}
+.post-title-link-left {
+  text-align: left;
+}
+.view-online-link {
+  word-wrap: none;
+  white-space: nowrap;
+  color: #15212a;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: underline !important;
+}
+.kg-audio-link {
+  color: #15212a !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+@media only screen and (max-width: 620px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .mobile-only {
+    display: initial !important;
+  }
+
+  .hide-desktop {
+    display: initial !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  table.body p,
+table.body ul,
+table.body ol,
+table.body td {
+    font-size: 16px;
+  }
+
+  table.header .post-excerpt {
+    font-size: 16px !important;
+  }
+
+  table.body .kg-callout-card {
+    padding: 16px 24px !important;
+  }
+
+  table.body .kg-callout-text {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  table.body pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  table.body .main,
+table.header .header-main {
+    border-spacing: 10px 0 !important;
+    border-left-width: 0 !important;
+    border-radius: 0 !important;
+    border-right-width: 0 !important;
+  }
+
+  table.header .site-icon {
+    padding-top: 0 !important;
+  }
+
+  table.header .site-info {
+    padding-top: 24px !important;
+  }
+
+  table.header .post-title-link {
+    margin-top: 24px !important;
+  }
+
+  table.header .post-meta-wrapper {
+    padding-bottom: 24px !important;
+  }
+
+  table.header .site-icon img {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  table.header .site-url a {
+    font-size: 13px !important;
+    padding-bottom: 16px !important;
+  }
+
+  table.header .post-meta,
+table.header .post-meta-date {
+    white-space: normal !important;
+    font-size: 13px !important;
+    line-height: 1.2;
+  }
+
+  table.header .post-meta,
+table.header .view-online {
+    width: 100% !important;
+  }
+
+  table.header .post-meta-left,
+table.header .post-meta-left.view-online {
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online-mobile {
+    display: table-row !important;
+  }
+
+  table.header .post-meta-left.view-online-mobile,
+table.header .post-meta-left.view-online-mobile .view-online {
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online.desktop {
+    display: none !important;
+  }
+
+  table.header .view-online {
+    text-decoration: underline;
+  }
+
+  table.body .footer p,
+table.body .footer p span {
+    font-size: 13px !important;
+  }
+
+  table.header .view-online-link,
+table.body .footer,
+table.body .footer a {
+    font-size: 13px !important;
+  }
+
+  table.header .post-title a {
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+  }
+
+  table.feedback-buttons {
+    display: table !important;
+    width: 100% !important;
+    max-width: 390px;
+  }
+
+  table.feedback-buttons img {
+    display: inherit !important;
+  }
+
+  table.body .feedback-button-text {
+    display: none!important;
+  }
+
+  table.body .latest-posts-header {
+    font-size: 12px !important;
+  }
+
+  table.body .latest-post-title {
+    padding-right: 8px !important;
+  }
+
+  table.body .latest-post h4,
+table.body .latest-post h4 span {
+    padding: 4px 0 6px !important;
+    font-size: 15px !important;
+  }
+
+  table.body .latest-post-excerpt,
+table.body .latest-post-excerpt a,
+table.body .latest-post-excerpt span {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+
+  table.body .subscription-box h3 {
+    font-size: 14px !important;
+  }
+
+  table.body .subscription-box p,
+table.body .subscription-box p span {
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details,
+table.body .manage-subscription {
+    display: inline-block;
+    width: 100%;
+    text-align: left !important;
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details {
+    padding-bottom: 12px;
+  }
+
+  table.body h1 {
+    font-size: 32px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h2,
+table.body h2 span {
+    font-size: 26px !important;
+    line-height: 1.22 !important;
+  }
+
+  table.body h3 {
+    font-size: 21px !important;
+    line-height: 1.25 !important;
+  }
+
+  table.body h4 {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h5 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body h6 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote {
+    font-size: 16px !important;
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+
+  table.body blockquote p {
+    margin-right: 15px !important;
+    margin-left: 15px !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt {
+    border-left: 0 none !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt p {
+    margin-right: 20px !important;
+    margin-left: 20px !important;
+  }
+
+  table.body hr {
+    margin: 2em 0 !important;
+  }
+
+  .feature-image-caption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption p,
+.kg-card-figcaption p span {
+    font-size: 13px!important;
+  }
+}
+@media all {
+  .subscription-details p.hidden {
+    display: none !important;
+  }
+}
+</style>
+        <!--[if mso]>
+        <style type=\\"text/css\\">
+            ul, ol { margin-left: 1.5em !important; } 
+        </style>
+        <![endif]-->
+    </head>
     <body data-testid=\\"email-preview-body\\" style=\\"background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 18px; line-height: 0; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; color: #15212A;\\">
         <span class=\\"preheader\\" style=\\"color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;\\"></span>
         <!-- SPACING TO AVOID BODY TEXT BEING DUPLICATED IN PREVIEW TEXT -->
@@ -655,6 +1321,51 @@ table[class=body] a[class=small] {
         </div>
 
         <!-- HEADER WITH FULL-WIDTH BACKGROUND -->
+            <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header\\" width=\\"100%\\" style=\\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; line-height: 1.4; background-color: #ffffff; width: 100%; border-spacing: 0; border-collapse: collapse;\\" bgcolor=\\"#ffffff\\">
+                <!-- Outlook doesn't respect max-width so we need an extra centered table -->
+                <!--[if mso]>
+                <tr>
+                    <td>
+                        <center>
+                            <table border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"600\\">
+                <![endif]-->
+                <tr>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                    <td class=\\"container\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
+                        <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
+                        <!-- Header content constrained to 600px -->
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header-main\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: transparent;\\" width=\\"100%\\" bgcolor=\\"transparent\\">
+                            <tr>
+                                <td class=\\"header-content\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding: 0; margin: 0 auto;\\" valign=\\"top\\">
+                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+
+                                            <tr class=\\"site-info-row\\">
+                                                <td class=\\"site-info\\" width=\\"100%\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding-top: 32px; padding-bottom: 32px;\\" valign=\\"top\\">
+                                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\" width=\\"100%\\">
+                                                            <tr>
+                                                                <td class=\\"site-url site-url-bottom-padding\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212A; font-size: 16px; letter-spacing: -0.1px; font-weight: 700; text-transform: uppercase; text-align: center; padding-bottom: 12px;\\" valign=\\"top\\" align=\\"center\\"><div style=\\"width: 100% !important;\\"><a href=\\"http://example.com\\" class=\\"site-title\\" style=\\"text-decoration: none; color: #15212A; overflow-wrap: anywhere;\\">Test Site</a></div></td>
+                                                            </tr>
+
+                                                    </table>
+                                                </td>
+                                            </tr>
+
+
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        </div>
+                    </td>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                </tr>
+                <!--[if mso]>
+                            </table>
+                        </center>
+                    </td>
+                </tr>
+                <![endif]-->
+            </table>
 
         <!-- MAIN CONTENT AREA -->
         <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"body\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; line-height: 1.4; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
@@ -669,30 +1380,32 @@ table[class=body] a[class=small] {
                 <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
                 <td class=\\"container\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; display: block; max-width: 600px; margin: 0 auto;\\" valign=\\"top\\">
                     <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
-                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
-                                          <tr>
-                                            <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
-                                                <tr>
-                                                  <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
-                                                    <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6em;\\">Hello friend, welcome!</p>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
-                                                <tr>
-                                                  <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5em; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
-                                                    Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                        </table>
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">              <tr>
+                <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+                    <tr class=\\"post-content-row\\">
+                      <td class=\\"post-content-sans-serif\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; font-size: 17px; line-height: 1.5; color: #15212A; padding-bottom: 20px; border-bottom: 1px solid #e0e7eb; max-width: 600px;\\" valign=\\"top\\">
+                        <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6; color: #15212A;\\">Hello friend, welcome!</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
+                    <tr>
+                      <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
+                        Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
+                      </td>
+                    </tr>
+                      <tr>
+                        <td class=\\"footer-powered\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; text-align: center; padding-top: 70px; padding-bottom: 40px;\\" valign=\\"top\\" align=\\"center\\"><a href=\\"https://ghost.org/?via=pbg-newsletter\\" style=\\"color: #15212A; text-decoration: none; overflow-wrap: anywhere;\\"><img src=\\"https://static.ghost.org/v4.0.0/images/powered.png\\" border=\\"0\\" width=\\"142\\" height=\\"30\\" class=\\"gh-powered\\" alt=\\"Powered by Ghost\\" style=\\"border: none; -ms-interpolation-mode: bicubic; max-width: 100%; width: 142px; height: 30px;\\"></a></td>
+                      </tr>
+                  </table>
+                </td>
+              </tr>
+</table>
                         <!-- END CENTERED WHITE CONTAINER -->
                     </div>
                 </td>
@@ -723,10 +1436,54 @@ table[class=body] a[class=small] {
 
 
 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Test Site [http://example.com]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  
 
+
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -755,6 +1512,9 @@ Hello friend, welcome!
 
 Test Site © 2020 — Manage your preferences [http://example.com/#/portal/account/newsletters]
 
+
+
+https://ghost.org/?via=pbg-newsletter
 
 
 
@@ -904,7 +1664,7 @@ table[class=body] a[class=small] {
   color: #15212A !important;
   font-family: inherit !important;
   font-size: 14px;
-  line-height: 1.3em;
+  line-height: 1.3;
   padding-top: 4px;
   padding-right: 20px;
   padding-left: 20px;
@@ -917,7 +1677,7 @@ table[class=body] a[class=small] {
   font-family: inherit !important;
   font-size: 15px;
   padding: 8px;
-  line-height: 1.3em;
+  line-height: 1.3;
 }
 .kg-cta-link-accent .kg-cta-sponsor-label a {
   color: #15212A !important;
@@ -1033,7 +1793,293 @@ table[class=body] a[class=small] {
     line-height: inherit;
   }
 }
-</style>    </head>
+.post-title-link {
+  display: block;
+  margin-top: 32px;
+  color: #15212A;
+  text-align: center;
+  line-height: 1.1;
+}
+.post-title-link-left {
+  text-align: left;
+}
+.view-online-link {
+  word-wrap: none;
+  white-space: nowrap;
+  color: #15212a;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: underline !important;
+}
+.kg-audio-link {
+  color: #15212a !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+@media only screen and (max-width: 620px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .mobile-only {
+    display: initial !important;
+  }
+
+  .hide-desktop {
+    display: initial !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  table.body p,
+table.body ul,
+table.body ol,
+table.body td {
+    font-size: 16px;
+  }
+
+  table.header .post-excerpt {
+    font-size: 16px !important;
+  }
+
+  table.body .kg-callout-card {
+    padding: 16px 24px !important;
+  }
+
+  table.body .kg-callout-text {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  table.body pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  table.body .main,
+table.header .header-main {
+    border-spacing: 10px 0 !important;
+    border-left-width: 0 !important;
+    border-radius: 0 !important;
+    border-right-width: 0 !important;
+  }
+
+  table.header .site-icon {
+    padding-top: 0 !important;
+  }
+
+  table.header .site-info {
+    padding-top: 24px !important;
+  }
+
+  table.header .post-title-link {
+    margin-top: 24px !important;
+  }
+
+  table.header .post-meta-wrapper {
+    padding-bottom: 24px !important;
+  }
+
+  table.header .site-icon img {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  table.header .site-url a {
+    font-size: 13px !important;
+    padding-bottom: 16px !important;
+  }
+
+  table.header .post-meta,
+table.header .post-meta-date {
+    white-space: normal !important;
+    font-size: 13px !important;
+    line-height: 1.2;
+  }
+
+  table.header .post-meta,
+table.header .view-online {
+    width: 100% !important;
+  }
+
+  table.header .post-meta-left,
+table.header .post-meta-left.view-online {
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online-mobile {
+    display: table-row !important;
+  }
+
+  table.header .post-meta-left.view-online-mobile,
+table.header .post-meta-left.view-online-mobile .view-online {
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online.desktop {
+    display: none !important;
+  }
+
+  table.header .view-online {
+    text-decoration: underline;
+  }
+
+  table.body .footer p,
+table.body .footer p span {
+    font-size: 13px !important;
+  }
+
+  table.header .view-online-link,
+table.body .footer,
+table.body .footer a {
+    font-size: 13px !important;
+  }
+
+  table.header .post-title a {
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+  }
+
+  table.feedback-buttons {
+    display: table !important;
+    width: 100% !important;
+    max-width: 390px;
+  }
+
+  table.feedback-buttons img {
+    display: inherit !important;
+  }
+
+  table.body .feedback-button-text {
+    display: none!important;
+  }
+
+  table.body .latest-posts-header {
+    font-size: 12px !important;
+  }
+
+  table.body .latest-post-title {
+    padding-right: 8px !important;
+  }
+
+  table.body .latest-post h4,
+table.body .latest-post h4 span {
+    padding: 4px 0 6px !important;
+    font-size: 15px !important;
+  }
+
+  table.body .latest-post-excerpt,
+table.body .latest-post-excerpt a,
+table.body .latest-post-excerpt span {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+
+  table.body .subscription-box h3 {
+    font-size: 14px !important;
+  }
+
+  table.body .subscription-box p,
+table.body .subscription-box p span {
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details,
+table.body .manage-subscription {
+    display: inline-block;
+    width: 100%;
+    text-align: left !important;
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details {
+    padding-bottom: 12px;
+  }
+
+  table.body h1 {
+    font-size: 32px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h2,
+table.body h2 span {
+    font-size: 26px !important;
+    line-height: 1.22 !important;
+  }
+
+  table.body h3 {
+    font-size: 21px !important;
+    line-height: 1.25 !important;
+  }
+
+  table.body h4 {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h5 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body h6 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote {
+    font-size: 16px !important;
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+
+  table.body blockquote p {
+    margin-right: 15px !important;
+    margin-left: 15px !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt {
+    border-left: 0 none !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt p {
+    margin-right: 20px !important;
+    margin-left: 20px !important;
+  }
+
+  table.body hr {
+    margin: 2em 0 !important;
+  }
+
+  .feature-image-caption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption p,
+.kg-card-figcaption p span {
+    font-size: 13px!important;
+  }
+}
+@media all {
+  .subscription-details p.hidden {
+    display: none !important;
+  }
+}
+</style>
+        <!--[if mso]>
+        <style type=\\"text/css\\">
+            ul, ol { margin-left: 1.5em !important; } 
+        </style>
+        <![endif]-->
+    </head>
     <body data-testid=\\"email-preview-body\\" style=\\"background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 18px; line-height: 0; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; color: #15212A;\\">
         <span class=\\"preheader\\" style=\\"color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;\\"></span>
         <!-- SPACING TO AVOID BODY TEXT BEING DUPLICATED IN PREVIEW TEXT -->
@@ -1042,6 +2088,51 @@ table[class=body] a[class=small] {
         </div>
 
         <!-- HEADER WITH FULL-WIDTH BACKGROUND -->
+            <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header\\" width=\\"100%\\" style=\\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; line-height: 1.4; background-color: #ffffff; width: 100%; border-spacing: 0; border-collapse: collapse;\\" bgcolor=\\"#ffffff\\">
+                <!-- Outlook doesn't respect max-width so we need an extra centered table -->
+                <!--[if mso]>
+                <tr>
+                    <td>
+                        <center>
+                            <table border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"600\\">
+                <![endif]-->
+                <tr>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                    <td class=\\"container\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
+                        <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
+                        <!-- Header content constrained to 600px -->
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header-main\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: transparent;\\" width=\\"100%\\" bgcolor=\\"transparent\\">
+                            <tr>
+                                <td class=\\"header-content\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding: 0; margin: 0 auto;\\" valign=\\"top\\">
+                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+
+                                            <tr class=\\"site-info-row\\">
+                                                <td class=\\"site-info\\" width=\\"100%\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding-top: 32px; padding-bottom: 32px;\\" valign=\\"top\\">
+                                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\" width=\\"100%\\">
+                                                            <tr>
+                                                                <td class=\\"site-url site-url-bottom-padding\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212A; font-size: 16px; letter-spacing: -0.1px; font-weight: 700; text-transform: uppercase; text-align: center; padding-bottom: 12px;\\" valign=\\"top\\" align=\\"center\\"><div style=\\"width: 100% !important;\\"><a href=\\"http://example.com\\" class=\\"site-title\\" style=\\"text-decoration: none; color: #15212A; overflow-wrap: anywhere;\\">Test Site</a></div></td>
+                                                            </tr>
+
+                                                    </table>
+                                                </td>
+                                            </tr>
+
+
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        </div>
+                    </td>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                </tr>
+                <!--[if mso]>
+                            </table>
+                        </center>
+                    </td>
+                </tr>
+                <![endif]-->
+            </table>
 
         <!-- MAIN CONTENT AREA -->
         <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"body\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; line-height: 1.4; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
@@ -1056,30 +2147,32 @@ table[class=body] a[class=small] {
                 <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
                 <td class=\\"container\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; display: block; max-width: 600px; margin: 0 auto;\\" valign=\\"top\\">
                     <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
-                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
-                                          <tr>
-                                            <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
-                                                <tr>
-                                                  <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
-                                                    <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6em;\\">Hello Jamie, welcome to Test Site! Your email is jamie@example.com.</p>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
-                                                <tr>
-                                                  <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5em; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
-                                                    Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                        </table>
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">              <tr>
+                <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+                    <tr class=\\"post-content-row\\">
+                      <td class=\\"post-content-sans-serif\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; font-size: 17px; line-height: 1.5; color: #15212A; padding-bottom: 20px; border-bottom: 1px solid #e0e7eb; max-width: 600px;\\" valign=\\"top\\">
+                        <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6; color: #15212A;\\">Hello Jamie, welcome to Test Site! Your email is jamie@example.com.</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
+                    <tr>
+                      <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
+                        Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
+                      </td>
+                    </tr>
+                      <tr>
+                        <td class=\\"footer-powered\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; text-align: center; padding-top: 70px; padding-bottom: 40px;\\" valign=\\"top\\" align=\\"center\\"><a href=\\"https://ghost.org/?via=pbg-newsletter\\" style=\\"color: #15212A; text-decoration: none; overflow-wrap: anywhere;\\"><img src=\\"https://static.ghost.org/v4.0.0/images/powered.png\\" border=\\"0\\" width=\\"142\\" height=\\"30\\" class=\\"gh-powered\\" alt=\\"Powered by Ghost\\" style=\\"border: none; -ms-interpolation-mode: bicubic; max-width: 100%; width: 142px; height: 30px;\\"></a></td>
+                      </tr>
+                  </table>
+                </td>
+              </tr>
+</table>
                         <!-- END CENTERED WHITE CONTAINER -->
                     </div>
                 </td>
@@ -1110,10 +2203,54 @@ table[class=body] a[class=small] {
 
 
 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Test Site [http://example.com]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  
 
+
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -1142,6 +2279,9 @@ Hello Jamie, welcome to Test Site! Your email is jamie@example.com.
 
 Test Site © 2020 — Manage your preferences [http://example.com/#/portal/account/newsletters]
 
+
+
+https://ghost.org/?via=pbg-newsletter
 
 
 
@@ -1292,7 +2432,7 @@ table[class=body] a[class=small] {
   color: #15212A !important;
   font-family: inherit !important;
   font-size: 14px;
-  line-height: 1.3em;
+  line-height: 1.3;
   padding-top: 4px;
   padding-right: 20px;
   padding-left: 20px;
@@ -1305,7 +2445,7 @@ table[class=body] a[class=small] {
   font-family: inherit !important;
   font-size: 15px;
   padding: 8px;
-  line-height: 1.3em;
+  line-height: 1.3;
 }
 .kg-cta-link-accent .kg-cta-sponsor-label a {
   color: #FF0000 !important;
@@ -1421,7 +2561,293 @@ table[class=body] a[class=small] {
     line-height: inherit;
   }
 }
-</style>    </head>
+.post-title-link {
+  display: block;
+  margin-top: 32px;
+  color: #15212A;
+  text-align: center;
+  line-height: 1.1;
+}
+.post-title-link-left {
+  text-align: left;
+}
+.view-online-link {
+  word-wrap: none;
+  white-space: nowrap;
+  color: #15212a;
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: underline !important;
+}
+.kg-audio-link {
+  color: #15212a !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+@media only screen and (max-width: 620px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .mobile-only {
+    display: initial !important;
+  }
+
+  .hide-desktop {
+    display: initial !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  table.body p,
+table.body ul,
+table.body ol,
+table.body td {
+    font-size: 16px;
+  }
+
+  table.header .post-excerpt {
+    font-size: 16px !important;
+  }
+
+  table.body .kg-callout-card {
+    padding: 16px 24px !important;
+  }
+
+  table.body .kg-callout-text {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  table.body pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  table.body .main,
+table.header .header-main {
+    border-spacing: 10px 0 !important;
+    border-left-width: 0 !important;
+    border-radius: 0 !important;
+    border-right-width: 0 !important;
+  }
+
+  table.header .site-icon {
+    padding-top: 0 !important;
+  }
+
+  table.header .site-info {
+    padding-top: 24px !important;
+  }
+
+  table.header .post-title-link {
+    margin-top: 24px !important;
+  }
+
+  table.header .post-meta-wrapper {
+    padding-bottom: 24px !important;
+  }
+
+  table.header .site-icon img {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  table.header .site-url a {
+    font-size: 13px !important;
+    padding-bottom: 16px !important;
+  }
+
+  table.header .post-meta,
+table.header .post-meta-date {
+    white-space: normal !important;
+    font-size: 13px !important;
+    line-height: 1.2;
+  }
+
+  table.header .post-meta,
+table.header .view-online {
+    width: 100% !important;
+  }
+
+  table.header .post-meta-left,
+table.header .post-meta-left.view-online {
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online-mobile {
+    display: table-row !important;
+  }
+
+  table.header .post-meta-left.view-online-mobile,
+table.header .post-meta-left.view-online-mobile .view-online {
+    text-align: left !important;
+  }
+
+  table.header .post-meta.view-online.desktop {
+    display: none !important;
+  }
+
+  table.header .view-online {
+    text-decoration: underline;
+  }
+
+  table.body .footer p,
+table.body .footer p span {
+    font-size: 13px !important;
+  }
+
+  table.header .view-online-link,
+table.body .footer,
+table.body .footer a {
+    font-size: 13px !important;
+  }
+
+  table.header .post-title a {
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+  }
+
+  table.feedback-buttons {
+    display: table !important;
+    width: 100% !important;
+    max-width: 390px;
+  }
+
+  table.feedback-buttons img {
+    display: inherit !important;
+  }
+
+  table.body .feedback-button-text {
+    display: none!important;
+  }
+
+  table.body .latest-posts-header {
+    font-size: 12px !important;
+  }
+
+  table.body .latest-post-title {
+    padding-right: 8px !important;
+  }
+
+  table.body .latest-post h4,
+table.body .latest-post h4 span {
+    padding: 4px 0 6px !important;
+    font-size: 15px !important;
+  }
+
+  table.body .latest-post-excerpt,
+table.body .latest-post-excerpt a,
+table.body .latest-post-excerpt span {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+
+  table.body .subscription-box h3 {
+    font-size: 14px !important;
+  }
+
+  table.body .subscription-box p,
+table.body .subscription-box p span {
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details,
+table.body .manage-subscription {
+    display: inline-block;
+    width: 100%;
+    text-align: left !important;
+    font-size: 13px !important;
+  }
+
+  table.body .subscription-details {
+    padding-bottom: 12px;
+  }
+
+  table.body h1 {
+    font-size: 32px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h2,
+table.body h2 span {
+    font-size: 26px !important;
+    line-height: 1.22 !important;
+  }
+
+  table.body h3 {
+    font-size: 21px !important;
+    line-height: 1.25 !important;
+  }
+
+  table.body h4 {
+    font-size: 19px !important;
+    line-height: 1.3 !important;
+  }
+
+  table.body h5 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body h6 {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote {
+    font-size: 16px !important;
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+
+  table.body blockquote p {
+    margin-right: 15px !important;
+    margin-left: 15px !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt {
+    border-left: 0 none !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+  }
+
+  table.body blockquote.kg-blockquote-alt p {
+    margin-right: 20px !important;
+    margin-left: 20px !important;
+  }
+
+  table.body hr {
+    margin: 2em 0 !important;
+  }
+
+  .feature-image-caption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption {
+    font-size: 13px!important;
+  }
+
+  .kg-card-figcaption p,
+.kg-card-figcaption p span {
+    font-size: 13px!important;
+  }
+}
+@media all {
+  .subscription-details p.hidden {
+    display: none !important;
+  }
+}
+</style>
+        <!--[if mso]>
+        <style type=\\"text/css\\">
+            ul, ol { margin-left: 1.5em !important; } 
+        </style>
+        <![endif]-->
+    </head>
     <body data-testid=\\"email-preview-body\\" style=\\"background-color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 18px; line-height: 0; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; color: #15212A;\\">
         <span class=\\"preheader\\" style=\\"color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;\\"></span>
         <!-- SPACING TO AVOID BODY TEXT BEING DUPLICATED IN PREVIEW TEXT -->
@@ -1430,6 +2856,51 @@ table[class=body] a[class=small] {
         </div>
 
         <!-- HEADER WITH FULL-WIDTH BACKGROUND -->
+            <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header\\" width=\\"100%\\" style=\\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; line-height: 1.4; background-color: #ffffff; width: 100%; border-spacing: 0; border-collapse: collapse;\\" bgcolor=\\"#ffffff\\">
+                <!-- Outlook doesn't respect max-width so we need an extra centered table -->
+                <!--[if mso]>
+                <tr>
+                    <td>
+                        <center>
+                            <table border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"600\\">
+                <![endif]-->
+                <tr>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                    <td class=\\"container\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
+                        <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
+                        <!-- Header content constrained to 600px -->
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"header-main\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: transparent;\\" width=\\"100%\\" bgcolor=\\"transparent\\">
+                            <tr>
+                                <td class=\\"header-content\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding: 0; margin: 0 auto;\\" valign=\\"top\\">
+                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+
+                                            <tr class=\\"site-info-row\\">
+                                                <td class=\\"site-info\\" width=\\"100%\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; padding-top: 32px; padding-bottom: 32px;\\" valign=\\"top\\">
+                                                    <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\" width=\\"100%\\">
+                                                            <tr>
+                                                                <td class=\\"site-url site-url-bottom-padding\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212A; font-size: 16px; letter-spacing: -0.1px; font-weight: 700; text-transform: uppercase; text-align: center; padding-bottom: 12px;\\" valign=\\"top\\" align=\\"center\\"><div style=\\"width: 100% !important;\\"><a href=\\"http://example.com\\" class=\\"site-title\\" style=\\"text-decoration: none; color: #15212A; overflow-wrap: anywhere;\\">Test Site</a></div></td>
+                                                            </tr>
+
+                                                    </table>
+                                                </td>
+                                            </tr>
+
+
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        </div>
+                    </td>
+                    <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
+                </tr>
+                <!--[if mso]>
+                            </table>
+                        </center>
+                    </td>
+                </tr>
+                <![endif]-->
+            </table>
 
         <!-- MAIN CONTENT AREA -->
         <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"body\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; line-height: 1.4; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
@@ -1444,30 +2915,32 @@ table[class=body] a[class=small] {
                 <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">&nbsp;</td>
                 <td class=\\"container\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; display: block; max-width: 600px; margin: 0 auto;\\" valign=\\"top\\">
                     <div class=\\"content\\" style=\\"box-sizing: border-box; display: block; margin: 0 auto; max-width: 600px;\\">
-                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">
-                                          <tr>
-                                            <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
-                                                <tr>
-                                                  <td style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A;\\" valign=\\"top\\">
-                                                    <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6em;\\">Welcome!</p>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                                          <tr>
-                                            <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
-                                              <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
-                                                <tr>
-                                                  <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5em; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
-                                                    Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
-                                                  </td>
-                                                </tr>
-                                              </table>
-                                            </td>
-                                          </tr>
-                        </table>
+                        <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" class=\\"main\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 20px 0; width: 100%; max-width: 600px; background: #ffffff; background-color: #ffffff;\\" bgcolor=\\"#ffffff\\">              <tr>
+                <td class=\\"wrapper\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;\\">
+                    <tr class=\\"post-content-row\\">
+                      <td class=\\"post-content-sans-serif\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; font-size: 17px; line-height: 1.5; color: #15212A; padding-bottom: 20px; border-bottom: 1px solid #e0e7eb; max-width: 600px;\\" valign=\\"top\\">
+                        <p style=\\"margin: 0 0 1.5em 0; line-height: 1.6; color: #15212A;\\">Welcome!</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class=\\"wrapper\\" align=\\"center\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; box-sizing: border-box;\\" valign=\\"top\\">
+                  <table role=\\"presentation\\" border=\\"0\\" cellpadding=\\"0\\" cellspacing=\\"0\\" width=\\"100%\\" style=\\"border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; padding-top: 40px; padding-bottom: 30px;\\">
+                    <tr>
+                      <td class=\\"footer\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; vertical-align: top; color: #15212a; color: rgba(0, 0, 0, 0.6); margin-top: 20px; text-align: center; padding-bottom: 10px; padding-top: 10px; padding-left: 30px; padding-right: 30px; line-height: 1.5; font-size: 13px;\\" valign=\\"top\\" align=\\"center\\">
+                        Test Site &copy; 2020 &mdash; <a href=\\"http://example.com/#/portal/account/newsletters\\" style=\\"overflow-wrap: anywhere; color: #15212a; color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 13px;\\">Manage your preferences</a>
+                      </td>
+                    </tr>
+                      <tr>
+                        <td class=\\"footer-powered\\" style=\\"font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 18px; vertical-align: top; color: #15212A; text-align: center; padding-top: 70px; padding-bottom: 40px;\\" valign=\\"top\\" align=\\"center\\"><a href=\\"https://ghost.org/?via=pbg-newsletter\\" style=\\"color: #FF0000; text-decoration: none; overflow-wrap: anywhere;\\"><img src=\\"https://static.ghost.org/v4.0.0/images/powered.png\\" border=\\"0\\" width=\\"142\\" height=\\"30\\" class=\\"gh-powered\\" alt=\\"Powered by Ghost\\" style=\\"border: none; -ms-interpolation-mode: bicubic; max-width: 100%; width: 142px; height: 30px;\\"></a></td>
+                      </tr>
+                  </table>
+                </td>
+              </tr>
+</table>
                         <!-- END CENTERED WHITE CONTAINER -->
                     </div>
                 </td>
@@ -1498,10 +2971,54 @@ table[class=body] a[class=small] {
 
 
 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Test Site [http://example.com]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  
 
+
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -1530,6 +3047,9 @@ Welcome!
 
 Test Site © 2020 — Manage your preferences [http://example.com/#/portal/account/newsletters]
 
+
+
+https://ghost.org/?via=pbg-newsletter
 
 
 

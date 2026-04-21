@@ -1,13 +1,16 @@
-import {join} from 'path';
-import {tmpdir} from 'os';
-import {writeFileSync} from 'fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {writeFileSync} from 'node:fs';
 
-import {MembersImportModal, MembersPage} from '@/helpers/pages';
+import {MembersImportModal, MembersListPage} from '@/admin-pages';
 import {expect, test} from '@/helpers/playwright';
+import {usePerTestIsolation} from '@/helpers/playwright/isolation';
+
+usePerTestIsolation();
 
 test.describe('Ghost Admin - Members Import', () => {
     test('imports members from CSV via the UI', async ({page}) => {
-        const membersPage = new MembersPage(page, {route: 'members-forward'});
+        const membersPage = new MembersListPage(page);
         const importModal = new MembersImportModal(page);
 
         const timestamp = Date.now();
@@ -27,12 +30,11 @@ test.describe('Ghost Admin - Members Import', () => {
         writeFileSync(csvPath, csvContent);
 
         await membersPage.goto();
-        await membersPage.membersActionsButton.click();
-        await page.getByRole('menuitem', {name: 'Import members'}).click();
+        await membersPage.openActionsMenu();
+        await membersPage.getMenuItem(/Import members/).click();
 
         await importModal.fileInput.setInputFiles(csvPath);
 
-        // Verify all three fields were auto-detected
         await expect(importModal.importButton).toBeVisible();
         await expect(importModal.getMappingValue('email')).toHaveText('Email');
         await expect(importModal.getMappingValue('name')).toHaveText('Name');
@@ -42,12 +44,21 @@ test.describe('Ghost Admin - Members Import', () => {
 
         await expect(importModal.importHeading).toBeVisible({timeout: 15000});
 
-        // Close the modal and reload to see the imported members in the list
         await importModal.closeButton.click();
         await membersPage.goto();
 
         await expect(membersPage.getMemberByName('Alice Test')).toBeVisible({timeout: 30000});
         await expect(membersPage.getMemberByName('Bob Test')).toBeVisible();
         await expect(membersPage.getMemberByName('Carol Test')).toBeVisible();
+    });
+
+    test('opens import modal on direct URL navigation without errors', async ({page}) => {
+        await page.goto('/ghost/#/members/import');
+
+        await expect(page.getByRole('dialog', {name: 'Import members'})).toBeVisible();
+
+        // Regression guard: the bug surfaced as an Ember alert like
+        // "Validation (matches) failed for id undefined.id" via #ember-alerts-wormhole
+        await expect(page.getByText(/Validation.*failed for id/i)).toHaveCount(0);
     });
 });

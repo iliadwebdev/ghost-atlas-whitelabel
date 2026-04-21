@@ -1,19 +1,15 @@
 import React, {useCallback, useState} from 'react';
 import {AddLabelModal, DeleteModal, ImportMembersModal, RemoveLabelModal, UnsubscribeModal} from './bulk-action-modals';
-import {
-    Button,
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-    LucideIcon
-} from '@tryghost/shade';
+import {Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger} from '@tryghost/shade/components';
+import {type ImportResponse} from './bulk-action-modals/import-members/state';
+import {LucideIcon} from '@tryghost/shade/utils';
 import {blobDownloadFromEndpoint} from '@tryghost/admin-x-framework/helpers';
 import {buildMemberOperationParams} from '../member-query-params';
+import {buildMembersUrl} from '../member-route';
 import {toast} from 'sonner';
 import {useBrowseNewsletters} from '@tryghost/admin-x-framework/api/newsletters';
 import {useBulkDeleteMembers, useBulkEditMembers} from '@tryghost/admin-x-framework/api/members';
+import {useLocation, useNavigate} from '@tryghost/admin-x-framework';
 
 interface MembersActionsProps {
     hasFilterOrSearch: boolean;
@@ -21,7 +17,7 @@ interface MembersActionsProps {
     nql?: string;
     search: string;
     canBulkDelete: boolean;
-    onImportComplete?: () => void;
+    onImportComplete?: (importResponse?: ImportResponse) => void;
 }
 
 async function exportMembers(filter?: string, search?: string): Promise<void> {
@@ -44,7 +40,12 @@ const MembersActions: React.FC<MembersActionsProps> = ({
     canBulkDelete,
     onImportComplete
 }) => {
-    const [showImportModal, setShowImportModal] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isImportRoute = location.pathname === '/members/import';
+    const currentSearch = location.search ?? '';
+    const membersBackPath = location.pathname === '/members' ? `${location.pathname}${currentSearch}` : '/members';
+    const newMemberHref = `#/members/new?back=${encodeURIComponent(membersBackPath)}`;
     const [showAddLabelModal, setShowAddLabelModal] = useState(false);
     const [showRemoveLabelModal, setShowRemoveLabelModal] = useState(false);
     const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
@@ -186,6 +187,27 @@ const MembersActions: React.FC<MembersActionsProps> = ({
         }
     }, [nql, search]);
 
+    const handleImportModalOpenChange = useCallback(() => {}, []);
+
+    const handleImportAction = useCallback(() => {
+        navigate(`/members/import${currentSearch}`);
+    }, [currentSearch, navigate]);
+
+    const handleImportComplete = useCallback((importResponse?: ImportResponse) => {
+        onImportComplete?.(importResponse);
+    }, [onImportComplete]);
+
+    const handleImportClose = useCallback((importResponse?: ImportResponse) => {
+        if (importResponse?.importLabel) {
+            navigate(buildMembersUrl({
+                filter: `label:[${importResponse.importLabel.slug}]`
+            }), {replace: true});
+            return;
+        }
+
+        navigate(`/members${currentSearch}`, {replace: true});
+    }, [currentSearch, navigate]);
+
     return (
         <>
             {/* Actions Dropdown */}
@@ -197,7 +219,7 @@ const MembersActions: React.FC<MembersActionsProps> = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     {/* Import */}
-                    <DropdownMenuItem onClick={() => setShowImportModal(true)}>
+                    <DropdownMenuItem onClick={handleImportAction}>
                         <LucideIcon.Upload className="mr-2 size-4" />
                         Import members
                     </DropdownMenuItem>
@@ -244,7 +266,7 @@ const MembersActions: React.FC<MembersActionsProps> = ({
 
             {/* New Member Button - styled like Tags */}
             <Button asChild>
-                <a aria-label="New member" className="inline-flex items-center gap-2 font-bold" href="#/members/new">
+                <a aria-label="New member" className="inline-flex items-center gap-2 font-bold" href={newMemberHref}>
                     <LucideIcon.Plus className="size-4" />
                     <span className="hidden sm:inline">New member</span>
                 </a>
@@ -252,9 +274,10 @@ const MembersActions: React.FC<MembersActionsProps> = ({
 
             {/* Modals */}
             <ImportMembersModal
-                open={showImportModal}
-                onComplete={onImportComplete}
-                onOpenChange={setShowImportModal}
+                open={isImportRoute}
+                onClose={handleImportClose}
+                onComplete={handleImportComplete}
+                onOpenChange={handleImportModalOpenChange}
             />
             <AddLabelModal
                 isLoading={isBulkEditing}

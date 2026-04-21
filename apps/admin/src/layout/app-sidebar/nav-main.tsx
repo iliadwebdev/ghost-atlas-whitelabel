@@ -1,19 +1,14 @@
 import React from "react"
 
-import {
-    LucideIcon,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarMenu,
-    SidebarMenuBadge
-} from "@tryghost/shade"
+import {SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuBadge} from "@tryghost/shade/components"
+import {LucideIcon} from "@tryghost/shade/utils"
 import { useBrowseSite } from "@tryghost/admin-x-framework/api/site";
 import { useCurrentUser } from "@tryghost/admin-x-framework/api/current-user";
 import { useBrowseSettings } from "@tryghost/admin-x-framework/api/settings";
 import { getSettingValue } from "@tryghost/admin-x-framework/api/settings";
 import { useBrowseConfig } from "@tryghost/admin-x-framework/api/config";
 import { hasAdminAccess } from "@tryghost/admin-x-framework/api/users";
-import { useNotificationsCountForUser } from "@tryghost/activitypub/src/index";
+import { useNotificationsCountForUser } from "@tryghost/activitypub/api";
 import NetworkIcon from "./icons/network-icon";
 import { NavMenuItem } from "./nav-menu-item";
 import { useIsActiveLink } from "./use-is-active-link";

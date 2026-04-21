@@ -1,11 +1,5 @@
 import {FONT_OPTIONS} from './font-constants';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@tryghost/shade';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@tryghost/shade/components';
 import {useEmailDesign} from '../email-design-context';
 
 export const BodyFontField = () => {
@@ -17,7 +11,11 @@ export const BodyFontField = () => {
                 <SelectTrigger className="w-[180px]">
                     <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                    onEscapeKeyDown={(event) => {
+                        event.stopPropagation();
+                    }}
+                >
                     {FONT_OPTIONS.map(opt => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}

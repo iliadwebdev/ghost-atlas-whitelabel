@@ -24,6 +24,10 @@ const features: Feature[] = [{
     description: 'Enables tier to be specified when importing members',
     flag: 'importMemberTier'
 }, {
+    title: 'Admin UI Refresh',
+    description: 'Enable Admin UI refresh (exploration)',
+    flag: 'adminUIRefresh'
+}, {
     title: 'Explore',
     description: 'Enables keeping in touch with the new Explore API',
     flag: 'explore'
@@ -48,13 +52,9 @@ const features: Feature[] = [{
     description: 'Display a Feedback menu item in the admin sidebar. Requires the new admin experience.',
     flag: 'featurebaseFeedback'
 }, {
-    title: 'Members Forward',
-    description: 'Use the new React-based members list instead of the Ember implementation',
-    flag: 'membersForward'
-}, {
-    title: 'Welcome Emails Design Customization',
-    description: 'Enable design customization options for welcome emails',
-    flag: 'welcomeEmailsDesignCustomization'
+    title: 'Drip Sequences',
+    description: 'Enable welcome email drip sequences',
+    flag: 'dripSequences'
 }, {
     title: 'Picture Element',
     description: 'Use the HTML picture element to serve modern image formats (AVIF, WebP) with automatic fallbacks',

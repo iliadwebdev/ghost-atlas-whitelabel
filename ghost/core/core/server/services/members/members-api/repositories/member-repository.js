@@ -9,7 +9,7 @@ const {NotFoundError} = require('@tryghost/errors');
 const validator = require('@tryghost/validator');
 const crypto = require('crypto');
 const hasActiveOffer = require('../utils/has-active-offer');
-const StartOutboxProcessingEvent = require('../../../outbox/events/start-outbox-processing-event');
+const StartAutomationsPollEvent = require('../../../welcome-email-automations/events/start-automations-poll-event');
 const {MEMBER_WELCOME_EMAIL_SLUGS} = require('../../../member-welcome-emails/constants');
 const messages = {
     noStripeConnection: 'Cannot {action} without a Stripe Connection',
@@ -64,7 +64,8 @@ module.exports = class MemberRepository {
      * @param {any} deps.offersAPI
      * @param {ITokenService} deps.tokenService
      * @param {any} deps.newslettersService
-     * @param {any} deps.AutomatedEmail
+     * @param {any} deps.WelcomeEmailAutomation
+     * @param {any} deps.WelcomeEmailAutomationRun
      */
     constructor({
         Member,
@@ -84,7 +85,8 @@ module.exports = class MemberRepository {
         offersAPI,
         tokenService,
         newslettersService,
-        AutomatedEmail
+        WelcomeEmailAutomation,
+        WelcomeEmailAutomationRun
     }) {
         this._Member = Member;
         this._MemberNewsletter = MemberNewsletter;
@@ -103,7 +105,8 @@ module.exports = class MemberRepository {
         this._offersAPI = offersAPI;
         this.tokenService = tokenService;
         this._newslettersService = newslettersService;
-        this._AutomatedEmail = AutomatedEmail;
+        this._WelcomeEmailAutomation = WelcomeEmailAutomation;
+        this._WelcomeEmailAutomationRun = WelcomeEmailAutomationRun;
 
         DomainEvents.subscribe(OfferRedemptionEvent, async function (event) {
             if (!event.data.offerId) {
@@ -128,6 +131,13 @@ module.exports = class MemberRepository {
         });
     }
 
+    /**
+     * @param {Parameters<typeof DomainEvents.dispatch>[0]} event
+     * @param {object} options
+     * @param {object} options.transacting
+     * @param {Promise<unknown>} options.transacting.executionPromise
+     * @returns {void}
+     */
     dispatchEvent(event, options) {
         if (options?.transacting) {
             // Only dispatch the event after the transaction has finished
@@ -135,9 +145,13 @@ module.exports = class MemberRepository {
                 DomainEvents.dispatch(event);
             }).catch((err) => {
                 // catches transaction errors/rollback to not dispatch event
+                let memberMessageFragment = '';
+                if (event.data && typeof event.data === 'object' && 'memberId' in event.data) {
+                    memberMessageFragment = `for member ${event.data.memberId} `;
+                }
                 logging.error({
                     err,
-                    message: `Error dispatching event ${event.constructor.name} for member ${event.data.memberId} after transaction finished`
+                    message: `Error dispatching event ${event.constructor.name} ${memberMessageFragment}after transaction finished`
                 });
             });
         } else {
@@ -358,10 +372,21 @@ module.exports = class MemberRepository {
         const isFreeSignup = !stripeCustomer;
         const shouldCheckFreeWelcomeEmail = WELCOME_EMAIL_SOURCES.includes(source) && isFreeSignup;
         let isFreeWelcomeEmailActive = false;
+        let freeWelcomeAutomation = null;
+        let freeWelcomeEmail = null;
 
-        if (shouldCheckFreeWelcomeEmail) {
-            const freeWelcomeEmail = this._AutomatedEmail ? await this._AutomatedEmail.findOne({slug: MEMBER_WELCOME_EMAIL_SLUGS.free}) : null;
-            isFreeWelcomeEmailActive = freeWelcomeEmail && freeWelcomeEmail.get('lexical') && freeWelcomeEmail.get('status') === 'active';
+        if (shouldCheckFreeWelcomeEmail && this._WelcomeEmailAutomation) {
+            freeWelcomeAutomation = await this._WelcomeEmailAutomation.findOne(
+                {slug: MEMBER_WELCOME_EMAIL_SLUGS.free},
+                {...options, withRelated: ['welcomeEmailAutomatedEmail']}
+            );
+            freeWelcomeEmail = freeWelcomeAutomation?.related('welcomeEmailAutomatedEmail');
+            isFreeWelcomeEmailActive = Boolean(
+                freeWelcomeAutomation &&
+                freeWelcomeEmail &&
+                freeWelcomeEmail.get('lexical') &&
+                freeWelcomeAutomation.get('status') === 'active'
+            );
         }
 
         if (isFreeWelcomeEmailActive && isFreeSignup) {
@@ -372,20 +397,14 @@ module.exports = class MemberRepository {
                     labels
                 }, {...memberAddOptions, transacting});
 
-                const timestamp = eventData.created_at || newMember.get('created_at');
-
-                await this._Outbox.add({
-                    id: ObjectId().toHexString(),
-                    event_type: MemberCreatedEvent.name,
-                    payload: JSON.stringify({
-                        memberId: newMember.id,
-                        uuid: newMember.get('uuid'),
-                        email: newMember.get('email'),
-                        name: newMember.get('name'),
-                        source,
-                        timestamp,
-                        status: 'free'
-                    })
+                await this._WelcomeEmailAutomationRun.add({
+                    welcome_email_automation_id: freeWelcomeAutomation.id,
+                    member_id: newMember.id,
+                    next_welcome_email_automated_email_id: freeWelcomeEmail.id,
+                    ready_at: new Date(),
+                    step_started_at: null,
+                    step_attempts: 0,
+                    exit_reason: null
                 }, {transacting});
 
                 return newMember;
@@ -397,7 +416,7 @@ module.exports = class MemberRepository {
                 member = await this._Member.transaction(runMemberCreation);
             }
 
-            this.dispatchEvent(StartOutboxProcessingEvent.create({memberId: member.id}), memberAddOptions);
+            this.dispatchEvent(StartAutomationsPollEvent.create(), memberAddOptions);
         } else {
             member = await this._Member.add({
                 ...memberData,
@@ -624,8 +643,8 @@ module.exports = class MemberRepository {
                         throw new errors.BadRequestError({message: tpl(messages.addProductWithActiveSubscription)});
                     }
 
-                    // CASE: We are changing products & there were not active stripe subscriptions - the member is "comped"
-                    memberStatusData.status = 'comped';
+                    // CASE: We are changing products & there were no active stripe subscriptions - the member gets non-Stripe access
+                    memberStatusData.status = data.status || 'comped';
                 }
             }
         }
@@ -958,9 +977,9 @@ module.exports = class MemberRepository {
     /**
      *
      * @param {Object} data
-     * @param {String} data.id - member ID
+     * @param {string} data.id - member ID
      * @param {Object} data.subscription
-     * @param {String} data.offerId
+     * @param {string} data.offerId
      * @param {import('@tryghost/member-attribution/lib/Attribution').AttributionResource} [data.attribution]
      * @param {*} options
      * @returns
@@ -1468,28 +1487,35 @@ module.exports = class MemberRepository {
             const source = this._resolveContextSource(context);
             const shouldSendPaidWelcomeEmail = WELCOME_EMAIL_SOURCES.includes(source);
             let isPaidWelcomeEmailActive = false;
-            if (shouldSendPaidWelcomeEmail && this._AutomatedEmail) {
-                const paidWelcomeEmail = await this._AutomatedEmail.findOne({slug: MEMBER_WELCOME_EMAIL_SLUGS.paid}, options);
-                isPaidWelcomeEmailActive = paidWelcomeEmail && paidWelcomeEmail.get('lexical') && paidWelcomeEmail.get('status') === 'active';
+            let paidWelcomeAutomation = null;
+            let paidWelcomeEmail = null;
+            if (shouldSendPaidWelcomeEmail && this._WelcomeEmailAutomation) {
+                paidWelcomeAutomation = await this._WelcomeEmailAutomation.findOne(
+                    {slug: MEMBER_WELCOME_EMAIL_SLUGS.paid},
+                    {...options, withRelated: ['welcomeEmailAutomatedEmail']}
+                );
+                paidWelcomeEmail = paidWelcomeAutomation?.related('welcomeEmailAutomatedEmail');
+                isPaidWelcomeEmailActive = Boolean(
+                    paidWelcomeAutomation &&
+                    paidWelcomeEmail &&
+                    paidWelcomeEmail.get('lexical') &&
+                    paidWelcomeAutomation.get('status') === 'active'
+                );
             }
             // Send paid welcome email if:
             // 1. The paid welcome email is active
             // 2. The member status changed to 'paid'
             if (updatedMember.get('status') === 'paid' && isPaidWelcomeEmailActive) {
-                await this._Outbox.add({
-                    id: ObjectId().toHexString(),
-                    event_type: MemberCreatedEvent.name,
-                    payload: JSON.stringify({
-                        memberId: memberModel.id,
-                        uuid: memberModel.get('uuid'),
-                        email: memberModel.get('email'),
-                        name: memberModel.get('name'),
-                        source,
-                        timestamp: subscriptionData.start_date || updatedMember.get('updated_at') || new Date(),
-                        status: 'paid'
-                    })
+                await this._WelcomeEmailAutomationRun.add({
+                    welcome_email_automation_id: paidWelcomeAutomation.id,
+                    member_id: memberModel.id,
+                    next_welcome_email_automated_email_id: paidWelcomeEmail.id,
+                    ready_at: new Date(),
+                    step_started_at: null,
+                    step_attempts: 0,
+                    exit_reason: null
                 }, options);
-                this.dispatchEvent(StartOutboxProcessingEvent.create({memberId: memberModel.id}), options);
+                this.dispatchEvent(StartAutomationsPollEvent.create(), options);
             }
         }
     }
@@ -1862,7 +1888,7 @@ module.exports = class MemberRepository {
     /**
      *
      * @param {Object} data
-     * @param {String} data.id - member ID
+     * @param {string} data.id - member ID
      * @param {Object} options
      * @param {Object} [options.transacting]
      */
@@ -1999,7 +2025,7 @@ module.exports = class MemberRepository {
     /**
      *
      * @param {Object} data
-     * @param {String} data.id - member ID
+     * @param {string} data.id - member ID
      * @param {Object} options
      * @param {Object} [options.transacting]
      */
