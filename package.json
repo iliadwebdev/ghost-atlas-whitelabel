@@ -91,7 +91,10 @@
       "sharp",
       "sqlite3",
       "ssh2"
-    ]
+    ],
+    "patchedDependencies": {
+      "@tryghost/koenig-lexical@1.7.30": "patches/@tryghost__koenig-lexical@1.7.30.patch"
+    }
   },
   "devDependencies": {
     "@actions/core": "3.0.0",

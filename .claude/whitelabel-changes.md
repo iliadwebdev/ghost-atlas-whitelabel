@@ -3,7 +3,9 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-04-21 (catalogued against 6.25.1 base)
+Last updated: 2026-04-21 (catalogued against 6.32.0 base)
+
+**Upgrade note — v6.25.1 → v6.32.0:** Ghost migrated the monorepo from yarn v1 to **pnpm 10** in PR #27017 (v6.29.0). All scripts, lockfile, CI configs, and the package-manager rule in `CLAUDE.md` moved to pnpm. `shamefully-hoist` was removed in PR #27343 (v6.29.0). `patch-package` was replaced with pnpm's native `pnpm.patchedDependencies`. See §7, §11, §14 for obsoleted workarounds.
 
 ---
 
@@ -180,8 +182,11 @@ Last updated: 2026-04-21 (catalogued against 6.25.1 base)
 
 ---
 
-## 7. `yarn.lock`
-- Added `bluebird@3.5.4` and `cloudinary@~1.14.0` (pulled in by a dependency, not a direct install).
+## 7. ~~`yarn.lock`~~ (OBSOLETE after v6.29.0 pnpm migration)
+
+- Previously added `bluebird@3.5.4` and `cloudinary@~1.14.0` as transient deps.
+- v6.29.0 replaced `yarn.lock` with `pnpm-lock.yaml`. Pnpm resolves these transitives correctly from the dep graph — no explicit pin needed.
+- `ghost-cloudinary-store@^3.3.0` is still a direct dep of `ghost/core/package.json` (added 2026-02-27; not in upstream) and must survive future merges.
 
 ---
 
@@ -231,16 +236,22 @@ v6.25.1 introduced a separate Tailwind v4 color palette in shade and hardcoded `
 #### `apps/shade/src/docs/tokens.mdx`
 - Updated example color values to match.
 
-#### Hardcoded RGBA replacements (`rgba(48,207,67,...)` → `rgba(73,69,255,...)`):
-- `apps/shade/src/components/ui/input.tsx` — focus ring
-- `apps/shade/src/components/ui/textarea.tsx` — focus ring
-- `apps/shade/src/components/ui/input-group.tsx` — focus ring
+#### Focus-ring CSS token override (new in v6.32.0 upgrade)
+
+v6.32.0 (PR in the shade refactor series) moved input focus rings from hardcoded `rgba(48,207,67,.25)` to a design token `--focus-ring` consumed as `focus-visible:border-focus-ring focus-visible:ring-focus-ring/25`. Per-component rgba overrides are **obsolete** for these files; we override the token once instead.
+
+- `apps/shade/theme-variables.css` — overrides `--focus-ring` in both light (`:root`) and dark mode blocks:
+  - Light: `--focus-ring: #4945FF;` (was `var(--ring)` — a gray)
+  - Dark: `--focus-ring: #7B78FF;`
+- Upstream components (`input.tsx`, `textarea.tsx`, `input-group.tsx`, `admin-x-design-system/src/global/form/*.tsx`) now use the token as-shipped and do **not** need per-file overrides.
+
+#### Remaining hardcoded RGBA replacements (`rgba(48,207,67,...)` → `rgba(73,69,255,...)`):
+
+These upstream files still embed the rgba literal inline and must be re-patched on each upgrade:
+
 - `apps/admin-x-settings/src/components/sidebar.tsx` — search input focus
 - `apps/admin-x-settings/src/components/settings/advanced/integrations.tsx` — "Active" badge bg
 - `apps/admin-x-settings/src/components/settings/growth/offers/offers-index.tsx` — "Active" badge bg (2 instances)
-- `apps/admin-x-design-system/src/global/form/color-picker.tsx` — focus ring
-- `apps/admin-x-design-system/src/global/form/text-field.tsx` — focus ring
-- `apps/admin-x-design-system/src/global/form/text-area.tsx` — focus ring
 - `apps/activitypub/src/views/preferences/components/edit-profile.tsx` — handle input focus
 - `apps/posts/src/components/label-picker/label-picker.tsx` — focus ring
 
@@ -250,14 +261,12 @@ v6.25.1 introduced a separate Tailwind v4 color palette in shade and hardcoded `
 
 ---
 
-## 11. Docker Build Fix — Shade `glob` Dependency
+## 11. ~~Docker Build Fix — Shade `glob` Dependency~~ (OBSOLETE after v6.29.0)
 
-**Purpose:** Fix Docker build failure caused by undeclared `glob` dependency in shade's vite config, which broke after the v6.25.1 upgrade due to yarn hoisting resolving an incompatible `brace-expansion` version.
+**Status:** No longer required. Upstream declared `glob@^10.5.0` as a direct dev-dependency of `apps/shade` (PR #27017 / pnpm migration). Pnpm's strict resolution eliminates the yarn-hoisted `brace-expansion` conflict that motivated this workaround.
 
-### `apps/shade/vite.config.ts`
-- Replaced `import {glob} from 'glob'` with `import {readdirSync} from 'node:fs'`.
-- Entry file discovery now uses Node's built-in `readdirSync({recursive: true})` instead of the undeclared `glob` package.
-- No functional change to build output — same set of entry files is resolved.
+- v6.32.0 `apps/shade/vite.config.ts` uses `import {globSync} from 'glob'`; our previous `readdirSync` fork has been removed.
+- Kept in this catalogue as historical context for anyone reviewing old commits.
 
 ---
 
@@ -345,7 +354,7 @@ If upstream re-adds `caddy add-package` for transform-encoder or any other modul
 
 **Purpose:** Adds four percentage-based width options (25%, 33%, 50%, 75%) to the image card toolbar, on top of upstream's Regular / Wide / Full presets. The primary target is email newsletters where writers want more granular control over image sizing.
 
-**Mechanism:** `patch-package` patch of the compiled `@tryghost/koenig-lexical` bundle (first use of patch-package in this fork), plus in-repo changes to the email image renderer and email CSS.
+**Mechanism (as of v6.32.0):** Pnpm-native `patchedDependencies` patch of the compiled `@tryghost/koenig-lexical` bundle, plus in-repo changes to the email image renderer and email CSS. Was `patch-package` + `"postinstall": "patch-package"` on yarn; migrated to `pnpm patch` / `pnpm patch-commit` when Ghost moved to pnpm 10 in v6.29.0.
 
 ### Chosen `cardWidth` values
 
@@ -358,12 +367,15 @@ If upstream re-adds `caddy add-package` for transform-encoder or any other modul
 
 Existing `regular` / `wide` / `full` remain untouched for back-compat.
 
-### Infrastructure (first patch-package use in this fork)
-- `package.json` — added `patch-package@^8.0.1` + `postinstall-postinstall@^2.1.0` devDeps and `"postinstall": "patch-package"` script.
-- `patches/` — tracked in git; contains all koenig patches going forward.
+### Infrastructure (pnpm-native patch workflow as of v6.32.0)
+- `package.json` — `pnpm.patchedDependencies` registers the patch file. `pnpm patch-commit` writes it automatically when the patch is committed.
+- `patches/` — tracked in git. Current file: `patches/@tryghost__koenig-lexical@1.7.30.patch`.
+- To regenerate: `pnpm patch '@tryghost/koenig-lexical@1.7.30'` → edit the copy it prints → `pnpm patch-commit <path>`.
 
 ### Patch
-- `patches/@tryghost+koenig-lexical+1.7.28.patch` — three files patched in node_modules:
+- `patches/@tryghost__koenig-lexical@1.7.30.patch` (v6.32.0) — three files patched in node_modules:
+
+**Icon strategy (v6.32.0 update):** Rather than define 4 distinct inline SVG icons (which the v1.7.28 patch did with bespoke outline-rect-plus-filled-bar glyphs), the v1.7.30 patch reuses the existing `imgFull` component (`me` in ESM, `P` in UMD) for all four new widths. Button tooltips ("Quarter width", "Third width", etc.) differentiate them. This trades visual distinction in the toolbar for a much simpler, more upgrade-resilient patch.
   - **`dist/koenig-lexical.js`** (ESM build, 3 hunks):
     - Extends the internal `JW` allowlist in `src/utils/image-card-widths.js` with `quarter`, `third`, `half`, `threequarters`.
     - Adds four inline SVG icon components to the `UF` icon map in `src/components/ui/ToolbarMenu.jsx` (`imgQuarter` / `imgThird` / `imgHalf` / `imgThreeQuarters`). Icons are 24×24 viewBox with an outline rectangle + a centered filled bar whose width visually represents the percentage.
@@ -424,18 +436,21 @@ When bumping `@tryghost/koenig-lexical`, the patch will almost certainly not app
 
 When upgrading to a new Ghost version:
 
-1. **Merge/rebase** onto new upstream tag.
+1. **Merge/rebase** onto new upstream tag. Use a dedicated branch (`upgrade/vX.Y.Z`).
 2. **Check conflicts** in all files listed above — especially:
    - `ghost/admin/app/utils/publish-options.js` (publish flow logic changes frequently)
    - `ghost/admin/app/routes/home.js` (routing changes)
    - `apps/admin/src/layout/app-sidebar/*` (sidebar refactors)
    - `apps/admin-x-settings/src/components/sidebar.tsx` (new nav items added upstream)
    - `apps/admin/src/routes.tsx` (route structure changes)
+   - `apps/shade/theme-variables.css` — `--focus-ring` override (both light + dark blocks)
    - `ghost/admin/app/index.html` (postMessage navigation script)
    - `ghost/core/core/built/admin/index.html` (postMessage script in built file — rebuild may overwrite)
-   - `patches/` directory — see section 14 upgrade guidance. `patch-package` will fail loudly during `yarn install` if a patch no longer applies, so regressions here surface immediately.
+   - `patches/` directory — see §14 upgrade guidance. `pnpm install` will fail loudly if a patch no longer applies.
 3. **Re-apply domain restriction disable** comment in `JwtSSOAdapter.js` if needed, or re-enable and test.
-   - Also verify the email-safe gallery renderer (`ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`) still has its `isEmail` table branch, and `card-styles.hbs` still has the `table.kg-gallery-row` / `td.kg-gallery-image` rules (see section 12).
+   - Also verify the email-safe gallery renderer (`ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`) still has its `isEmail` table branch, and `card-styles.hbs` still has the `table.kg-gallery-row` / `td.kg-gallery-image` rules (see §12).
 4. **Verify `disableWebsiteFeatures` config key** is still in the serializer allowlist (`config.js`).
-5. **Test SSO flow** end-to-end after upgrade.
-6. **Test `disableWebsiteFeatures=true`** mode to ensure no new website-feature UI slipped through.
+5. **After `pnpm build`**, re-inject the postMessage script into `ghost/core/core/built/admin/index.html` (§8) since the Ember build regenerates it.
+6. **Test SSO flow** end-to-end after upgrade.
+7. **Test `disableWebsiteFeatures=true`** mode to ensure no new website-feature UI slipped through.
+8. **Test Koenig image percentage widths** (§14) — open a post, insert image, confirm the four extra toolbar buttons appear.

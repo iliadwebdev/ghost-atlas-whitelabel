@@ -37,6 +37,11 @@ overrides:
   juice>cheerio: 0.22.0
   lodash.template: 4.5.0
 
+patchedDependencies:
+  '@tryghost/koenig-lexical@1.7.30':
+    hash: 42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688
+    path: patches/@tryghost__koenig-lexical@1.7.30.patch
+
 importers:
 
   .:
@@ -185,7 +190,7 @@ importers:
         version: link:../admin-x-settings
       '@tryghost/koenig-lexical':
         specifier: 1.7.30
-        version: 1.7.30
+        version: 1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)
       '@tryghost/posts':
         specifier: workspace:*
         version: link:../posts
@@ -518,7 +523,7 @@ importers:
         version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tryghost/koenig-lexical':
         specifier: 1.7.30
-        version: 1.7.30
+        version: 1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)
       '@types/react':
         specifier: 18.3.28
         version: 18.3.28
@@ -1653,7 +1658,7 @@ importers:
         version: 1.1.21
       '@tryghost/koenig-lexical':
         specifier: 1.7.30
-        version: 1.7.30
+        version: 1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)
       '@tryghost/limit-service':
         specifier: 1.5.2
         version: 1.5.2
@@ -2257,6 +2262,9 @@ importers:
       fs-extra:
         specifier: 11.3.4
         version: 11.3.4
+      ghost-cloudinary-store:
+        specifier: ^3.3.0
+        version: 3.3.0
       ghost-storage-base:
         specifier: 1.1.2
         version: 1.1.2
@@ -11130,6 +11138,9 @@ packages:
   blank-object@1.0.2:
     resolution: {integrity: sha512-kXQ19Xhoghiyw66CUiGypnuRpWlbHAzY/+NyvqTEdTfhfQGH1/dbEMYiXju7fYKIFePpzp/y9dsu5Cu/PkmawQ==}
 
+  bluebird@3.5.4:
+    resolution: {integrity: sha512-FG+nFEZChJrbQ9tIccIfZJBz3J7mLrAhxakAbnrJWn8d7aKOC+LWifa0G+p4ZqKp4y13T7juYvdhq9NzKdsrjw==}
+
   bluebird@3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
 
@@ -11926,6 +11937,10 @@ packages:
   clone@2.1.2:
     resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
+
+  cloudinary@1.14.0:
+    resolution: {integrity: sha512-auJY4aD1UGnQTD2iy6kuTA+FJsqyrr9svG12WYSPAO6oRGRf+16UFDDBNuRMm37wj8Tyn8LyiED0b+Jha36ORA==}
+    engines: {node: '>=0.6'}
 
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
@@ -15158,6 +15173,12 @@ packages:
 
   getpass@0.1.7:
     resolution: {integrity: sha512-0fzj9JxOLfJ+XGLhR8ze3unN0KZCgZwiSSDz168VERjK8Wl8kVSdcu2kspd4s4wtAa1y/qrVRiAA0WclVsu0ng==}
+
+  ghost-cloudinary-store@3.3.0:
+    resolution: {integrity: sha512-JaxcTyCwgsHDvlgKsjGL74x62b+nJJUt+YktUlww5y3rDfX4WMqD4wiIy2Ff/kC97u6QS7CveURM1zYoB0c9Zg==}
+
+  ghost-storage-base@0.0.3:
+    resolution: {integrity: sha512-EMQLl9hR6zgjvDENHBH5Icbsf4DdA7n7ABtgCpjRx3BDgBb/tmM3XV97iTpGWZe9KEGKlXN25k8FXIVS2R0Jag==}
 
   ghost-storage-base@1.1.2:
     resolution: {integrity: sha512-5NG3cm7dbb5RPFcviNlXJuwIN5ydDEaMEY5+ixrMAYspRLLEtAAtUYF+YDkBfpJc86aopqMshcszvwDzE7QCnA==}
@@ -31409,7 +31430,7 @@ snapshots:
     dependencies:
       semver: 7.7.4
 
-  '@tryghost/koenig-lexical@1.7.30': {}
+  '@tryghost/koenig-lexical@1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)': {}
 
   '@tryghost/limit-service@1.5.2':
     dependencies:
@@ -34232,6 +34253,8 @@ snapshots:
 
   blank-object@1.0.2: {}
 
+  bluebird@3.5.4: {}
+
   bluebird@3.7.2: {}
 
   bn.js@4.12.3: {}
@@ -35596,6 +35619,11 @@ snapshots:
   clone@1.0.4: {}
 
   clone@2.1.2: {}
+
+  cloudinary@1.14.0:
+    dependencies:
+      lodash: 4.17.23
+      q: 1.5.1
 
   clsx@2.1.1: {}
 
@@ -40154,6 +40182,16 @@ snapshots:
   getpass@0.1.7:
     dependencies:
       assert-plus: 1.0.0
+
+  ghost-cloudinary-store@3.3.0:
+    dependencies:
+      bluebird: 3.5.4
+      cloudinary: 1.14.0
+      ghost-storage-base: 0.0.3
+
+  ghost-storage-base@0.0.3:
+    dependencies:
+      moment: 2.24.0
 
   ghost-storage-base@1.1.2:
     dependencies:
