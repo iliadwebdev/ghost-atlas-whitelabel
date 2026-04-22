@@ -259,19 +259,36 @@ These upstream files still embed the rgba literal inline and must be re-patched 
 - `apps/admin-x-design-system/styles.base.css` — `.gh-prose-links a` color
 - `apps/admin/src/layout/app-sidebar/shared-views.ts` — `green` in colorMap
 
-#### Koenig-lexical bundle (v1.7.30+) — 38 hardcoded `#30cf43` → `#4945ff` replacements
+#### Koenig-lexical bundle (v1.7.30+) — full green palette → Atlas purple palette
 
-Koenig's CSS bundle hardcodes the brand green in selection outlines, focus rings, hover/active backgrounds, and the `--green` custom property — all bypassing our shade `--color-green` override. These were missed in the initial v6.32.0 upgrade (selection outlines on images in the editor stayed green).
+Koenig's CSS bundle hardcodes the Ghost green palette across selection outlines, focus rings, active/hover backgrounds, badges, and the `--green` custom property — all bypassing our shade `--color-green` override. The Koenig bundle is built with its *own* Tailwind config, so shade's token overrides do not reach it.
 
-Handled as additional hunks in `patches/@tryghost__koenig-lexical@1.7.30.patch`:
+Two passes of replacement were needed (one missed the `active button state`):
 
-- `dist/style.css` — 15 occurrences across `border-color:#30cf4333`, `background-color:#30cf431a/33/b3`, `outline-color:#30cf43`, `--green:#30cf43`, and `shadow-[0_0_0_*px_#30cf43]` Tailwind arbitrary-value classes.
-- `dist/koenig-lexical.umd.js` — 19 occurrences in the inlined CSS (Ember admin loads the UMD, which bundles its stylesheet at the top).
-- `dist/koenig-lexical.js` — 4 occurrences in the ESM (JSX className strings with hardcoded shadow colors).
+**Pass 1 (commit `0a32ee5fc8`)** — 38 hex-literal replacements:
+- `#30cf43` → `#4945ff` (green-500) + all alpha-suffixed variants (`1a`, `33`, `40`, `b3`) preserved.
 
-All alpha-suffixed variants are preserved (`1a`, `33`, `40`, `b3`). Regenerate with `sed -E 's/30cf43/4945ff/gi'` across all three dist files before `pnpm patch-commit`.
+**Pass 2** — 28 palette-shade replacements to catch Tailwind's space-separated RGB syntax and non-500 shades:
 
-After `pnpm patch-commit`, copy the patched UMD into the three built locations (`ghost/admin/dist/...`, `ghost/core/core/built/admin/assets/...`, `apps/admin/dist/assets/...`) since Ember's admin caches the file during its build.
+| From | To | Semantic |
+|---|---|---|
+| `rgb(48 207 67/…)` | `rgb(73 69 255/…)` | green-500 with opacity slot |
+| `rgb(42 178 58/…)` | `rgb(54 51 204/…)` | green-600 (**active button state**) |
+| `#2ab23a` | `#3633cc` | green-600 hex |
+| `rgb(225 249 228/…)` | `rgb(236 234 255/…)` | green-100 (light bg) |
+| `#e1f9e4` | `#eceaff` | green-100 hex |
+| `rgb(88 218 103/…)` | `rgb(122 119 255/…)` | green-400 (future-proof) |
+| `#58da67` | `#7a77ff` | green-400 hex (future-proof) |
+
+All rgb replacements are anchored on the `rgb(` prefix so coincidental integer triples elsewhere in the bundle aren't affected. Total across the patch: ~66 replacements (`dist/style.css`: 29, `dist/koenig-lexical.umd.js`: 33, `dist/koenig-lexical.js`: 4).
+
+After `pnpm patch-commit`, copy the patched UMD into the three built-asset locations (`ghost/admin/dist/ghost/assets/koenig-lexical/`, `ghost/core/core/built/admin/assets/koenig-lexical/`, `apps/admin/dist/assets/koenig-lexical/`) since Ember's admin caches the file during its build. Hard-refresh the browser (`Cmd+Shift+R`) to bust the `?v=HASH` cache.
+
+**Verification** — no greens should remain:
+```
+grep -Eo '#30cf43|#2ab23a|#e1f9e4|#58da67|rgb\((48 207 67|42 178 58|225 249 228|88 218 103)' \
+     node_modules/.pnpm/@tryghost+koenig-lexical@1.7.30_patch_hash=*/node_modules/@tryghost/koenig-lexical/dist/{style.css,koenig-lexical.umd.js}
+```
 
 ---
 
