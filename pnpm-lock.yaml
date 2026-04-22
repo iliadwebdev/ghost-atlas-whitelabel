@@ -39,7 +39,7 @@ overrides:
 
 patchedDependencies:
   '@tryghost/koenig-lexical@1.7.30':
-    hash: 42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688
+    hash: f90d0b3dc351db66d9fba17aab76bae6f5cfeadc4efb34962744a64578792058
     path: patches/@tryghost__koenig-lexical@1.7.30.patch
 
 importers:
@@ -190,7 +190,7 @@ importers:
         version: link:../admin-x-settings
       '@tryghost/koenig-lexical':
         specifier: 1.7.30
-        version: 1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)
+        version: 1.7.30(patch_hash=f90d0b3dc351db66d9fba17aab76bae6f5cfeadc4efb34962744a64578792058)
       '@tryghost/posts':
         specifier: workspace:*
         version: link:../posts
@@ -523,7 +523,7 @@ importers:
         version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tryghost/koenig-lexical':
         specifier: 1.7.30
-        version: 1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)
+        version: 1.7.30(patch_hash=f90d0b3dc351db66d9fba17aab76bae6f5cfeadc4efb34962744a64578792058)
       '@types/react':
         specifier: 18.3.28
         version: 18.3.28
@@ -1658,7 +1658,7 @@ importers:
         version: 1.1.21
       '@tryghost/koenig-lexical':
         specifier: 1.7.30
-        version: 1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)
+        version: 1.7.30(patch_hash=f90d0b3dc351db66d9fba17aab76bae6f5cfeadc4efb34962744a64578792058)
       '@tryghost/limit-service':
         specifier: 1.5.2
         version: 1.5.2
@@ -31430,7 +31430,7 @@ snapshots:
     dependencies:
       semver: 7.7.4
 
-  '@tryghost/koenig-lexical@1.7.30(patch_hash=42e64b089b4579cb090c2f134367a16a655d0c61009336783080371ff0337688)': {}
+  '@tryghost/koenig-lexical@1.7.30(patch_hash=f90d0b3dc351db66d9fba17aab76bae6f5cfeadc4efb34962744a64578792058)': {}
 
   '@tryghost/limit-service@1.5.2':
     dependencies:

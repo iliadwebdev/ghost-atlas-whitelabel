@@ -30,6 +30,9 @@ COPY ghost/parse-email-address/package.json ghost/parse-email-address/package.js
 COPY .github/scripts .github/scripts
 COPY .github/hooks .github/hooks
 
+# Copy pnpm-native patches referenced by pnpm.patchedDependencies
+COPY patches patches
+
 # Enable corepack so it can read packageManager from package.json and provide pnpm
 RUN corepack enable
 

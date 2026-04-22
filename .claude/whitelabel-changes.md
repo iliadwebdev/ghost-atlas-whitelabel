@@ -259,6 +259,20 @@ These upstream files still embed the rgba literal inline and must be re-patched 
 - `apps/admin-x-design-system/styles.base.css` — `.gh-prose-links a` color
 - `apps/admin/src/layout/app-sidebar/shared-views.ts` — `green` in colorMap
 
+#### Koenig-lexical bundle (v1.7.30+) — 38 hardcoded `#30cf43` → `#4945ff` replacements
+
+Koenig's CSS bundle hardcodes the brand green in selection outlines, focus rings, hover/active backgrounds, and the `--green` custom property — all bypassing our shade `--color-green` override. These were missed in the initial v6.32.0 upgrade (selection outlines on images in the editor stayed green).
+
+Handled as additional hunks in `patches/@tryghost__koenig-lexical@1.7.30.patch`:
+
+- `dist/style.css` — 15 occurrences across `border-color:#30cf4333`, `background-color:#30cf431a/33/b3`, `outline-color:#30cf43`, `--green:#30cf43`, and `shadow-[0_0_0_*px_#30cf43]` Tailwind arbitrary-value classes.
+- `dist/koenig-lexical.umd.js` — 19 occurrences in the inlined CSS (Ember admin loads the UMD, which bundles its stylesheet at the top).
+- `dist/koenig-lexical.js` — 4 occurrences in the ESM (JSX className strings with hardcoded shadow colors).
+
+All alpha-suffixed variants are preserved (`1a`, `33`, `40`, `b3`). Regenerate with `sed -E 's/30cf43/4945ff/gi'` across all three dist files before `pnpm patch-commit`.
+
+After `pnpm patch-commit`, copy the patched UMD into the three built locations (`ghost/admin/dist/...`, `ghost/core/core/built/admin/assets/...`, `apps/admin/dist/assets/...`) since Ember's admin caches the file during its build.
+
 ---
 
 ## 11. ~~Docker Build Fix — Shade `glob` Dependency~~ (OBSOLETE after v6.29.0)
@@ -429,6 +443,21 @@ When bumping `@tryghost/koenig-lexical`, the patch will almost certainly not app
    ```
    A full admin rebuild also fixes this (asset-delivery at `ghost/admin/lib/asset-delivery/index.js:112-120` copies the dist folder on every admin build), but the manual copy is instant.
 8. **Hard-refresh the browser** — the editor URL uses a `?v=HASH` query bust based on the baked-in Ember build hash; if the hash hasn't changed, the browser may serve a cached old UMD.
+
+---
+
+## 15. Docker Build Fix — Copy `patches/` into `ghost-dev` Image
+
+**Purpose:** The koenig-lexical patch in §14 lives in `patches/` and is referenced from `package.json` under `pnpm.patchedDependencies`. When the `ghost-dev` Docker image builds, `pnpm install --frozen-lockfile` runs inside the container; if `patches/` isn't copied in, pnpm fails with `ENOENT: no such file or directory, open '/home/ghost/patches/...'`.
+
+Upstream's Dockerfile doesn't need this because upstream has no patches. Added in this fork to keep `pnpm dev` working.
+
+### `docker/ghost-dev/Dockerfile`
+- Added `COPY patches patches` right before the `pnpm install` step (after `.github/scripts` and `.github/hooks` copies).
+- No `.dockerignore` exclusion needed — `patches/` isn't in `.dockerignore`.
+
+### Upgrade guidance
+On each upgrade, re-confirm this `COPY patches patches` line is still present. Upstream may refactor the Dockerfile's layer ordering at any time.
 
 ---
 
