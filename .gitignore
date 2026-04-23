@@ -95,8 +95,6 @@ typings/
 /ghost/core/content/files/**/*
 /ghost/core/content/public/*
 /ghost/core/content/adapters/storage/**/*
-!/ghost/core/content/adapters/storage/atlas_cloudinary/
-!/ghost/core/content/adapters/storage/atlas_cloudinary/**
 /ghost/core/content/adapters/scheduling/**/*
 /ghost/core/content/themes/casper
 /ghost/core/content/themes/source
