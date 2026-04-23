@@ -36,12 +36,12 @@
         }
     },
     "storage": {
-        "active": "ghost-storage-cloudinary",
-        "ghost-storage-cloudinary": {
+        "active": "atlas_cloudinary",
+        "atlas_cloudinary": {
             "auth": {
-                "cloud_name": "gcollective-cloud",
-                "api_key": "553536588261785",
-                "api_secret": "1Ja2BfrH4Kkz8VzCWGUoOjJgSHc"
+                "cloud_name": "",
+                "api_key": "",
+                "api_secret": ""
             },
             "upload": {
                 "use_filename": true,

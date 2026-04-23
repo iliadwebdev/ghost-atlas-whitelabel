@@ -592,9 +592,17 @@ Self-contained change to cut push time on incremental deploys from ~15 min to <1
 - Replaced `"ghost-cloudinary-store": "^3.3.0"` with `"ghost-storage-cloudinary": "^3.0.2"` (sorted alphabetically — now sits between `ghost-storage-base` and `glob`).
 
 ### `ghost/core/core/shared/config/env/config.production.json`
-- `storage.active`: `"ghost-cloudinary-store"` → `"ghost-storage-cloudinary"`.
-- Renamed object key `storage["ghost-cloudinary-store"]` → `storage["ghost-storage-cloudinary"]`.
+- `storage.active`: `"ghost-cloudinary-store"` → `"atlas_cloudinary"` (see alias adapter below — originally bumped to `"ghost-storage-cloudinary"` on 2026-04-22 but renamed 2026-04-23 to get rid of the hyphens).
+- Config block key `storage["ghost-cloudinary-store"]` → `storage["atlas_cloudinary"]`.
+- Auth fields intentionally left empty (`""`) so nothing leaks into the baked image; all three `auth.*` values are supplied at runtime via Railway env vars.
 - Renamed nested block `display` → `fetch` (v3 renamed this config block; see [`ghost-storage-cloudinary/index.js:25`](https://github.com/eexit/ghost-storage-cloudinary/blob/master/index.js#L25) — `config.fetch || legacy.image || {}`). The `quality` / `secure` / `cdn_subdomain` keys inside are unchanged and still flow to `cloudinary.url(publicId, fetchOptions)` during URL generation.
+
+### `ghost/core/content/adapters/storage/atlas_cloudinary/index.js` (new, alias)
+A one-line passthrough: `module.exports = require('ghost-storage-cloudinary');`. Its purpose is purely naming — it lets us pick a shell-safe `storage.active` key.
+
+- **Why the alias exists:** env var names with hyphens (e.g. `storage__ghost-storage-cloudinary__auth__cloud_name`) are rejected by POSIX shells (`VAR=val` requires `[A-Za-z_][A-Za-z0-9_]*`). Some container platforms strip or drop them when propagating env vars through a shell. Using an underscore-only alias (`atlas_cloudinary`) makes the env var names shell-portable: `storage__atlas_cloudinary__auth__cloud_name=…` works everywhere.
+- **Why this name specifically:** `cloudinary` would collide with the Cloudinary SDK npm package — Ghost's adapter manager ([adapter-manager.js:120-146](ghost/core/core/server/services/adapter-manager/adapter-manager.js#L120-L146)) checks node_modules first; if `require('cloudinary')` resolves, it loads the SDK and fails the `instanceof StorageBase` check instead of falling through to our adapter. `atlas_cloudinary` is project-specific and has no npm collision, so the adapter manager falls through to `content/adapters/storage/atlas_cloudinary/` correctly.
+- **The underlying `ghost-storage-cloudinary@3.0.2` package (with its patches) is still the real adapter** — the wrapper just re-exports it. Patches continue to apply unchanged.
 
 ### Key differences vs the old adapter
 - `cloudinary@^2.6.0` (vs `~1.14.0` in the old) — modern SDK, no `request` dep.
