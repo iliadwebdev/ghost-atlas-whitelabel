@@ -1,0 +1,18 @@
+diff --git a/index.js b/index.js
+index cd31410c9de078d9486d4598ba4ef27490c8910a..cc25716892964ffdf262b6a787813ab08878c45a 100644
+--- a/index.js
++++ b/index.js
+@@ -102,10 +102,12 @@ class CloudinaryAdapter extends StorageBase {
+         return new Promise((resolve, reject) => cloudinary.uploader.upload(imagePath, options.upload, (err, res) => {
+             if (err) {
+                 debug('cloudinary.uploader:error', err);
++                console.error('[ghost-storage-cloudinary] upload failed:', err && err.message, '|', JSON.stringify(err));
+ 
+                 return reject(new errors.CloudinaryAdapterError({
+                     err: err,
+-                    message: `Could not upload image ${imagePath}`
++                    message: `Could not upload image ${imagePath}`,
++                    context: (err && (err.message || err.http_code)) ? `${err.message || ''} (http ${err.http_code || '?'})` : JSON.stringify(err)
+                 }));
+             }
+ 

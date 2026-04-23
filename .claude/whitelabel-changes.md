@@ -186,7 +186,7 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 
 - Previously added `bluebird@3.5.4` and `cloudinary@~1.14.0` as transient deps.
 - v6.29.0 replaced `yarn.lock` with `pnpm-lock.yaml`. Pnpm resolves these transitives correctly from the dep graph — no explicit pin needed.
-- `ghost-cloudinary-store@^3.3.0` is still a direct dep of `ghost/core/package.json` (added 2026-02-27; not in upstream) and must survive future merges.
+- The Cloudinary storage adapter is still a direct dep of `ghost/core/package.json` (not in upstream) and must survive future merges. As of 2026-04-22 the package is `ghost-storage-cloudinary@^3.0.2` (superseded `ghost-cloudinary-store@^3.3.0` — see §20).
 
 ---
 
@@ -523,6 +523,114 @@ Verified: `docker run --rm -v "$PWD:/work" -w /work node:22.18.0-bullseye-slim b
 
 ### Upgrade guidance
 On each upgrade, confirm `postcss-import`, `autoprefixer`, and `@tailwindcss/postcss` are still in `apps/admin-x-settings/package.json` devDependencies. If upstream adds them itself (they should — this is a legitimate bug in their phantom-deps audit), drop our entries in favor of theirs. If upstream rewrites `admin-x-design-system/postcss.config.cjs` to export resolved plugin instances instead of string names (e.g. `require('postcss-import')()` in the config itself), our declarations become unnecessary and can be removed.
+
+---
+
+## 18. `Dockerfile.railway` — `ENV NODE_PATH` + serial nx builds
+
+Two independent issues surfaced during the Node-22 Docker build after §17 unblocked admin-x-settings. Both fixes live in the builder stage of [Dockerfile.railway](Dockerfile.railway).
+
+### 18a. `ENV NODE_PATH=/home/ghost/node_modules/.pnpm/node_modules`
+
+**Symptom:** `@tryghost/posts:build` failed with `Rollup failed to resolve import "clsx" from .../admin-x-design-system/es/global/form/color-picker.js`; `ghost-admin:build` failed with `Cannot find module 'lodash/camelCase'` from `ghost/admin/lib/asset-delivery/index.js`.
+
+**Root cause:** Three phantom-dep sites all resolve the same way — code outside the workspace manifest graph that `require()`s or `import`s a transitive dep:
+
+1. `ghost/admin/lib/asset-delivery/index.js` line 7: `const camelCase = require('lodash/camelCase')`. The nested addon has no `package.json` deps; lodash comes from ember-cli's transitive tree. pnpm's shell wrapper at `ghost/admin/node_modules/.bin/ember` injects NODE_PATH for ember-cli itself, but that covers only ember-cli's own descendants, not addon subprocesses.
+2. `apps/admin-x-design-system/es/*.js`: admin-x-design-system's vite config externalizes every bare-specifier import (`clsx`, `lucide-react`, `@radix-ui/*`, etc.) into its emitted `es/` output. When posts/stats/activitypub Rollup those files in lib mode, Rollup re-resolves the externals from the importing workspace — which doesn't redeclare them.
+3. String-named plugins in re-exported `postcss.config.cjs` files (see §17, plus comments-ui surfacing `Cannot find module 'resolve'` transitively from postcss-import).
+
+**Fix:** Point `NODE_PATH` at pnpm's virtual store root (`node_modules/.pnpm/node_modules`), which has a single-level-flat layout of every installed package. This restores the yarn-classic-era fallback resolution without turning on `shamefully-hoist=true` across the whole install (which would bloat the image).
+
+### 18b. `--parallel=1` on the nx build
+
+**Symptom:** After §18a fixed the phantom-dep resolution, posts still failed mid-build with jest-dom type errors (`Property 'toBeInTheDocument' does not exist on type 'Assertion<HTMLElement>'`) and `TS2307: Cannot find module '@tryghost/admin-x-framework'`.
+
+**Root cause:** `nx.json` sets `parallel: 4`. Under a cold Docker filesystem, Nx queues posts:build before admin-x-framework has finished writing its `dist/` and `types/`, even though the dependency is declared (visible in `pnpm nx graph`). Posts' `tsc` then sees partial/missing upstream types. The build log showed `> nx run @tryghost/posts:build` at 67s and `> nx run @tryghost/admin-x-framework:build` at 94s — out of topological order for the same reason.
+
+**Fix:** Swap `pnpm build` for `pnpm nx run-many -t build --parallel=1`. Serializing the build graph is slower (single-threaded through the tsc/vite chain) but deterministic. The `pnpm-store` cache mount keeps pnpm install fast across rebuilds, so total wall-clock is still dominated by CPU-bound compile work, not I/O.
+
+Verified end-to-end: `sh scripts/docker-push` (equivalent to `docker buildx build --platform linux/amd64 --no-cache -f Dockerfile.railway`) now runs all 16 nx projects to completion and the builder stage exits 0.
+
+### Upgrade guidance
+Both fixes are Docker-build-only shims. Upstream Ghost doesn't hit them because their CI uses `pnpm nx run @tryghost/admin:build` (narrower subgraph that happens to respect topology) and runs in an environment where the ember wrapper's own NODE_PATH suffices for asset-delivery.
+- If upstream declares the phantom deps explicitly (clsx et al. as posts/stats/activitypub deps; lodash as an asset-delivery devDep), drop the `ENV NODE_PATH` line.
+- If upstream fixes the nx parallel-scheduling bug (or we move to a newer nx that fixes it), revert to `pnpm build` and drop `--parallel=1`. Benchmark: serial build is ~2× slower than parallel=4 on this repo.
+
+---
+
+## 19. Docker push-speed: split runtime COPY + enable BuildKit cache
+
+Self-contained change to cut push time on incremental deploys from ~15 min to <1 min. Does not affect runtime behavior; purely a layering / caching optimization.
+
+### 19a. Runtime stage — split the monolithic `COPY --from=builder`
+
+**Symptom:** Every `sh scripts/docker-push` re-transmitted a ~3GB layer to Docker Hub, even when only ghost/core source changed. Slow pushes felt like a hang on the 2.98GB layer.
+
+**Root cause:** `COPY --from=builder /home/ghost /home/ghost` flattens node_modules + all workspaces + build artifacts into one giant Docker layer. Any file change busts it; the whole thing re-uploads.
+
+**Fix:** Replace the single COPY with per-directory COPYs ordered stable → volatile (node_modules first, ghost/core last). See the runtime stage in [Dockerfile.railway](Dockerfile.railway). Each COPY is its own layer, so BuildKit caches them independently. Typical edits only touch `ghost/core/`, so only the last ~50MB layer re-uploads.
+
+### 19b. Removed `--no-cache` from `scripts/docker-push`
+
+`--no-cache` forces a clean rebuild + full re-upload every invocation, defeating 19a. Dropping it lets BuildKit's local cache (on the Mac, in the `docker-container` builder) reuse the deps and builder stages across builds when `pnpm-lock.yaml` hasn't changed.
+
+### Upgrade guidance
+- If upstream ever adds a `Dockerfile.railway` (unlikely — it's fork-only), diff theirs against our split runtime stage.
+- The runtime stage copies the `apps/` tree wholesale (so new apps/* workspaces are picked up automatically), but enumerates `ghost/i18n`, `ghost/parse-email-address`, `ghost/admin`, `ghost/core` individually. If a new `ghost/<newpkg>` workspace is added, add a matching `COPY --from=builder` line for it, otherwise Ghost will fail to resolve it at runtime.
+- The single-COPY original is preserved in git history (pre-§19) if a rollback is needed.
+
+---
+
+## 20. Cloudinary storage adapter — upgraded to `ghost-storage-cloudinary@3.0.2`
+
+**Symptom (2026-04-22):** Production image uploads on the Railway image returned a generic `"Could not upload image /tmp/<hash>_processed"` error with no underlying cause attached. The shipped `ghost-cloudinary-store@3.3.0` (last npm publish 2019) discards the Cloudinary SDK error object at `index.js:49` and throws a plain `Error` with just the local path — so Railway logs never show *why* uploads fail.
+
+**Root cause of the silent failure:** `ghost-cloudinary-store@3.3.0` pins `cloudinary@~1.14.0` (2019-era SDK) and the now-deprecated `request` HTTP library. Neither has any known upstream fix path. The author (eexit) published a full rewrite under a new package name years ago; the whitelabel was still on the old one.
+
+### `ghost/core/package.json`
+- Replaced `"ghost-cloudinary-store": "^3.3.0"` with `"ghost-storage-cloudinary": "^3.0.2"` (sorted alphabetically — now sits between `ghost-storage-base` and `glob`).
+
+### `ghost/core/core/shared/config/env/config.production.json`
+- `storage.active`: `"ghost-cloudinary-store"` → `"ghost-storage-cloudinary"`.
+- Renamed object key `storage["ghost-cloudinary-store"]` → `storage["ghost-storage-cloudinary"]`.
+- Renamed nested block `display` → `fetch` (v3 renamed this config block; see [`ghost-storage-cloudinary/index.js:25`](https://github.com/eexit/ghost-storage-cloudinary/blob/master/index.js#L25) — `config.fetch || legacy.image || {}`). The `quality` / `secure` / `cdn_subdomain` keys inside are unchanged and still flow to `cloudinary.url(publicId, fetchOptions)` during URL generation.
+
+### Key differences vs the old adapter
+- `cloudinary@^2.6.0` (vs `~1.14.0` in the old) — modern SDK, no `request` dep.
+- `got@^11` for the `read()` path (vs deprecated `request`).
+- Errors now wrap the underlying Cloudinary SDK error via `@tryghost/errors` `InternalServerError` subclass `CloudinaryAdapterError` — the real SDK error flows through `err.err`. **Note:** this is not quite enough on its own — Ghost's `GhostLogger.js:462-477` error serializer whitelists `{id, code, name, statusCode, level, message, context, help, stack, hideStack, errorDetails}` and drops the `err` field, so the wrapped SDK error was invisible in Railway logs. See the patch section below.
+- New optional features (all off by default, config shape unchanged from our use):
+  - `useDatedFolder: true` — appends `YYYY/MM` to the upload folder.
+  - `plugins.retinajs` — adds retina variants on upload.
+- Engines: `"node": "^18"`. Our `.npmrc` sets `engine-strict=false`, so pnpm install on Node 22 emits a warning but does not fail. Verified in the Docker build — the package installs and loads correctly.
+
+### Upgrade guidance
+- If the fork's `CLOUDINARY_URL` env var is ever removed from Railway, the Ghost config's `storage.ghost-storage-cloudinary.auth` block is the sole source of credentials — the Cloudinary SDK's env-var fallback won't rescue the upload path.
+- If bumping `ghost-storage-cloudinary` to a 4.x major, check whether the config shape changes again (`fetch` block, upload options, plugin keys). The v2 → v3 rename was `display` → `fetch`; watch for similar renames on the next bump.
+- Dead code to clean up (not blocking): the old local adapter fork at `ghost/core/content/adapters/storage/cloudinary-store/` is no longer referenced by any `active` config. It can be deleted in a follow-up cleanup commit.
+
+### Diagnostic patch — `patches/ghost-storage-cloudinary@3.0.2.patch`
+
+Added 2026-04-23 because the swap alone did not produce visible errors in Railway logs. Two things block visibility of the underlying Cloudinary error:
+
+1. Ghost's `GhostLogger.js:462-477` `err` serializer drops the wrapped `.err` property (see note above).
+2. `DEBUG=ghost-storage-cloudinary:*` in Railway does print the full error via `debug('cloudinary.uploader:error', err)`, but the stderr stream is interleaved with Ghost's ERROR log in Railway's collector and visibly truncates the debug output mid-object.
+
+The patch is a ~4-line surgical edit to `index.js` `uploader()` (the upload reject path only — `delete()` and `read()` left untouched) that:
+
+- Adds `console.error('[ghost-storage-cloudinary] upload failed:', err.message, '|', JSON.stringify(err))` as a synchronous stdout write, avoiding the stderr/ERROR-log interleave problem.
+- Sets `context: (err && (err.message || err.http_code)) ? ...` on the thrown `CloudinaryAdapterError` so the real error flows through Ghost's allow-listed `context` field into both the log output and the API response JSON.
+
+Registered in root `package.json` under `pnpm.patchedDependencies` alongside the existing koenig-lexical patch (§14). Generated via `pnpm patch ghost-storage-cloudinary@3.0.2` → edit → `pnpm patch-commit`.
+
+**Upgrade guidance:** on the next `ghost-storage-cloudinary` bump, the patch will almost certainly fail to apply if upstream restructures the `uploader()` method. Regenerate with the same approach. If upstream ever fixes this themselves (PR them a `context` field on `CloudinaryAdapterError`), the patch becomes unnecessary — drop it.
+
+### Verification
+1. `pnpm install` — lockfile cleanly switches from `ghost-cloudinary-store@3.3.0` to `ghost-storage-cloudinary@3.0.2` (the old package is fully purged from `pnpm-lock.yaml`).
+2. Rebuild: `sh scripts/docker-push`.
+3. Deploy to Railway. Remove the temporary `DEBUG=ghost-storage-cloudinary:*` env var — no longer needed with the patch.
+4. Upload an image via the admin. On success, no change in behavior. On failure, the Railway log will contain a line starting `[ghost-storage-cloudinary] upload failed:` with the real SDK error, *and* the API response's `errors[0].context` field will contain the real error message + http_code.
 
 ---
 

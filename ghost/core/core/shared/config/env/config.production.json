@@ -36,8 +36,8 @@
         }
     },
     "storage": {
-        "active": "ghost-cloudinary-store",
-        "ghost-cloudinary-store": {
+        "active": "ghost-storage-cloudinary",
+        "ghost-storage-cloudinary": {
             "auth": {
                 "cloud_name": "gcollective-cloud",
                 "api_key": "553536588261785",
@@ -50,7 +50,7 @@
                 "folder": "blog-images",
                 "tags": ["blog"]
             },
-            "display": {
+            "fetch": {
                 "quality": "auto",
                 "secure": true,
                 "cdn_subdomain": true

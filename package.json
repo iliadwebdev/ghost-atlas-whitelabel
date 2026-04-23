@@ -93,7 +93,8 @@
       "ssh2"
     ],
     "patchedDependencies": {
-      "@tryghost/koenig-lexical@1.7.30": "patches/@tryghost__koenig-lexical@1.7.30.patch"
+      "@tryghost/koenig-lexical@1.7.30": "patches/@tryghost__koenig-lexical@1.7.30.patch",
+      "ghost-storage-cloudinary@3.0.2": "patches/ghost-storage-cloudinary@3.0.2.patch"
     }
   },
   "devDependencies": {
