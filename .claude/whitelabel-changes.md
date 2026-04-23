@@ -632,6 +632,19 @@ Registered in root `package.json` under `pnpm.patchedDependencies` alongside the
 3. Deploy to Railway. Remove the temporary `DEBUG=ghost-storage-cloudinary:*` env var — no longer needed with the patch.
 4. Upload an image via the admin. On success, no change in behavior. On failure, the Railway log will contain a line starting `[ghost-storage-cloudinary] upload failed:` with the real SDK error, *and* the API response's `errors[0].context` field will contain the real error message + http_code.
 
+#### Phase 3 diagnostic hunk (temporary — remove once root cause found)
+
+Added 2026-04-23 after Phase 2 exposed `Invalid cloud_name gcollective-cloud (http 401)` despite the same credentials working on older Docker images. That 401 message is Cloudinary's generic "signature verification failed" response — so either the secret the SDK ends up with is not the one we wrote in `config.production.json`, or it is and something else (clock, form-data boundary, TLS) is corrupting the signed request.
+
+The patch adds three `console.log` calls right after `cloudinary.config(auth)` in the adapter constructor (around `index.js:40`), printing:
+- The SDK's **effective** config (after env-var merging) via `cloudinary.config()`
+- The `auth` object the constructor was passed (from Ghost's nconf-resolved config)
+- The raw `process.env.CLOUDINARY_URL` value
+
+Compare the boot log against a working older-image instance's boot log to find the divergence.
+
+**Remove when root cause is identified:** regenerate the patch with only the error-surfacing `console.error` + `context:` hunk in `uploader()`. Leave those in — they're a net improvement regardless of this specific incident.
+
 ---
 
 ## Upgrade Checklist

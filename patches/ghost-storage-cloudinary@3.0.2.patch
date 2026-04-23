@@ -1,8 +1,19 @@
 diff --git a/index.js b/index.js
-index cd31410c9de078d9486d4598ba4ef27490c8910a..cc25716892964ffdf262b6a787813ab08878c45a 100644
+index cd31410c9de078d9486d4598ba4ef27490c8910a..1f1cfcb13ef2a166c611f6026fe3eadb0ff94c37 100644
 --- a/index.js
 +++ b/index.js
-@@ -102,10 +102,12 @@ class CloudinaryAdapter extends StorageBase {
+@@ -37,6 +37,10 @@ class CloudinaryAdapter extends StorageBase {
+         debug('constructor:plugins:', this.plugins);
+ 
+         cloudinary.config(auth);
++
++        console.log('[ghost-storage-cloudinary] boot auth — sdk effective:', cloudinary.config());
++        console.log('[ghost-storage-cloudinary] boot auth — passed to ctor:', auth);
++        console.log('[ghost-storage-cloudinary] boot env CLOUDINARY_URL:', process.env.CLOUDINARY_URL);
+     }
+ 
+     /**
+@@ -102,10 +106,12 @@ class CloudinaryAdapter extends StorageBase {
          return new Promise((resolve, reject) => cloudinary.uploader.upload(imagePath, options.upload, (err, res) => {
              if (err) {
                  debug('cloudinary.uploader:error', err);
