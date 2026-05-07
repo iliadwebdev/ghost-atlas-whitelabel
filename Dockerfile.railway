@@ -78,12 +78,27 @@ COPY e2e e2e
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# `pnpm build` runs `pnpm nx run-many -t build` per root package.json,
-# which builds all workspaces in correct dependency order. Nx invokes each
-# workspace's build via `pnpm` from root, so NODE_PATH is set correctly and
-# transitive deps (postcss-import, etc.) are reachable through pnpm's
-# per-binary NODE_PATH injection.
-RUN pnpm build
+# NODE_PATH points Node's module resolver at pnpm's virtual store so deeply-
+# transitive phantom deps resolve during the build:
+#   - asset-delivery's `require('lodash/camelCase')` (loaded by ember-cli
+#     when building ghost-admin)
+#   - `import 'clsx'` inside admin-x-design-system's pre-built es/ files,
+#     which posts/stats/activitypub inline when they bundle admin-x-framework
+#   - postcss plugins named by string in re-exported postcss.config.cjs files
+# Under yarn classic's flat hoist these were all on the default resolution
+# path; pnpm 10 strict mode keeps them only under .pnpm/, so we need to
+# surface that dir via NODE_PATH for downstream bundlers.
+ENV NODE_PATH=/home/ghost/node_modules/.pnpm/node_modules
+
+# Build all workspaces via nx. `--parallel=1` serializes the dep graph:
+# nx.json defaults to parallel=4, which under Node 22 + a cold Docker
+# filesystem lets downstream consumers (posts, stats, activitypub) start
+# tsc before admin-x-framework has finished writing dist/types, producing
+# spurious TS2307/TS2339 errors. Serial build is slower but deterministic;
+# the `pnpm-store` cache mount keeps the install step fast, so total
+# build time is still dominated by the CPU-bound work.
+RUN --mount=type=cache,target=/home/ghost/.nxcache,id=ghost-atlas-nxcache \
+    pnpm nx run-many -t build --parallel=1
 
 # Ghost's static frontend assets (minified JS/CSS) — separate target from
 # the workspace builds. minify-assets.js requires esbuild, declared as a
@@ -96,8 +111,27 @@ RUN pnpm --filter ghost build:assets
 FROM base AS runtime
 WORKDIR /home/ghost
 
-# Whole built workspace — pnpm symlinks and built artifacts intact
-COPY --from=builder /home/ghost /home/ghost
+# COPYs are split from most-stable to most-volatile so BuildKit can cache and
+# reuse per-layer across pushes. A single monolithic COPY re-transmits the
+# full ~3GB on every push because any change anywhere busts one giant layer.
+
+# Stable: only invalidates when pnpm-lock.yaml changes
+COPY --from=builder /home/ghost/node_modules /home/ghost/node_modules
+
+# Workspaces that change with the lockfile cadence
+COPY --from=builder /home/ghost/apps /home/ghost/apps
+COPY --from=builder /home/ghost/e2e /home/ghost/e2e
+
+# Ghost sibling packages — change rarely
+COPY --from=builder /home/ghost/ghost/i18n /home/ghost/ghost/i18n
+COPY --from=builder /home/ghost/ghost/parse-email-address /home/ghost/ghost/parse-email-address
+COPY --from=builder /home/ghost/ghost/admin /home/ghost/ghost/admin
+
+# Volatile: most edits touch ghost/core — keep this layer last
+COPY --from=builder /home/ghost/ghost/core /home/ghost/ghost/core
+
+# Top-level manifests
+COPY --from=builder /home/ghost/package.json /home/ghost/pnpm-lock.yaml /home/ghost/pnpm-workspace.yaml /home/ghost/.npmrc /home/ghost/
 
 ENV NODE_ENV=production
 ENV server__host=0.0.0.0

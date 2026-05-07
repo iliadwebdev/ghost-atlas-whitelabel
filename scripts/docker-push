@@ -1,1 +1,29 @@
-docker buildx build --no-cache --platform linux/amd64 -f Dockerfile.railway -t owenrossi/ghost-atlas-whitelabel:latest --push --progress=plain .
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE="owenrossi/ghost-atlas-whitelabel"
+VERSION_FILE="$(dirname "$0")/.docker-version"
+
+if [[ -f "$VERSION_FILE" ]]; then
+  current="$(cat "$VERSION_FILE")"
+else
+  current="0.0.0"
+fi
+
+IFS='.' read -r major minor patch <<< "$current"
+minor=$((minor + 1))
+next="${major}.${minor}.0"
+
+echo "Bumping ${current} -> ${next}"
+
+docker buildx build \
+  --platform linux/amd64 \
+  -f Dockerfile.railway \
+  -t "${IMAGE}:latest" \
+  -t "${IMAGE}:${next}" \
+  --push \
+  --progress=plain \
+  .
+
+echo "$next" > "$VERSION_FILE"
+echo "Pushed ${IMAGE}:latest and ${IMAGE}:${next}"

@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
+Last updated: 2026-04-27 — §10 added "Admin Signin Button" subsection: hardcoded Atlas purple `#4945FF` on the `/ghost/signin` button, bypassing the publication's `accent_color` (pink default) without altering the setting itself. Previous same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@^1.1.3` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
 
 **Upgrade note — v6.25.1 → v6.32.0:** Ghost migrated the monorepo from yarn v1 to **pnpm 10** in PR #27017 (v6.29.0). All scripts, lockfile, CI configs, and the package-manager rule in `CLAUDE.md` moved to pnpm. `shamefully-hoist` was removed in PR #27343 (v6.29.0). `patch-package` was replaced with pnpm's native `pnpm.patchedDependencies`. See §7, §11, §14 for obsoleted workarounds.
 
@@ -17,55 +17,68 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 ### Backend
 
 #### `ghost/core/core/server/services/public-config/config.js`
+
 - Added `disableWebsiteFeatures` to the returned config object.
 - Reads from `process.env.DISABLE_WEBSITE_FEATURES === 'true'` OR `config.get('disableWebsiteFeatures') === true`.
 
 #### `ghost/core/core/server/api/endpoints/utils/serializers/output/config.js`
+
 - Added `'disableWebsiteFeatures'` to the list of allowed config keys exposed via the Admin API.
 
 ### Frontend — React Admin (`apps/`)
 
 #### `apps/admin-x-framework/src/api/config.ts`
+
 - Added `disableWebsiteFeatures?: boolean` to the `Config` TypeScript type.
 
 #### `apps/admin-x-settings/src/components/sidebar.tsx`
+
 - Hides nav items when `disableWebsiteFeatures` is true:
-  - **General section:** Meta data, Social accounts, Make site private
-  - **Site section:** Entire section (Design & branding, Theme, Navigation, Announcement bar)
-  - **Growth section:** Network, Ghost Explore, Recommendations
-  - **Advanced section:** Code injection
+    - **General section:** Meta data, Social accounts, Make site private
+    - **Site section:** Entire section (Design & branding, Theme, Navigation, Announcement bar)
+    - **Growth section:** Network, Ghost Explore, Recommendations
+    - **Advanced section:** Code injection
 
 #### `apps/admin-x-settings/src/components/settings/general/users.tsx`
+
 - Hides the "Invite people" button when `disableWebsiteFeatures` is true.
 
 #### `apps/admin-x-settings/src/components/settings/general/about.tsx`
+
 - Adds an Iliad.dev branding paragraph above the Ghost copyright notice: "This is a modified installation of Ghost, built by Iliad.dev."
 - Also formatting-only changes (single → double quotes, JSX reformatting — no functional change beyond the branding paragraph).
 
 #### `apps/admin/src/layout/app-sidebar/app-sidebar-header.tsx`
+
 - Hides the site icon + title branding when `disableWebsiteFeatures` is true, but keeps the search button visible.
 - Imports `useBrowseConfig` to read config.
 
 #### `apps/admin/src/layout/app-sidebar/app-sidebar-footer.tsx`
+
 - Removed the `isEmbedded` check that previously returned `null` for embedded views (sidebar footer always renders now).
 - Minor formatting cleanup (quotes, trailing commas).
 
 #### `apps/admin/src/layout/app-sidebar/nav-content.tsx`
+
 - Hides **Pages** nav item when `disableWebsiteFeatures` is true.
 - Hides **Comments** nav item when `disableWebsiteFeatures` is true.
 
 #### `apps/admin/src/layout/app-sidebar/nav-main.tsx`
+
 - Returns `null` entirely when `disableWebsiteFeatures` is true (avoids empty SidebarGroup adding unwanted spacing).
 - Also returns `null` while config is loading (`!configData`) to prevent flash of website-feature items.
 
 #### `apps/admin/src/layout/app-sidebar/nav-content.tsx`
+
 - `disableWebsiteFeatures` defaults to `true` (hidden) while config is loading, to prevent Pages/Comments flashing before API response arrives.
 
 #### `apps/admin-x-settings/src/components/settings/general/users/profile-tab.tsx`
+
 - Email field is **disabled** when embedded (reads `isEmbedded` via `useFramework()`).
 - Hint text changes to **"Email is managed by Atlas"** when embedded.
 
 #### `apps/admin/src/layout/app-sidebar/user-menu.tsx`
+
 - Hides **What's new?** menu item and avatar badge when embedded (`window.self !== window.top`).
 - Hides **Dark mode** toggle when embedded.
 - Hides **Sign out** when embedded (both admin and contributor menus).
@@ -73,38 +86,46 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 - All `isEmbedded` checks return `false` when `?dev=true` is in the URL (dev mode override).
 
 #### `apps/admin/src/main.tsx`
+
 - `detectIsEmbedded()` returns `false` when `?dev=true` is in the URL.
 
 #### `ghost/admin/app/services/embedding.js`
+
 - `isEmbedded` getter returns `false` when `?dev=true` is in the URL (dev mode override).
 
 ### Frontend — Ember Admin (`ghost/admin/`)
 
 #### `ghost/admin/app/components/gh-post-settings-menu.hbs`
+
 - Hides "View post" link in post settings when `disableWebsiteFeatures` is true.
 - Hides "Template" selector when `disableWebsiteFeatures` is true.
 - Hides "Featured" toggle when `disableWebsiteFeatures` is true.
 - Hides Code injection, Meta data, X card, Facebook card menu items when `disableWebsiteFeatures` is true.
 
 #### `ghost/admin/app/components/editor/modals/preview.hbs`
+
 - Hides "Web" preview button when `disableWebsiteFeatures` is true.
 - Hides share/test email group on the right when `disableWebsiteFeatures` is true.
 
 #### `ghost/admin/app/components/editor/modals/preview.js`
+
 - Injects `config` via `@inject config` decorator.
 - Defaults `previewFormat` to `'email'` (instead of `'browser'`) when `disableWebsiteFeatures` is true.
 
 #### `ghost/admin/app/components/editor/publish-management.js`
+
 - Injects `config` via `@inject config` decorator.
 - Sets `previewFormat = 'email'` in constructor when `disableWebsiteFeatures` is true.
 
 #### `ghost/admin/app/utils/publish-options.js`
+
 - Added `disableWebsiteFeatures` getter.
 - `publishTypeOptions` filtered to only `'send'` when `disableWebsiteFeatures` is true (removes Publish and Publish+Send options).
 - Default `publishType` set to `'send'` when `disableWebsiteFeatures` is true.
 - Skips "email-from-filter" defaulting logic when `disableWebsiteFeatures` is true.
 
 #### `ghost/admin/app/routes/home.js`
+
 - Redirects admin users to `'posts'` instead of `'stats-x'` when `disableWebsiteFeatures` is true.
 - Redirects non-contributor users to `'posts'` instead of `'site'` when `disableWebsiteFeatures` is true.
 
@@ -115,6 +136,7 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 **Purpose:** Allows Atlas CMS to authenticate users into Ghost via signed JWT tokens (iframe embedding with auto-login).
 
 ### New File (custom, not in upstream): `ghost/core/core/server/adapters/sso/JwtSSOAdapter.js`
+
 - Actually exists in upstream but heavily modified.
 - Verifies JWT tokens using a shared secret (HS256).
 - Auto-provisions users with configurable default role.
@@ -122,17 +144,20 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 - Added extensive `logging.info` / `console.log` debug statements (can be cleaned up).
 
 ### `ghost/core/core/server/services/auth/session/index.js`
+
 - Added `logging` import.
 - Added `logging.info` for session creation logging.
 - Added `catch` block in `createSession` to log session creation errors before re-throwing.
 
 ### `ghost/core/core/server/web/parent/backend.js`
+
 - Wires up `createSessionFromToken()` middleware on `/ghost` route.
 - Added `redirectAfterTokenExchange` middleware: after successful SSO, redirects to strip `?token=` from URL.
 - Added debug log when redirect is skipped.
 - Minor formatting changes (single → double quotes).
 
 ### `ghost/core/core/server/web/admin/controller.js`
+
 - In production: sets `Content-Security-Policy: frame-ancestors 'self' <origin>` for requests from `*.atlas-cms.rest`, `*.iliad.dev`, or `localhost` (any port).
 - Falls back to `X-Frame-Options: SAMEORIGIN` for other origins.
 - (Previous `adminFrameProtection` config was commented out; replaced with this hardcoded logic.)
@@ -143,6 +168,7 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 ## 3. React Admin Root Route Fix
 
 ### `apps/admin/src/routes.tsx`
+
 - **v6.25.1 update:** Upstream replaced the catch-all `path: "*"` EmberFallback with an explicit `EMBER_ROUTES` array that includes `"/"`, which subsumes our original fix. Our custom index route was dropped during the merge — upstream's solution handles the same problem.
 - ~~Added `{ index: true, Component: EmberFallback }` inside the `path: ""` (ActivityPub wrapper) route's children.~~
 - **Original issue:** Ghost v6.21.0's `path: ""` route catches `/ghost/` before EmberFallback. Upstream fixed this in v6.25.1.
@@ -152,9 +178,11 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 ## 4. Docker / Dev Infrastructure
 
 ### `compose.dev.yaml`
+
 - Passes `DISABLE_WEBSITE_FEATURES` env var through to the Ghost container (with empty default).
 
 ### `docker/dev-gateway/Caddyfile`
+
 - Added `@sso_token` matcher: any request to `/ghost` or `/ghost/` with a `?token=` query param.
 - Routes SSO token requests to the Ghost **backend** (not the admin dev server) so the session is established before the frontend loads.
 
@@ -163,13 +191,15 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 ## 5. Configuration Files
 
 ### `ghost/core/config.development.json`
+
 - Added SSO adapter config for local development:
-  - `active: "JwtSSOAdapter"`
-  - `secret: "svTLJKlfRtxa5tB9DuCd3A=="`
-  - `allowedDomains: ["iliad.dev", "atlas-cms.rest", "localhost"]`
-  - `defaultRole: "Administrator"`, `autoProvision: true`
+    - `active: "JwtSSOAdapter"`
+    - `secret: "svTLJKlfRtxa5tB9DuCd3A=="`
+    - `allowedDomains: ["iliad.dev", "atlas-cms.rest", "localhost"]`
+    - `defaultRole: "Administrator"`, `autoProvision: true`
 
 ### `ghost/core/core/shared/config/env/config.production.json`
+
 - Added SSO adapter config for production (same structure, no autoProvision override).
 - Minor formatting cleanup (consistent JSON indentation).
 
@@ -178,6 +208,7 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 ## 6. Package Scripts
 
 ### `package.json`
+
 - Added `dev:kill` script: kills nx/yarn dev processes and brings down Docker containers.
 
 ---
@@ -195,10 +226,12 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 **Purpose:** Notifies the parent iframe of Ghost admin navigation events so the embedding Atlas CMS can keep its own URL bar / breadcrumbs in sync with Ghost's hash-based routing.
 
 ### `ghost/admin/app/index.html`
+
 - Added inline `<script>` in `<head>` (after `{{content-for "head-footer"}}`) that listens to `hashchange` events and posts `{ type: 'ghost-nav', hash: location.hash }` to `window.parent`.
 - Script is a no-op when Ghost is not embedded in an iframe (`window.parent === window`).
 
 ### `ghost/core/core/built/admin/index.html`
+
 - Same script injected into the pre-built admin HTML (this is the file actually served in production).
 - **Must be re-applied** after any Ember build or Ghost upgrade that regenerates this file.
 
@@ -209,6 +242,7 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 **Purpose:** Upstream Ghost's lint-staged config catches hundreds of pre-existing lint errors (mostly Tailwind class ordering) when merging upstream changes, blocking commits.
 
 ### `.github/hooks/pre-commit`
+
 - Commented out the `yarn lint-staged --relative` call and its exit-on-failure check.
 - Submodule removal and ActivityPub version bump prompts are still active.
 
@@ -221,19 +255,37 @@ Last updated: 2026-04-22 (catalogued against 6.32.0 base; §17 added same day)
 ### Ember Admin (pre-existing, predates v6.25.1)
 
 #### `ghost/admin/app/styles/patterns/global.css`
+
 - `--green: #4945ff` (overrides upstream `#30cf43`)
 
 #### `ghost/admin/app/styles/spirit/_colors-dark.css`
+
 - `--green: #7B78FF` (dark mode variant)
+
+### Admin Signin Button — pink `accent_color` overridden to Atlas purple (new 2026-04-27)
+
+Distinct from the green→purple work above: the Ember admin signin button (`/ghost/signin`) used the publication's `accent_color` site setting (defaults to Ghost brand pink `#FF1A75`) as an inline `background-color` via `<GhTaskButton @useAccentColor={{true}}>`. The button is now hardcoded to Atlas purple `#4945FF`. The `accent_color` setting itself is **not** changed — Portal signin, member emails, and other publication-facing surfaces still respect the tenant's brand color (which a tenant may legitimately want to be something other than Atlas purple).
+
+#### `ghost/admin/app/templates/signin.hbs`
+
+- Removed `@useAccentColor={{true}}` from the "Sign in →" `<GhTaskButton>` (around line 74). No more inline `style="background-color: ${accent_color}"` on the button element.
+
+#### `ghost/admin/app/styles/layouts/auth.css`
+
+- Added `.gh-signin .gh-btn-login:not(.gh-btn-red) { background: #4945FF; }` directly after the existing `.gh-signin .gh-btn-login:hover` rule. The `:not(.gh-btn-red)` lets the failure-state red (`failureClass: 'gh-btn-red'` from `ghost/admin/app/components/gh-task-button.js`) keep working.
+
+`GhTaskButton`'s `useAccentColor` API is **unchanged** and still in use elsewhere across the admin — only the signin template stops opting in.
 
 ### Shade / React Admin (new in v6.25.1 upgrade)
 
 v6.25.1 introduced a separate Tailwind v4 color palette in shade and hardcoded `rgba(48,207,67,...)` values across React components, all bypassing the Ember `--green` CSS variable. These are overridden to `#4945FF` / `rgba(73,69,255,...)`.
 
 #### `apps/shade/tailwind.theme.css`
+
 - `--color-green-100: #ECEAFF`, `--color-green-400: #7A77FF`, `--color-green-500: #4945FF`, `--color-green-600: #3633CC`, `--color-green: #4945FF`
 
 #### `apps/shade/src/docs/tokens.mdx`
+
 - Updated example color values to match.
 
 #### Focus-ring CSS token override (new in v6.32.0 upgrade)
@@ -241,8 +293,8 @@ v6.25.1 introduced a separate Tailwind v4 color palette in shade and hardcoded `
 v6.32.0 (PR in the shade refactor series) moved input focus rings from hardcoded `rgba(48,207,67,.25)` to a design token `--focus-ring` consumed as `focus-visible:border-focus-ring focus-visible:ring-focus-ring/25`. Per-component rgba overrides are **obsolete** for these files; we override the token once instead.
 
 - `apps/shade/theme-variables.css` — overrides `--focus-ring` in both light (`:root`) and dark mode blocks:
-  - Light: `--focus-ring: #4945FF;` (was `var(--ring)` — a gray)
-  - Dark: `--focus-ring: #7B78FF;`
+    - Light: `--focus-ring: #4945FF;` (was `var(--ring)` — a gray)
+    - Dark: `--focus-ring: #7B78FF;`
 - Upstream components (`input.tsx`, `textarea.tsx`, `input-group.tsx`, `admin-x-design-system/src/global/form/*.tsx`) now use the token as-shipped and do **not** need per-file overrides.
 
 #### Remaining hardcoded RGBA replacements (`rgba(48,207,67,...)` → `rgba(73,69,255,...)`):
@@ -256,39 +308,22 @@ These upstream files still embed the rgba literal inline and must be re-patched 
 - `apps/posts/src/components/label-picker/label-picker.tsx` — focus ring
 
 #### Other hardcoded color replacements:
+
 - `apps/admin-x-design-system/styles.base.css` — `.gh-prose-links a` color
 - `apps/admin/src/layout/app-sidebar/shared-views.ts` — `green` in colorMap
 
-#### Koenig-lexical bundle (v1.7.30+) — full green palette → Atlas purple palette
+#### Koenig-lexical bundle — moved to `@iliad.dev/koenig-lexical` fork (see §21)
 
-Koenig's CSS bundle hardcodes the Ghost green palette across selection outlines, focus rings, active/hover backgrounds, badges, and the `--green` custom property — all bypassing our shade `--color-green` override. The Koenig bundle is built with its *own* Tailwind config, so shade's token overrides do not reach it.
+Previously a ~66-replacement pnpm patch against the minified bundle (hex + space-separated rgb across green-100/400/500/600). Palette is now compiled into the source fork `@iliad.dev/koenig-lexical`, installed in place of `@tryghost/koenig-lexical` via a pnpm alias override. No patch file, no bundle replacements, no post-patch copy step, no `?v=HASH` cache-bust dance.
 
-Two passes of replacement were needed (one missed the `active button state`):
+Historical palette mapping (retained for fork maintainers):
 
-**Pass 1 (commit `0a32ee5fc8`)** — 38 hex-literal replacements:
-- `#30cf43` → `#4945ff` (green-500) + all alpha-suffixed variants (`1a`, `33`, `40`, `b3`) preserved.
-
-**Pass 2** — 28 palette-shade replacements to catch Tailwind's space-separated RGB syntax and non-500 shades:
-
-| From | To | Semantic |
-|---|---|---|
-| `rgb(48 207 67/…)` | `rgb(73 69 255/…)` | green-500 with opacity slot |
-| `rgb(42 178 58/…)` | `rgb(54 51 204/…)` | green-600 (**active button state**) |
-| `#2ab23a` | `#3633cc` | green-600 hex |
-| `rgb(225 249 228/…)` | `rgb(236 234 255/…)` | green-100 (light bg) |
-| `#e1f9e4` | `#eceaff` | green-100 hex |
-| `rgb(88 218 103/…)` | `rgb(122 119 255/…)` | green-400 (future-proof) |
-| `#58da67` | `#7a77ff` | green-400 hex (future-proof) |
-
-All rgb replacements are anchored on the `rgb(` prefix so coincidental integer triples elsewhere in the bundle aren't affected. Total across the patch: ~66 replacements (`dist/style.css`: 29, `dist/koenig-lexical.umd.js`: 33, `dist/koenig-lexical.js`: 4).
-
-After `pnpm patch-commit`, copy the patched UMD into the three built-asset locations (`ghost/admin/dist/ghost/assets/koenig-lexical/`, `ghost/core/core/built/admin/assets/koenig-lexical/`, `apps/admin/dist/assets/koenig-lexical/`) since Ember's admin caches the file during its build. Hard-refresh the browser (`Cmd+Shift+R`) to bust the `?v=HASH` cache.
-
-**Verification** — no greens should remain:
-```
-grep -Eo '#30cf43|#2ab23a|#e1f9e4|#58da67|rgb\((48 207 67|42 178 58|225 249 228|88 218 103)' \
-     node_modules/.pnpm/@tryghost+koenig-lexical@1.7.30_patch_hash=*/node_modules/@tryghost/koenig-lexical/dist/{style.css,koenig-lexical.umd.js}
-```
+| From (Ghost green)               | To (Atlas purple)                | Semantic                  |
+| -------------------------------- | -------------------------------- | ------------------------- |
+| `#30cf43` / `rgb(48 207 67/…)`   | `#4945ff` / `rgb(73 69 255/…)`   | 500                       |
+| `#2ab23a` / `rgb(42 178 58/…)`   | `#3633cc` / `rgb(54 51 204/…)`   | 600 (active button state) |
+| `#e1f9e4` / `rgb(225 249 228/…)` | `#eceaff` / `rgb(236 234 255/…)` | 100                       |
+| `#58da67` / `rgb(88 218 103/…)`  | `#7a77ff` / `rgb(122 119 255/…)` | 400                       |
 
 ---
 
@@ -313,21 +348,26 @@ Inside the `rows.forEach` loop (the code that builds each gallery row):
 
 1. **Added `const isEmail = options.target === 'email';`** before the loop.
 2. **Branched row-container creation** inside the loop:
-   - If `isEmail`: create a `<table>` with attributes `class="kg-gallery-row"`, `role="presentation"`, `cellspacing="0"`, `cellpadding="0"`, `border="0"`, `width="100%"`, and inline `style="width:100%;border-collapse:collapse;table-layout:fixed;"`. Append a `<tr>` to it. Set `rowContainer = table` and `rowInsertionPoint = tr`.
-   - Else: build the original `<div class="kg-gallery-row">` and set both `rowContainer` and `rowInsertionPoint` to it.
+    - If `isEmail`: create a `<table>` with attributes `class="kg-gallery-row"`, `role="presentation"`, `cellspacing="0"`, `cellpadding="0"`, `border="0"`, `width="100%"`, and inline `style="width:100%;border-collapse:collapse;table-layout:fixed;"`. Append a `<tr>` to it. Set `rowContainer = table` and `rowInsertionPoint = tr`.
+    - Else: build the original `<div class="kg-gallery-row">` and set both `rowContainer` and `rowInsertionPoint` to it.
 3. **Computed aspect-based column widths** before the inner `row.forEach`:
-   ```js
-   const aspectRatios = row.map(image => (image.width && image.height) ? (image.width / image.height) : 1);
-   const aspectSum = aspectRatios.reduce((sum, r) => sum + r, 0) || row.length;
-   ```
+    ```js
+    const aspectRatios = row.map((image) =>
+        image.width && image.height ? image.width / image.height : 1,
+    );
+    const aspectSum = aspectRatios.reduce((sum, r) => sum + r, 0) || row.length;
+    ```
 4. **Branched image-cell creation** inside `row.forEach`:
-   - If `isEmail`: create a `<td class="kg-gallery-image">` with `width="${pct.toFixed(2)}%"` (pct = `aspectRatios[colIdx] / aspectSum * 100`), `valign="top"`, and inline `style="padding:0 4px;vertical-align:top;"`.
-   - Else: create the original `<div class="kg-gallery-image">`.
-   - Renamed the variable from `imgDiv` → `imgCell` throughout so it works for both branches.
+    - If `isEmail`: create a `<td class="kg-gallery-image">` with `width="${pct.toFixed(2)}%"` (pct = `aspectRatios[colIdx] / aspectSum * 100`), `valign="top"`, and inline `style="padding:0 4px;vertical-align:top;"`.
+    - Else: create the original `<div class="kg-gallery-image">`.
+    - Renamed the variable from `imgDiv` → `imgCell` throughout so it works for both branches.
 5. **Added inline `<img>` style for email** at the end of the existing `if (options.target === 'email')` block (just after the Unsplash URL branch):
-   ```js
-   img.setAttribute('style', 'display:block;width:100%;height:auto;max-width:100%;');
-   ```
+    ```js
+    img.setAttribute(
+        "style",
+        "display:block;width:100%;height:auto;max-width:100%;",
+    );
+    ```
 6. **Updated `.appendChild` calls** at the end of `row.forEach` to use `imgCell` instead of `imgDiv`, and `rowInsertionPoint` instead of `rowDiv`.
 7. **Updated the container append** at the end of `rows.forEach` to `container.appendChild(rowContainer)`.
 
@@ -367,27 +407,33 @@ On each upstream Ghost merge, diff these files and re-port any upstream changes 
 The module was used by exactly one line in the Caddyfile — a dev-only Apache-style access log format — so the cheapest fix is to drop it and use Caddy's built-in `console` log format.
 
 ### `docker/dev-gateway/Dockerfile`
+
 - Removed line: `RUN caddy add-package github.com/caddyserver/transform-encoder`.
 - Image now uses `caddy:2-alpine` as-is (no on-demand binary rebuild).
 
 ### `docker/dev-gateway/Caddyfile`
+
 - Changed log format from `format transform "{common_log}"` to `format console` (built-in, no extra module required).
 
 ### Upgrade guidance
 
 If upstream re-adds `caddy add-package` for transform-encoder or any other module:
+
 - Leave it removed unless the module becomes functionally required (not just cosmetic logging).
 - If a module becomes required, switch the Dockerfile to a multi-stage `xcaddy build` to avoid the caddyserver.com dependency entirely.
 
 ---
 
-## 14. Image Width Percentages in Koenig Editor
+## 14. Image Width Control in Koenig Editor
 
-**Purpose:** Adds four percentage-based width options (25%, 33%, 50%, 75%) to the image card toolbar, on top of upstream's Regular / Wide / Full presets. The primary target is email newsletters where writers want more granular control over image sizing.
+**Purpose:** Give newsletter writers granular control over image sizing. Originally shipped as four percentage presets (25% / 33% / 50% / 75%) on top of upstream's Regular / Wide / Full via a pnpm-native bundle patch. As of 2026-04-24 the editor-package side of this moved to the `@iliad.dev/koenig-lexical` fork (see §21), which replaces the four presets with a **single numeric max-width input** (pixels). The consumer-side backend renderer and CSS below still reflect the old preset contract and are scheduled for migration to the fork's new `data-kg-max-width` attribute contract.
 
-**Mechanism (as of v6.32.0):** Pnpm-native `patchedDependencies` patch of the compiled `@tryghost/koenig-lexical` bundle, plus in-repo changes to the email image renderer and email CSS. Was `patch-package` + `"postinstall": "patch-package"` on yarn; migrated to `pnpm patch` / `pnpm patch-commit` when Ghost moved to pnpm 10 in v6.29.0.
+**Current mechanism:**
 
-### Chosen `cardWidth` values
+- **Editor UI + WYSIWYG:** compiled into `@iliad.dev/koenig-lexical` source; no patch in this repo. Installed via pnpm alias override (§21).
+- **Backend renderer + email/site CSS:** still in this repo (see subsections below). ⚠ **Stale:** still keyed on the old `cardWidth` string presets (`quarter`/`third`/`half`/`threequarters`). Leave as-is until the fork's first release; then migrate to read `data-kg-max-width` (or equivalent numeric attribute) from the serialized node.
+
+### Legacy `cardWidth` values (retained in backend code pending migration)
 
 | Setting       | `cardWidth` value | Email width |
 | ------------- | ----------------- | ----------- |
@@ -396,84 +442,45 @@ If upstream re-adds `caddy add-package` for transform-encoder or any other modul
 | Half          | `half`            | 300px       |
 | Three-quarter | `threequarters`   | 450px       |
 
-Existing `regular` / `wide` / `full` remain untouched for back-compat.
+### Backend ⚠ stale — pending migration to fork's numeric contract
 
-### Infrastructure (pnpm-native patch workflow as of v6.32.0)
-- `package.json` — `pnpm.patchedDependencies` registers the patch file. `pnpm patch-commit` writes it automatically when the patch is committed.
-- `patches/` — tracked in git. Current file: `patches/@tryghost__koenig-lexical@1.7.30.patch`.
-- To regenerate: `pnpm patch '@tryghost/koenig-lexical@1.7.30'` → edit the copy it prints → `pnpm patch-commit <path>`.
-
-### Patch
-- `patches/@tryghost__koenig-lexical@1.7.30.patch` (v6.32.0) — three files patched in node_modules:
-
-**Icon strategy (v6.32.0 update):** Rather than define 4 distinct inline SVG icons (which the v1.7.28 patch did with bespoke outline-rect-plus-filled-bar glyphs), the v1.7.30 patch reuses the existing `imgFull` component (`me` in ESM, `P` in UMD) for all four new widths. Button tooltips ("Quarter width", "Third width", etc.) differentiate them. This trades visual distinction in the toolbar for a much simpler, more upgrade-resilient patch.
-  - **`dist/koenig-lexical.js`** (ESM build, 3 hunks):
-    - Extends the internal `JW` allowlist in `src/utils/image-card-widths.js` with `quarter`, `third`, `half`, `threequarters`.
-    - Adds four inline SVG icon components to the `UF` icon map in `src/components/ui/ToolbarMenu.jsx` (`imgQuarter` / `imgThird` / `imgHalf` / `imgThreeQuarters`). Icons are 24×24 viewBox with an outline rectangle + a centered filled bar whose width visually represents the percentage.
-    - Adds four toolbar buttons after the "Full width" button. Each auto-hides if `cardConfig.image.allowedWidths` is set and does not include the value.
-  - **`dist/koenig-lexical.umd.js`** (UMD build, 3 hunks) — **critical: this is the bundle actually served to the browser.** Ghost's Ember admin imports the UMD via `app.import('node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js', ...)` at `ghost/admin/ember-cli-build.js:271` and Vite's admin dev server serves the same file. The UMD has **different minified variable names** and uses **backtick string literals** (not quoted), so the ESM patch doesn't apply to it automatically.
-    - UMD variable mapping at the time of this patch: allowlist `KW` (was `JW`), icon map `Gae` (was `UF`), toolbar-button component `KF` (was `GF`), separator `qF` (was `KF`), setWidth callback `P` (was `ee`), current-width state `_` (was `y`), allowed-widths array `O` (was `A`).
-    - Patches the `KW` allowlist, the `cardWidth:W.default.oneOf([...])` PropTypes check, the icon map to add the 4 inline SVG icons (now using `(0,n.jsx)` / `(0,n.jsxs)` calls instead of `p` / `m`), and the toolbar-button JSX.
-    - Also patches the **inlined CSS string** at the top of the UMD — style.css is bundled inside the UMD and injected at runtime, so our 4 WYSIWYG rules must be added there too, not just to `dist/style.css`.
-  - **`dist/style.css`** (1 hunk, appended):
-    - Adds WYSIWYG width rules scoped to `.koenig-lexical figure[data-kg-card-width=...]` so the editor preview visually resizes when a new width is selected. Rules use `width: 25% / 33.333% / 50% / 75%` with `margin: 0 auto; display: block;` — no `max-width` cap so the image scales with the editor's column width (unlike email, which caps at the 600px content column). Only affects consumers that load the standalone CSS file; the Ember admin runtime uses the copy inlined into the UMD above.
-
-### Backend
 - `ghost/core/core/server/services/koenig/node-renderers/image-renderer.js`
-  - Added `PERCENT_BY_CARD_WIDTH` map at module top.
-  - Email output path now computes target width from percentage (`Math.round(600 * percent)`) rather than a fixed 600px cap. Non-percentage widths (`regular` / `wide` / `full` / undefined) fall through to the original 600px behavior.
-  - Retina-src logic (`srcWidth >= 1200`) unchanged — higher-resolution source files are still used even when display width is smaller.
-  - Web rendering is already free — the existing `kg-width-${node.cardWidth}` class emission at lines 34-36 handles any string, so `kg-width-half` etc. land on the figure automatically.
+    - Added `PERCENT_BY_CARD_WIDTH` map at module top.
+    - Email output path now computes target width from percentage (`Math.round(600 * percent)`) rather than a fixed 600px cap. Non-percentage widths (`regular` / `wide` / `full` / undefined) fall through to the original 600px behavior.
+    - Retina-src logic (`srcWidth >= 1200`) unchanged — higher-resolution source files are still used even when display width is smaller.
+    - Web rendering is already free — the existing `kg-width-${node.cardWidth}` class emission at lines 34-36 handles any string, so `kg-width-half` etc. land on the figure automatically.
 
-### Email Styles
-- `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs` — added `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with `width: X% !important`, matching `max-width: {150,200,300,450}px`, centered, `display: block`. Class rules are belt-and-braces alongside the `width` attribute set by the renderer, since some email clients honor one but not the other.
+### Email Styles ⚠ stale — pending migration to fork's numeric contract
 
-### Site Frontend Styles
-- `ghost/core/core/frontend/src/cards/css/image.css` (**new file**) — adds the four `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules to Ghost's bundled card CSS. Rules use plain `width: X%; margin: 0 auto; display: block;` (no `!important`, no `max-width`) so themes can override if they want different sizing.
+- `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs` — `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with `width: X% !important`, matching `max-width: {150,200,300,450}px`, centered, `display: block`.
+
+### Site Frontend Styles ⚠ stale — pending migration to fork's numeric contract
+
+- `ghost/core/core/frontend/src/cards/css/image.css` (**new file**) — `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with plain `width: X%; margin: 0 auto; display: block;`.
 - **Delivery:** Ghost bundles `ghost/core/core/frontend/src/cards/css/*.css` into `cards.min.css` (see `ghost/core/core/frontend/services/assets-minification/card-assets.js`). Themes opt in via `"card_assets": true` in their `package.json`; if a theme uses an explicit `include` list, it must add `"image"` to pick these rules up. Ghost's default Casper/Source themes use `card_assets: true`.
 - **Upstream coordination risk:** Ghost does not currently ship an `image.css` — image card widths have always been theme responsibility. If upstream ever adds their own `image.css` with conflicting rules (e.g. for `.kg-width-full`), expect a file-add conflict on merge; favor concatenating their rules after ours so upstream's `regular`/`wide`/`full` styling wins while our percentage rules remain.
 
 ### Upgrade guidance
 
-When bumping `@tryghost/koenig-lexical`, the patch will almost certainly not apply cleanly — the minified variable names it targets change on every build, and the ESM and UMD builds have different names. Workflow:
+Editor-package upgrades are now owned by the `@iliad.dev/koenig-lexical` fork — see §21. In this repo, bumping is a one-line version change to the `pnpm.overrides` alias. No patch to regenerate, no UMD copy step, no browser cache-bust needed beyond ordinary `pnpm build`.
 
-1. Delete `patches/@tryghost+koenig-lexical+*.patch`.
-2. Run `yarn install` to pull the new version.
-3. **`dist/koenig-lexical.js`** (ESM) — find three positions by grepping stable strings:
-   - Allowlist: `grep -n '"regular",' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.js` — find the `[...,"wide","full"]` array.
-   - Icon map: `grep -n 'imgRegular:' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.js` — the identifier letter after the colon is the runtime icon component.
-   - Toolbar buttons: `grep -n '"Full width"' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.js` — the `p(GF, {...})` block insertion point is directly after.
-4. **`dist/koenig-lexical.umd.js`** (UMD — **this is the one the browser actually loads**) — find three positions using backtick literals:
-   - Allowlist: `grep -oE 'var [A-Z]+=\[\`regular\`,\`wide\`,\`full\`\]' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — the letters between `var` and `=[` is the allowlist variable name.
-   - Icon map: `grep -oE 'imgRegular:[a-zA-Z_$]+,imgWide:[a-zA-Z_$]+,imgFull:[a-zA-Z_$]+,imgReplace:[a-zA-Z_$]+' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — insertion point is between `imgFull:X` and `,imgReplace:Y`.
-   - Toolbar buttons: `perl -ne 'while(/icon:\`imgFull\`.{0,400}/g){print "$&\n"}' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — shows the Full button + following separator so you can map the UMD's KF-equivalent component name and the setWidth callback name (`P` in this patch's version).
-   - **Inlined CSS:** `grep -oE '\.koenig-lexical \.CodeMirror \.cm-spell-error[^{]{1,100}\{[^}]{1,60}\}' node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js` — if this anchor rule is still the end of the bundled stylesheet, append the four `.koenig-lexical figure[data-kg-card-width=...] img{...}` rules right after it. If upstream adds new CSS rules after `.cm-spell-error`, pick a new anchor — grep the bundle for where the `.koenig-lexical` selectors end.
-5. **`dist/style.css`** — append the same four WYSIWYG rules at end of file. Single-line minified; use `printf ... >> style.css` rather than Edit.
-6. Regenerate: `npx patch-package @tryghost/koenig-lexical`. Verify the patch has hunks for all three files (`grep -E '^(\+\+\+|---)'`).
-7. **Copy the patched UMD into the three built locations** (since Ember/Vite builds cache):
-   ```
-   for dest in ghost/admin/dist/ghost/assets/koenig-lexical \
-               ghost/core/core/built/admin/assets/koenig-lexical \
-               apps/admin/dist/assets/koenig-lexical; do
-     cp node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js "$dest/"
-   done
-   ```
-   A full admin rebuild also fixes this (asset-delivery at `ghost/admin/lib/asset-delivery/index.js:112-120` copies the dist folder on every admin build), but the manual copy is instant.
-8. **Hard-refresh the browser** — the editor URL uses a `?v=HASH` query bust based on the baked-in Ember build hash; if the hash hasn't changed, the browser may serve a cached old UMD.
+**Follow-up migration** (pending fork's first release): once the fork ships the numeric-width contract, replace the four `kg-width-{preset}` branches in `image-renderer.js`, `card-styles.hbs`, and `image.css` with logic that reads the fork's numeric attribute (expected: `data-kg-max-width` in px on the `<figure>`). Delete this section's ⚠ stale markers after that migration lands.
 
 ---
 
 ## 15. Docker Build Fix — Copy `patches/` into `ghost-dev` Image
 
-**Purpose:** The koenig-lexical patch in §14 lives in `patches/` and is referenced from `package.json` under `pnpm.patchedDependencies`. When the `ghost-dev` Docker image builds, `pnpm install --frozen-lockfile` runs inside the container; if `patches/` isn't copied in, pnpm fails with `ENOENT: no such file or directory, open '/home/ghost/patches/...'`.
+**Purpose:** Patches in `patches/` (currently just `ghost-storage-cloudinary@3.0.2.patch` — see §20; the former koenig-lexical patch was retired in favor of the fork in §21) are referenced from `package.json` under `pnpm.patchedDependencies`. When the `ghost-dev` Docker image builds, `pnpm install --frozen-lockfile` runs inside the container; if `patches/` isn't copied in, pnpm fails with `ENOENT: no such file or directory, open '/home/ghost/patches/...'`.
 
 Upstream's Dockerfile doesn't need this because upstream has no patches. Added in this fork to keep `pnpm dev` working.
 
 ### `docker/ghost-dev/Dockerfile`
+
 - Added `COPY patches patches` right before the `pnpm install` step (after `.github/scripts` and `.github/hooks` copies).
 - No `.dockerignore` exclusion needed — `patches/` isn't in `.dockerignore`.
 
 ### Upgrade guidance
+
 On each upgrade, re-confirm this `COPY patches patches` line is still present. Upstream may refactor the Dockerfile's layer ordering at any time.
 
 ---
@@ -487,6 +494,7 @@ On each upgrade, re-confirm this `COPY patches patches` line is still present. U
 **Root cause of the per-app failures:** the original Dockerfile used a multi-stage `FROM development-base AS X-builder` + `RUN cd apps/X && pnpm build` pattern, one stage per workspace. This worked under yarn classic because yarn always hoists every transitive dep to the root `/home/ghost/node_modules`, so `require('postcss-import')` from anywhere walked up and found it. Under pnpm 10 with `shamefully-hoist=false`, transitive deps are only reachable through pnpm's per-binary NODE_PATH injection — which only kicks in when pnpm itself launches the binary, and is fragile in our cross-stage `COPY` graph (the per-stage symlink farm doesn't survive being assembled from multiple builder stages).
 
 ### `Dockerfile.railway` — full rewrite (deps + builder + runtime)
+
 Replaced the ten per-app builder stages with a single `builder` stage that runs `pnpm build` from the workspace root. `pnpm build` resolves to `pnpm nx run-many -t build` (per root `package.json`), which is the same invocation upstream's CI uses (`.github/workflows/ci.yml` line ~1589: `pnpm nx build ${{ matrix.package_name }}`). Nx orchestrates the dependency graph, runs each workspace's build through pnpm from root, and gets the correct NODE_PATH so transitive deps like `postcss-import` resolve via the `node_modules/.pnpm/node_modules/` hoist.
 
 Final shape: `base` → `deps` (manifests + `pnpm install --frozen-lockfile`) → `builder` (full source + `pnpm build` + `pnpm --filter ghost build:assets`) → `runtime` (single `COPY --from=builder /home/ghost /home/ghost`).
@@ -494,6 +502,7 @@ Final shape: `base` → `deps` (manifests + `pnpm install --frozen-lockfile`) �
 Trade-off: less granular Docker layer caching (any source change rebuilds everything), in exchange for matching upstream's blessed build path. The `--mount=type=cache,target=/root/.local/share/pnpm/store` mount keeps install fast across rebuilds.
 
 ### `ghost/core/package.json` — added `esbuild` devDependency
+
 `ghost/core/bin/minify-assets.js` (called by `pnpm build:assets:js`) does `require('esbuild')`, but no workspace declares esbuild as a direct dep — it only exists transitively via vite/tailwind. When pnpm runs scripts, it sets NODE_PATH for direct binary invocations (e.g. `vite`), but not for plain `node bin/foo.js` calls inside scripts. So `node bin/minify-assets.js` doesn't get NODE_PATH, can't see `.pnpm/node_modules/esbuild`, and fails.
 
 Upstream papers over this in `ghost/core/package.json` script `pack:standalone`, which appends `shamefully-hoist=true` to the `.npmrc` written into the `npm pack` tarball before that tarball is consumed by `Dockerfile.production`. Source builds (our Dockerfile) don't go through `pack:standalone`, so they hit the bug.
@@ -505,6 +514,7 @@ Re-added `"esbuild": "0.25.12"` to `ghost/core/package.json` devDependencies (al
 Verified locally: `cd ghost/core && pnpm build:assets` now produces `ghost.min.css` plus the five `*.min.js` files (`comment-counts`, `ghost-stats`, `member-attribution`, `admin-auth/admin-auth`, `private`). Without esbuild present, this raises `Cannot find module 'esbuild'`.
 
 ### Upgrade guidance
+
 - On each upgrade, re-confirm `Dockerfile.railway` is still using the single-builder pattern with `pnpm build` from root. Upstream doesn't ship this file. If the set of workspaces changes (new `apps/*` added), the per-workspace `package.json` COPY list in the `deps` stage must be extended, otherwise `pnpm install --frozen-lockfile` fails naming the missing workspace.
 - Re-confirm the `esbuild` devDependency in `ghost/core/package.json` survived the merge. If upstream re-adds esbuild themselves, drop our entry in favor of theirs (compare versions). If upstream rewrites `bin/minify-assets.js` to not need esbuild, remove our entry. `pnpm --filter ghost build:assets:js` from root is a fast smoke test.
 
@@ -517,11 +527,13 @@ Verified locally: `cd ghost/core && pnpm build:assets` now produces `ghost.min.c
 **Root cause:** `apps/admin-x-settings/postcss.config.cjs` re-exports the design-system config via `module.exports = require('@tryghost/admin-x-design-system/postcss.config.cjs')`. That config names three plugins as strings (`postcss-import`, `@tailwindcss/postcss`, `autoprefixer`). Vite's bundled postcss-load-config resolves those names with `createRequire(<config file path>)` — anchored at `apps/admin-x-settings/postcss.config.cjs`, not at the design-system file it re-exports. The three plugins are declared only in `admin-x-design-system/package.json`, so under strict pnpm (`shamefully-hoist=false`, PR #27343) they're absent from `apps/admin-x-settings/node_modules/` and Node resolution fails. Vite's `cssPlugin` fires `resolvePostcssConfig(config)` without await/catch, so the rejection becomes an unhandled rejection — fatal on Node 22, tolerated on Node 20 (hence why local dev masks the bug; Docker uses Node 22 because `ghost/core` requires `^22.13.1`). This is a latent upstream bug in commit `dc2ae810f4` (phantom deps missed for admin-x-settings).
 
 ### `apps/admin-x-settings/package.json` — added three devDependencies
+
 Added `@tailwindcss/postcss: 4.2.1`, `autoprefixer: 10.4.21`, `postcss-import: 16.1.1` — matching the exact versions pinned in `apps/admin-x-design-system/package.json`, so pnpm dedupes to the single already-installed `.pnpm` entry rather than pulling a second copy. `pnpm-lock.yaml` regenerated by `pnpm install`.
 
 Verified: `docker run --rm -v "$PWD:/work" -w /work node:22.18.0-bullseye-slim bash -c "corepack enable && pnpm nx build @tryghost/admin-x-settings"` exits 0 after the fix (crashed before it).
 
 ### Upgrade guidance
+
 On each upgrade, confirm `postcss-import`, `autoprefixer`, and `@tailwindcss/postcss` are still in `apps/admin-x-settings/package.json` devDependencies. If upstream adds them itself (they should — this is a legitimate bug in their phantom-deps audit), drop our entries in favor of theirs. If upstream rewrites `admin-x-design-system/postcss.config.cjs` to export resolved plugin instances instead of string names (e.g. `require('postcss-import')()` in the config itself), our declarations become unnecessary and can be removed.
 
 ---
@@ -553,7 +565,9 @@ Two independent issues surfaced during the Node-22 Docker build after §17 unblo
 Verified end-to-end: `sh scripts/docker-push` (equivalent to `docker buildx build --platform linux/amd64 --no-cache -f Dockerfile.railway`) now runs all 16 nx projects to completion and the builder stage exits 0.
 
 ### Upgrade guidance
+
 Both fixes are Docker-build-only shims. Upstream Ghost doesn't hit them because their CI uses `pnpm nx run @tryghost/admin:build` (narrower subgraph that happens to respect topology) and runs in an environment where the ember wrapper's own NODE_PATH suffices for asset-delivery.
+
 - If upstream declares the phantom deps explicitly (clsx et al. as posts/stats/activitypub deps; lodash as an asset-delivery devDep), drop the `ENV NODE_PATH` line.
 - If upstream fixes the nx parallel-scheduling bug (or we move to a newer nx that fixes it), revert to `pnpm build` and drop `--parallel=1`. Benchmark: serial build is ~2× slower than parallel=4 on this repo.
 
@@ -576,28 +590,32 @@ Self-contained change to cut push time on incremental deploys from ~15 min to <1
 `--no-cache` forces a clean rebuild + full re-upload every invocation, defeating 19a. Dropping it lets BuildKit's local cache (on the Mac, in the `docker-container` builder) reuse the deps and builder stages across builds when `pnpm-lock.yaml` hasn't changed.
 
 ### Upgrade guidance
+
 - If upstream ever adds a `Dockerfile.railway` (unlikely — it's fork-only), diff theirs against our split runtime stage.
-- The runtime stage copies the `apps/` tree wholesale (so new apps/* workspaces are picked up automatically), but enumerates `ghost/i18n`, `ghost/parse-email-address`, `ghost/admin`, `ghost/core` individually. If a new `ghost/<newpkg>` workspace is added, add a matching `COPY --from=builder` line for it, otherwise Ghost will fail to resolve it at runtime.
+- The runtime stage copies the `apps/` tree wholesale (so new apps/\* workspaces are picked up automatically), but enumerates `ghost/i18n`, `ghost/parse-email-address`, `ghost/admin`, `ghost/core` individually. If a new `ghost/<newpkg>` workspace is added, add a matching `COPY --from=builder` line for it, otherwise Ghost will fail to resolve it at runtime.
 - The single-COPY original is preserved in git history (pre-§19) if a rollback is needed.
 
 ---
 
 ## 20. Cloudinary storage adapter — upgraded to `ghost-storage-cloudinary@3.0.2`
 
-**Symptom (2026-04-22):** Production image uploads on the Railway image returned a generic `"Could not upload image /tmp/<hash>_processed"` error with no underlying cause attached. The shipped `ghost-cloudinary-store@3.3.0` (last npm publish 2019) discards the Cloudinary SDK error object at `index.js:49` and throws a plain `Error` with just the local path — so Railway logs never show *why* uploads fail.
+**Symptom (2026-04-22):** Production image uploads on the Railway image returned a generic `"Could not upload image /tmp/<hash>_processed"` error with no underlying cause attached. The shipped `ghost-cloudinary-store@3.3.0` (last npm publish 2019) discards the Cloudinary SDK error object at `index.js:49` and throws a plain `Error` with just the local path — so Railway logs never show _why_ uploads fail.
 
 **Root cause of the silent failure:** `ghost-cloudinary-store@3.3.0` pins `cloudinary@~1.14.0` (2019-era SDK) and the now-deprecated `request` HTTP library. Neither has any known upstream fix path. The author (eexit) published a full rewrite under a new package name years ago; the whitelabel was still on the old one.
 
 ### `ghost/core/package.json`
+
 - Replaced `"ghost-cloudinary-store": "^3.3.0"` with `"ghost-storage-cloudinary": "^3.0.2"` (sorted alphabetically — now sits between `ghost-storage-base` and `glob`).
 
 ### `ghost/core/core/shared/config/env/config.production.json`
+
 - `storage.active`: `"ghost-cloudinary-store"` → `"atlas_cloudinary"` (see alias adapter below — originally bumped to `"ghost-storage-cloudinary"` on 2026-04-22 but renamed 2026-04-23 to get rid of the hyphens).
 - Config block key `storage["ghost-cloudinary-store"]` → `storage["atlas_cloudinary"]`.
 - Auth fields intentionally left empty (`""`) so nothing leaks into the baked image; all three `auth.*` values are supplied at runtime via Railway env vars.
 - Renamed nested block `display` → `fetch` (v3 renamed this config block; see [`ghost-storage-cloudinary/index.js:25`](https://github.com/eexit/ghost-storage-cloudinary/blob/master/index.js#L25) — `config.fetch || legacy.image || {}`). The `quality` / `secure` / `cdn_subdomain` keys inside are unchanged and still flow to `cloudinary.url(publicId, fetchOptions)` during URL generation.
 
 ### `ghost/core/core/server/adapters/storage/atlas_cloudinary.js` (new, alias)
+
 A one-line passthrough: `module.exports = require('ghost-storage-cloudinary');`. Its purpose is purely naming — it lets us pick a shell-safe `storage.active` key.
 
 - **Why the alias exists:** env var names with hyphens (e.g. `storage__ghost-storage-cloudinary__auth__cloud_name`) are rejected by POSIX shells (`VAR=val` requires `[A-Za-z_][A-Za-z0-9_]*`). Some container platforms strip or drop them when propagating env vars through a shell. Using an underscore-only alias (`atlas_cloudinary`) makes the env var names shell-portable: `storage__atlas_cloudinary__auth__cloud_name=…` works everywhere.
@@ -606,15 +624,17 @@ A one-line passthrough: `module.exports = require('ghost-storage-cloudinary');`.
 - **The underlying `ghost-storage-cloudinary@3.0.2` package (with its patches) is still the real adapter** — the wrapper just re-exports it. Patches continue to apply unchanged.
 
 ### Key differences vs the old adapter
+
 - `cloudinary@^2.6.0` (vs `~1.14.0` in the old) — modern SDK, no `request` dep.
 - `got@^11` for the `read()` path (vs deprecated `request`).
 - Errors now wrap the underlying Cloudinary SDK error via `@tryghost/errors` `InternalServerError` subclass `CloudinaryAdapterError` — the real SDK error flows through `err.err`. **Note:** this is not quite enough on its own — Ghost's `GhostLogger.js:462-477` error serializer whitelists `{id, code, name, statusCode, level, message, context, help, stack, hideStack, errorDetails}` and drops the `err` field, so the wrapped SDK error was invisible in Railway logs. See the patch section below.
 - New optional features (all off by default, config shape unchanged from our use):
-  - `useDatedFolder: true` — appends `YYYY/MM` to the upload folder.
-  - `plugins.retinajs` — adds retina variants on upload.
+    - `useDatedFolder: true` — appends `YYYY/MM` to the upload folder.
+    - `plugins.retinajs` — adds retina variants on upload.
 - Engines: `"node": "^18"`. Our `.npmrc` sets `engine-strict=false`, so pnpm install on Node 22 emits a warning but does not fail. Verified in the Docker build — the package installs and loads correctly.
 
 ### Upgrade guidance
+
 - If the fork's `CLOUDINARY_URL` env var is ever removed from Railway, the Ghost config's `storage.ghost-storage-cloudinary.auth` block is the sole source of credentials — the Cloudinary SDK's env-var fallback won't rescue the upload path.
 - If bumping `ghost-storage-cloudinary` to a 4.x major, check whether the config shape changes again (`fetch` block, upload options, plugin keys). The v2 → v3 rename was `display` → `fetch`; watch for similar renames on the next bump.
 - Dead code to clean up (not blocking): the old local adapter fork at `ghost/core/content/adapters/storage/cloudinary-store/` is no longer referenced by any `active` config. It can be deleted in a follow-up cleanup commit.
@@ -636,16 +656,18 @@ Registered in root `package.json` under `pnpm.patchedDependencies` alongside the
 **Upgrade guidance:** on the next `ghost-storage-cloudinary` bump, the patch will almost certainly fail to apply if upstream restructures the `uploader()` method. Regenerate with the same approach. If upstream ever fixes this themselves (PR them a `context` field on `CloudinaryAdapterError`), the patch becomes unnecessary — drop it.
 
 ### Verification
+
 1. `pnpm install` — lockfile cleanly switches from `ghost-cloudinary-store@3.3.0` to `ghost-storage-cloudinary@3.0.2` (the old package is fully purged from `pnpm-lock.yaml`).
 2. Rebuild: `sh scripts/docker-push`.
 3. Deploy to Railway. Remove the temporary `DEBUG=ghost-storage-cloudinary:*` env var — no longer needed with the patch.
-4. Upload an image via the admin. On success, no change in behavior. On failure, the Railway log will contain a line starting `[ghost-storage-cloudinary] upload failed:` with the real SDK error, *and* the API response's `errors[0].context` field will contain the real error message + http_code.
+4. Upload an image via the admin. On success, no change in behavior. On failure, the Railway log will contain a line starting `[ghost-storage-cloudinary] upload failed:` with the real SDK error, _and_ the API response's `errors[0].context` field will contain the real error message + http_code.
 
 #### Phase 3 diagnostic hunk (temporary — remove once root cause found)
 
 Added 2026-04-23 after Phase 2 exposed `Invalid cloud_name gcollective-cloud (http 401)` despite the same credentials working on older Docker images. That 401 message is Cloudinary's generic "signature verification failed" response — so either the secret the SDK ends up with is not the one we wrote in `config.production.json`, or it is and something else (clock, form-data boundary, TLS) is corrupting the signed request.
 
 The patch adds three `console.log` calls right after `cloudinary.config(auth)` in the adapter constructor (around `index.js:40`), printing:
+
 - The SDK's **effective** config (after env-var merging) via `cloudinary.config()`
 - The `auth` object the constructor was passed (from Ghost's nconf-resolved config)
 - The raw `process.env.CLOUDINARY_URL` value
@@ -656,25 +678,69 @@ Compare the boot log against a working older-image instance's boot log to find t
 
 ---
 
+## 21. Koenig editor fork — `@iliad.dev/koenig-lexical`
+
+**Purpose:** Replace the minified-bundle pnpm patch against `@tryghost/koenig-lexical` (previously §10 Koenig subsection + §14 editor bits) with a source fork published as `@iliad.dev/koenig-lexical`. The fork compiles the Atlas palette and the image max-width control into readable source, so upgrades no longer involve re-deriving minified variable names from each new bundle.
+
+**Fork responsibilities:**
+
+1. Atlas purple palette replacing Ghost green everywhere (shades 100/400/500/600 — see §10 mapping table).
+2. Image card toolbar: removes the four percentage presets and the upstream Regular/Wide/Full buttons; replaces them with a single numeric max-width (px) input. Serializes as a numeric attribute on the image node (planned contract: `data-kg-max-width` on the `<figure>`). Source fork lives at `@iliad.dev/koenig-lexical` on npm; see the fork's repo for implementation.
+
+**Wire-up in this repo:**
+
+### `package.json` — pnpm alias override
+
+```json
+"pnpm": {
+  "overrides": {
+    "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@^1.1.3",
+    ...
+  }
+}
+```
+
+This makes pnpm install the fork's tarball into the `node_modules/@tryghost/koenig-lexical` directory, so all existing code paths — direct imports in `apps/admin/src/utils/fetch-koenig-lexical.ts`, `apps/admin-x-framework/src/test/render.tsx`; the Ember `app.import('node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js', ...)` at `ghost/admin/ember-cli-build.js:271`; `require.resolve('@tryghost/koenig-lexical')` in `ghost/admin/lib/asset-delivery/index.js` — transparently pick up the fork. No source imports needed updating.
+
+**Direct deps** remain pinned at `@tryghost/koenig-lexical@1.7.30` in [ghost/admin/package.json](ghost/admin/package.json), [apps/admin-x-framework/package.json](apps/admin-x-framework/package.json), [apps/admin/package.json](apps/admin/package.json). The override supersedes these regardless of the declared version — intentional, so upstream Ghost merges touching those manifests produce no conflicts.
+
+**Built-asset delivery** is unchanged. The Ember `asset-delivery` addon still copies `dist/` into `ghost/admin/dist/ghost/assets/koenig-lexical/`, `ghost/core/core/built/admin/assets/koenig-lexical/`, and `apps/admin/dist/assets/koenig-lexical/` on each build. Gitignored; regenerated every build.
+
+### Upgrade guidance
+
+- **Ghost version bumps:** no patch regeneration required. Merge upstream, run `pnpm install`, done.
+- **Fork version bumps:** change the version spec inside the override (e.g. `^1.1.0`) and `pnpm install`.
+- **Upstream Koenig bumps:** handled in the fork's repo (merge upstream there, republish). Downstream in this repo, adjust the override version if the fork's major changes.
+- **Follow-up to resolve:** the backend renderer + email/site CSS in §14 still key on the old `kg-width-{preset}` contract. Migrate to the fork's `data-kg-max-width` numeric contract once the fork's first release ships. After migration, drop the ⚠ stale markers in §14.
+
+### Verification
+
+- `ls node_modules/@tryghost/koenig-lexical/package.json` and inspect the `name` field — reads `@iliad.dev/koenig-lexical` (pnpm aliases the on-disk folder, not the manifest).
+- `pnpm-lock.yaml` shows the `@tryghost/koenig-lexical` key resolving to an `@iliad.dev` tarball.
+- `pnpm --filter @tryghost/admin build` and `pnpm --filter ghost-admin build` succeed.
+- Open the editor, insert an image: palette is purple everywhere; toolbar shows a numeric max-width input (no percentage buttons).
+
+---
+
 ## Upgrade Checklist
 
 When upgrading to a new Ghost version:
 
 1. **Merge/rebase** onto new upstream tag. Use a dedicated branch (`upgrade/vX.Y.Z`).
 2. **Check conflicts** in all files listed above — especially:
-   - `ghost/admin/app/utils/publish-options.js` (publish flow logic changes frequently)
-   - `ghost/admin/app/routes/home.js` (routing changes)
-   - `apps/admin/src/layout/app-sidebar/*` (sidebar refactors)
-   - `apps/admin-x-settings/src/components/sidebar.tsx` (new nav items added upstream)
-   - `apps/admin/src/routes.tsx` (route structure changes)
-   - `apps/shade/theme-variables.css` — `--focus-ring` override (both light + dark blocks)
-   - `ghost/admin/app/index.html` (postMessage navigation script)
-   - `ghost/core/core/built/admin/index.html` (postMessage script in built file — rebuild may overwrite)
-   - `patches/` directory — see §14 upgrade guidance. `pnpm install` will fail loudly if a patch no longer applies.
+    - `ghost/admin/app/utils/publish-options.js` (publish flow logic changes frequently)
+    - `ghost/admin/app/routes/home.js` (routing changes)
+    - `apps/admin/src/layout/app-sidebar/*` (sidebar refactors)
+    - `apps/admin-x-settings/src/components/sidebar.tsx` (new nav items added upstream)
+    - `apps/admin/src/routes.tsx` (route structure changes)
+    - `apps/shade/theme-variables.css` — `--focus-ring` override (both light + dark blocks)
+    - `ghost/admin/app/index.html` (postMessage navigation script)
+    - `ghost/core/core/built/admin/index.html` (postMessage script in built file — rebuild may overwrite)
+    - `patches/` directory — currently only `ghost-storage-cloudinary@3.0.2.patch` (§20). `pnpm install` will fail loudly if a patch no longer applies. Koenig editor patches moved to the fork (§21) — no longer in `patches/`.
 3. **Re-apply domain restriction disable** comment in `JwtSSOAdapter.js` if needed, or re-enable and test.
-   - Also verify the email-safe gallery renderer (`ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`) still has its `isEmail` table branch, and `card-styles.hbs` still has the `table.kg-gallery-row` / `td.kg-gallery-image` rules (see §12).
+    - Also verify the email-safe gallery renderer (`ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`) still has its `isEmail` table branch, and `card-styles.hbs` still has the `table.kg-gallery-row` / `td.kg-gallery-image` rules (see §12).
 4. **Verify `disableWebsiteFeatures` config key** is still in the serializer allowlist (`config.js`).
 5. **After `pnpm build`**, re-inject the postMessage script into `ghost/core/core/built/admin/index.html` (§8) since the Ember build regenerates it.
 6. **Test SSO flow** end-to-end after upgrade.
 7. **Test `disableWebsiteFeatures=true`** mode to ensure no new website-feature UI slipped through.
-8. **Test Koenig image percentage widths** (§14) — open a post, insert image, confirm the four extra toolbar buttons appear.
+8. **Test Koenig editor** (§21) — open a post, insert image, confirm the palette is Atlas purple and the toolbar shows the numeric max-width input. The legacy four percentage-preset buttons are gone.

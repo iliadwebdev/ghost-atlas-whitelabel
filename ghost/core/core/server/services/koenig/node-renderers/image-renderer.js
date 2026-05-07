@@ -9,12 +9,28 @@ const {renderEmptyContainer} = require('../render-utils/render-empty-container')
 
 const MODERN_IMAGE_FORMATS = ['avif', 'webp'];
 
+const EMAIL_MAX_WIDTH = 600;
+
+// legacy widths stored on posts created before the fork switched to
+// a numeric maxWidthPx property — map them to pixel widths so emails
+// still size sensibly for historical content
 const PERCENT_BY_CARD_WIDTH = {
     quarter: 0.25,
     third: 1 / 3,
     half: 0.5,
     threequarters: 0.75
 };
+
+function resolveTargetWidth(node) {
+    if (node.maxWidthPx && Number.isFinite(node.maxWidthPx) && node.maxWidthPx > 0) {
+        return Math.min(node.maxWidthPx, EMAIL_MAX_WIDTH);
+    }
+    const legacyPercent = PERCENT_BY_CARD_WIDTH[node.cardWidth];
+    if (legacyPercent) {
+        return Math.round(EMAIL_MAX_WIDTH * legacyPercent);
+    }
+    return EMAIL_MAX_WIDTH;
+}
 
 function isAnimatedImage(url = '') {
     try {
@@ -47,11 +63,24 @@ function renderImageNode(node, options = {}) {
 
     figure.setAttribute('class', figureClasses);
 
+    // iliad fork: numeric maxWidthPx sizes the image independently of the
+    // cardWidth preset. Tag the figure so consumers can hook via CSS, but
+    // apply the inline size style to the <img> below — constraining the
+    // figure would squish the caption alongside the image.
+    const hasNumericMaxWidth = node.maxWidthPx && Number.isFinite(node.maxWidthPx) && node.maxWidthPx > 0;
+    if (hasNumericMaxWidth) {
+        figure.setAttribute('data-kg-max-width', String(node.maxWidthPx));
+    }
+
     const img = document.createElement('img');
     img.setAttribute('src', node.src);
     img.setAttribute('class', 'kg-image');
     img.setAttribute('alt', node.alt);
     img.setAttribute('loading', 'lazy');
+
+    if (hasNumericMaxWidth) {
+        img.setAttribute('style', `max-width: ${node.maxWidthPx}px; margin: 0 auto; display: block;`);
+    }
 
     if (node.title) {
         img.setAttribute('title', node.title);
@@ -163,9 +192,7 @@ function renderImageNode(node, options = {}) {
     // so we add that at the expected size in emails (600px) and use a higher
     // resolution image to keep images looking good on retina screens
     if (options.target === 'email' && node.width && node.height) {
-        const emailMaxWidth = 600;
-        const percent = PERCENT_BY_CARD_WIDTH[node.cardWidth];
-        const targetWidth = percent ? Math.round(emailMaxWidth * percent) : emailMaxWidth;
+        const targetWidth = resolveTargetWidth(node);
 
         let imageDimensions = {
             width: node.width,

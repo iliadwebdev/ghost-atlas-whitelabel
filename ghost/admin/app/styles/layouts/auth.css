@@ -90,6 +90,10 @@
     opacity: 0.9;
 }
 
+.gh-signin .gh-btn-login:not(.gh-btn-red) {
+    background: #4945FF;
+}
+
 .gh-signin label {
     font-size: 1.3rem;
     font-weight: 600 !important;
