@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-04-27 — §10 added "Admin Signin Button" subsection: hardcoded Atlas purple `#4945FF` on the `/ghost/signin` button, bypassing the publication's `accent_color` (pink default) without altering the setting itself. Previous same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@^1.1.3` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
+Last updated: 2026-05-07 — added §22: end-to-end focal-point support for the post `feature_image` (new `posts_meta.feature_image_focal_point` column, validating model layer, email plumbing, body-image renderer extension, a one-property `kg-default-nodes` patch so the editor's body-image focal-point survives server-side lexical→HTML re-rendering, and an `admin-api-schema` patch so the Admin API rejects malformed `{x, y}` payloads at the validator layer rather than the model). Earlier 2026-04-27: §10 added "Admin Signin Button" subsection (hardcoded Atlas purple `#4945FF` on `/ghost/signin`, bypassing the publication's `accent_color`). Same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.4` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
 
 **Upgrade note — v6.25.1 → v6.32.0:** Ghost migrated the monorepo from yarn v1 to **pnpm 10** in PR #27017 (v6.29.0). All scripts, lockfile, CI configs, and the package-manager rule in `CLAUDE.md` moved to pnpm. `shamefully-hoist` was removed in PR #27343 (v6.29.0). `patch-package` was replaced with pnpm's native `pnpm.patchedDependencies`. See §7, §11, §14 for obsoleted workarounds.
 
@@ -694,7 +694,7 @@ Compare the boot log against a working older-image instance's boot log to find t
 ```json
 "pnpm": {
   "overrides": {
-    "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@^1.1.3",
+    "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@1.1.4",
     ...
   }
 }
@@ -720,6 +720,217 @@ This makes pnpm install the fork's tarball into the `node_modules/@tryghost/koen
 - `pnpm --filter @tryghost/admin build` and `pnpm --filter ghost-admin build` succeed.
 - Open the editor, insert an image: palette is purple everywhere; toolbar shows a numeric max-width input (no percentage buttons).
 
+### Resolution — body-image FocalPointPicker marker offset (Tailwind v3 ↔ v4 conflict)
+
+**Root cause:** Two Tailwind builds with overlapping class names but different output formats run side-by-side in the Ember admin DOM:
+
+1. The koenig fork's runtime `<style>` (Tailwind v3) emits `.koenig-lexical .-translate-x-1\/2 { --tw-translate-x: -50%; transform: translate(var(--tw-translate-x), var(--tw-translate-y)) … }` — the v3 chained-transform shape.
+2. `apps/admin`'s injected Tailwind v4 build (~340 KB) emits unscoped `.-translate-x-1\/2 { --tw-translate-x: calc(…); translate: var(--tw-translate-x) var(--tw-translate-y); }` — the v4 shape that uses the new CSS `translate:` property.
+
+Both rules match the marker. They target *different* CSS properties (`transform:` vs `translate:`), so they don't override each other in the cascade — they **compound**. The marker gets translated `-50% -50%` once via v3 `transform:` and again via v4 `translate:`, displacing it by twice the dot's half-width (≈ 10 px each axis). That's the "marker renders at the top-left of the click point" symptom: the dot's center is one full radius up-and-left of the click.
+
+Verified in DevTools by clicking at picker centre `(720, 384.59)`: marker centre measured at `(710, 374)` before fix → delta `(−10, −10.59)`; after injecting `.koenig-lexical [class*="translate"]{translate:none}`, marker centre measured at `(720, 384)` → delta `(0, −0.59)` (sub-pixel).
+
+**Fix:** [ghost/admin/app/styles/components/koenig.css](../ghost/admin/app/styles/components/koenig.css) sets `translate: none` on any element inside `.koenig-lexical` whose class name contains "translate". This neutralises the v4 `translate:` leakage and lets only the v3 `transform:` rules apply.
+
+```css
+.koenig-lexical [class*="translate"] {
+    translate: none;
+}
+```
+
+**Why not patch the fork or the v4 build?** The v3↔v4 dual-loading is structural (apps/admin uses v4, koenig fork uses v3) and out of scope for this picker. The fork is also used unmodified in upstream Ghost's own admin, where this conflict doesn't exist. Patching the v4 admin pipeline (e.g. scoping its utilities to `.admin-x-base`) would be a much larger refactor. The local CSS reset is bounded, easy to remove if the v4/v3 split is ever resolved upstream, and has no side effects: koenig's own components don't use the v4 `translate:` property (they use `transform:`), so resetting `translate:` on translate-class elements inside `.koenig-lexical` is a no-op for them.
+
+**Scope:** body-image picker only; the feature-image picker (§23) is plain Ember markup with non-Tailwind CSS and is unaffected.
+
+### Resolution — body-image FocalPointPicker drag interception
+
+When the user click-and-drags inside the body-image FocalPointPicker, the gesture also triggers the editor's block-drag-and-drop and scoops up the entire image card. The picker is rendered inside the image card's DOM tree, and the koenig fork dynamically sets `draggable="true"` on the card via a `useEffect` (UMD byte ~1847683) so blocks can be repositioned. A native HTML5 `dragstart` originating inside the picker therefore initiates a card drag.
+
+**Fix:** A capture-phase `dragstart` listener on `document` in [ghost/admin/app/components/gh-koenig-editor-lexical.js](../ghost/admin/app/components/gh-koenig-editor-lexical.js) calls `preventDefault()` and `stopPropagation()` whenever the event originates inside `[data-testid="focal-point-picker"]`. The listener is attached in `registerElement` and removed in `willDestroy`. Capture phase ensures it runs before the koenig fork's drag handlers.
+
+```js
+@action
+suppressFocalPointPickerDrag(event) {
+    if (event.target?.closest?.('[data-testid="focal-point-picker"]')) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+}
+```
+
+A complementary CSS rule in [ghost/admin/app/styles/components/koenig.css](../ghost/admin/app/styles/components/koenig.css) sets `pointer-events: none` on the picker image so clicks bubble up to the parent `.cursor-crosshair` div (which has the click handler) and the image cannot itself be a pointer-event target — defence in depth, since the dragstart listener already suppresses the editor's drag.
+
+```css
+.koenig-lexical [data-testid="focal-point-picker"] img {
+    pointer-events: none;
+}
+```
+
+Verified end-to-end: synthesising `dragstart` on the picker image or its inner div now sets `defaultPrevented: true`; clicking in the picker continues to update the marker centre to within sub-pixel tolerance.
+
+---
+
+## 22. Feature image focal-point — end-to-end
+
+**Purpose:** Authors can pick a focal point on the post's `feature_image` (and on body image cards via the editor) so that themes and newsletter clients which crop with `object-fit: cover` keep the subject in frame instead of clipping it. Mirrors the contract the `@iliad.dev/koenig-lexical` editor (1.1.4+) already emits for body images: `data-kg-focal-point="X,Y"` on the `<figure>`, inline `style="object-position: X% Y%"` on the `<img>`, with `{x: number, y: number}` percentages stored as JSON. Implicit center `{50, 50}` collapses to `null`; null means "no focal point" and renderers emit no `object-position`.
+
+### Schema and migration
+
+- `ghost/core/core/server/data/schema/schema.js` — added `feature_image_focal_point: {type: 'text', maxlength: 100, nullable: true}` to the `posts_meta` block, immediately after `feature_image_caption`. `text` (rather than a native JSON column type) matches Ghost's mobiledoc/lexical pattern of storing structured values as JSON-stringified strings parsed at the model layer.
+- `ghost/core/core/server/data/migrations/versions/6.31/2026-05-07-12-00-00-add-feature-image-focal-point-to-posts-meta.js` — one-line `createAddColumnMigration('posts_meta', 'feature_image_focal_point', {type: 'text', maxlength: 100, nullable: true})`. No backfill — `null` matches today's center-crop behaviour.
+
+### Model — validation, rounding, collapse-to-null
+
+- `ghost/core/core/server/models/posts-meta.js` — extended the existing `formatOnWrite` and `parse` hooks (which already URL-transform `og_image` / `twitter_image`) with a sibling `normalizeFocalPoint(value)` helper. On write: rejects non-object / non-finite / out-of-range values (`@tryghost/errors` `ValidationError`), rounds each coordinate to one decimal, collapses `{50, 50}` → `null`, JSON-stringifies the result. Tolerates an already-stringified value passing through (partial-update round-trips). On read: JSON-parses the stored string back to `{x, y}`; falls back to `null` defensively if the row is malformed.
+
+### Posts API exposure (no serializer changes)
+
+The input serializer `handlePostsMeta()` ([`api/endpoints/utils/serializers/input/posts.js:119-123`](ghost/core/core/server/api/endpoints/utils/serializers/input/posts.js#L119-L123)) derives accepted fields from `_.keys(_.omit(postsMetaSchema, ['id', 'post_id']))`, so adding the schema entry alone is enough to make `feature_image_focal_point: {x, y}` accepted on POST/PUT. The output mapper ([`output/mappers/posts.js:107-116`](ghost/core/core/server/api/endpoints/utils/serializers/output/mappers/posts.js#L107-L116)) flattens posts_meta keys onto the top-level post JSON, so the field is exposed on both Admin and Content API responses with no allowlist edits.
+
+### `admin-api-schema` patch — JSON Schema validation entry
+
+`@tryghost/admin-api-schema@4.7.2` defines the JSON Schema that the Admin API uses to validate `posts.add` / `posts.edit` request bodies. Both endpoints `$ref` into `posts#/definitions/post`, so adding `feature_image_focal_point` once to the shared `posts.json` definitions block covers both. Without this entry the field flows through the validator unrecognised and is only caught by the model-layer `normalizeFocalPoint` (still a clean 422, just one layer deeper and with a less structured error envelope). The schema entry rejects the request at the API boundary instead.
+
+- `patches/@tryghost__admin-api-schema@4.7.2.patch` — adds a `feature_image_focal_point` property to `lib/schemas/posts.json` with `oneOf: [object{x,y in [0,100]}, null]`. `additionalProperties: false` and `required: ["x", "y"]` mirror the contract enforced in `posts-meta.js`.
+- Generated via `pnpm patch @tryghost/admin-api-schema@4.7.2` → edit → `pnpm patch-commit`. Registered in `pnpm.patchedDependencies` alongside the other two patches.
+
+### Newsletter email plumbing
+
+- `ghost/core/core/server/services/email-service/email-renderer.js` — passes `feature_image_focal_point` (already parsed to `{x, y}` by the model) into the template data block alongside `feature_image_alt` / `feature_image_caption`. Latest-posts thumbnails fetch `posts_meta` via a new `withRelated: ['posts_meta']` on the `findPage` call and surface `focalPoint` on each `featureImage` / `featureImageMobile` object.
+- `ghost/core/core/server/services/email-rendering/partials/email-wrapper.hbs` — conditional `style="object-position: {{x}}% {{y}}%"` on the feature-image `<img>` (alongside existing `width` / `alt` conditionals).
+- `ghost/core/core/server/services/email-service/email-templates/partials/latest-posts.hbs` — same conditional style on each latest-posts thumbnail `<img>`.
+
+**Practical effect note:** Ghost emails do not currently apply `object-fit: cover` to the feature-image, so the inline `object-position` is largely a no-op in most email clients today. The attribute is still safe (and free) to emit, and future-proofs the markup if/when emails adopt fixed-aspect-ratio crops.
+
+### Body-image renderer
+
+- `ghost/core/core/server/services/koenig/node-renderers/image-renderer.js` — added a `readFocalPoint(node)` helper (validates `{x, y}` numerics, returns `null` otherwise). When a focal point is set: emits `data-kg-focal-point="X,Y"` on the `<figure>` (alongside the existing `data-kg-max-width`), and merges `object-position: X% Y%` into the inline style on the `<img>` via a small style-builder so the existing `max-width: ...; margin: 0 auto; display: block;` declarations from §14 still coexist. Applied uniformly across both the email and web rendering branches.
+
+### `kg-default-nodes` patch — required for body-image round-trip
+
+The `@iliad.dev/koenig-lexical` editor stores `focalPoint` on its lexical image node, but the upstream `@tryghost/kg-default-nodes@2.0.21` (which ghost-core uses to deserialize lexical state for server-side HTML rendering) only registers 8 known properties on `ImageNode` ([`lib/nodes/image/ImageNode.js`](https://github.com/TryGhost/Ghost/tree/main/ghost/kg-default-nodes/lib/nodes/image/ImageNode.js)). Anything else is silently dropped on the `importJSON` path (see `generateDecoratorNode.importJSON` at [generate-decorator-node.js:148-159](ghost/kg-default-nodes/lib/generate-decorator-node.js#L148-L159) — it iterates only over `properties`).
+
+Without the patch, `focalPoint` is set in the editor but lost the moment Ghost re-renders the post HTML server-side, so neither the public site nor the email ever sees `data-kg-focal-point`.
+
+- `patches/@tryghost__kg-default-nodes@2.0.21.patch` — generated via `pnpm patch @tryghost/kg-default-nodes@2.0.21` → edit → `pnpm patch-commit`. Adds `{name: 'focalPoint', default: null}` to the `properties` array in `ImageNode` (covers `importJSON`/`exportJSON` automatically) and includes `focalPoint` in the `exportJSON` destructure + dataset literal. Patches all three build outputs (`lib/`, `cjs/`, `es/`).
+- `package.json` (root) — registered under `pnpm.patchedDependencies` alongside the existing `ghost-storage-cloudinary@3.0.2` patch (§20).
+
+### Theme integration
+
+`feature_image_focal_point` flows through to the theme `post` context via the auto-flatten in the output mapper (no helper needed). Themes that want to honor the focal point write:
+
+```hbs
+<img src="{{img_url feature_image}}"
+     alt="{{feature_image_alt}}"
+     {{#if feature_image_focal_point}}
+       style="object-position: {{feature_image_focal_point.x}}% {{feature_image_focal_point.y}}%"
+     {{/if}}>
+```
+
+No new helper. Themes opt in. The field is available as a parsed object (`{x, y}`) — model `parse()` runs on read.
+
+### Out of scope
+
+- **OG / Twitter / social-card cropping.** Ghost has no server-side crop pipeline ([`og-image.js`](ghost/core/core/frontend/meta/og-image.js) / [`twitter-image.js`](ghost/core/core/frontend/meta/twitter-image.js) return raw URLs; consumers like Twitter/LinkedIn ignore `object-position`). To make focal-point affect OG cards we'd need either a Cloudinary dynamic transform (`g_xy_center,x_<x>,y_<y>` — we use `ghost-storage-cloudinary` per §20) or a server-side rasterised OG generator. Both are meaningful new infrastructure and explicitly **not** part of this work.
+- **Admin-side picker UI.** Sibling effort in apps/admin and apps/posts. Backend exposes the field; admin can wire up a picker independently.
+- **Upstream PR for `@tryghost/admin-api-schema`** — applied locally as a patch in this fork (see above), but a clean upstream contribution would remove the perpetual patch maintenance burden.
+
+### Upgrade guidance
+
+- The `kg-default-nodes` patch will need regeneration on every upstream bump until upstream registers `focalPoint` themselves. `pnpm patch @tryghost/kg-default-nodes@<new-version>` → re-apply the same diff (`{name: 'focalPoint', default: null}` in properties, `focalPoint` in `exportJSON` destructure + dataset) → `pnpm patch-commit`.
+- The `admin-api-schema` patch needs the same treatment on every bump of that package. Re-apply the `feature_image_focal_point` block to `lib/schemas/posts.json` after `feature_image_caption`. If upstream restructures the posts definitions (e.g. splits into a separate `posts-meta.json`), the block may need to move with the relevant `$ref`.
+- If upstream eventually registers `focalPoint` on `ImageNode` and adds the schema entry to `admin-api-schema`, drop both patches and their entries in `pnpm.patchedDependencies`.
+- The `posts_meta.feature_image_focal_point` column survives upgrades automatically; the migration is in the version-stamped `versions/6.31/` directory and won't re-run.
+
+### Verification
+
+1. Migration: `pnpm dev` and `docker exec ghost-mysql mysql -u root -p<pw> ghost_dev -e 'desc posts_meta' | grep focal` → `feature_image_focal_point | text | YES | NULL`.
+2. Round-trip: PUT `{posts:[{feature_image_focal_point:{x:33.3,y:66.7}}]}` to the Admin API → GET returns `{x:33.3,y:66.7}` at top-level. PUT `{x:50,y:50}` → DB `NULL`, GET returns `null`. PUT `{x:150,y:50}` → 422 ValidationError. PUT `{x:33.34,y:66.78}` → response stores `{x:33.3,y:66.8}` (rounded).
+3. Body image: open the editor (`@iliad.dev/koenig-lexical@1.1.4`), insert an image, set focal point, save. Public site page HTML → `<figure data-kg-focal-point="X,Y">` and `<img style="...; object-position: X% Y%;">`. Send as newsletter → same attributes survive in the email HTML (Mailpit `http://localhost:8025`). Without the §22 `kg-default-nodes` patch this would silently regress to no focal-point on the rendered HTML.
+4. Feature image: until the admin picker exists, set via Admin API directly. Send as newsletter → email HTML has `style="object-position: X% Y%"` on the feature image `<img>`. Render in a theme that opts in → public HTML carries the same style.
+5. Default-state preservation: post with no focal point → DB `NULL`, API `null`, no `style` attribute emitted, no `data-kg-focal-point` on `<figure>`.
+
+---
+
+## 23. Feature image focal-point — admin UI picker
+
+**Purpose:** Author-facing picker for the `feature_image_focal_point` field added in §22. Until this exists, authors had to PUT the field via the Admin API by hand. UI is Ember-side (the post editor's feature-image preview is still classic `gh-editor-feature-image`), and visually mirrors the body-image `FocalPointPicker` from the `@iliad.dev/koenig-lexical` fork — same coordinate math, same Atlas-purple accent, same `{50, 50}` collapse-to-null. Entry point is a third overlay button (crosshair icon) alongside the existing trash + KoenigImageEditor buttons; activating it puts the live preview into "picking" mode where click + drag places a marker, with Reset and Done swapped into the action stack until exit.
+
+### Model — Ember Data attribute
+
+- `ghost/admin/app/models/post.js` — added `featureImageFocalPoint: attr()` (no transform; the API serializer returns `{x, y}` already parsed). Sits beside the existing `featureImage` / `featureImageAlt` / `featureImageCaption` attrs. Save round-trips automatically via Ember Data — no manual API call.
+
+### Controller — setter + clear
+
+- `ghost/admin/app/controllers/lexical-editor.js` —
+  - New `setFeatureImageFocalPoint(value)` `@action` mirroring the existing `setFeatureImageAlt` shape: sets the model attr, kicks `autosaveTask` if the post is a draft.
+  - `clearFeatureImage` extended to also null `featureImageFocalPoint` so deleting the image clears the focal point in lockstep with caption / alt / URL. Avoids a stale focal-point bleeding onto a subsequently uploaded image.
+
+### Prop wiring (route template → editor → feature-image)
+
+- `ghost/admin/app/templates/lexical-editor.hbs` — passes `@featureImageFocalPoint={{this.post.featureImageFocalPoint}}` and `@setFeatureImageFocalPoint={{this.setFeatureImageFocalPoint}}` into `GhKoenigEditorLexical`.
+- `ghost/admin/app/components/gh-koenig-editor-lexical.hbs` — re-passes them as `@focalPoint` / `@updateFocalPoint` into `GhEditorFeatureImage`.
+
+### Picker component — `gh-editor-feature-image`
+
+- `ghost/admin/app/components/gh-editor-feature-image.js` —
+  - New tracked state: `isPickingFocalPoint`, `localFocalPoint` (in-progress drag value, distinct from the model so we can update fluidly without per-frame autosaves), `isDragging`. `imageElement` DOM ref captured via `did-insert this.registerImageElement`.
+  - `displayFocalPoint` getter resolves to: in-progress drag value → committed model value → `{50, 50}` muted-centre during picking with no choice yet → `null`. `isFocalMarkerMuted` flags the third case for CSS.
+  - `startPicking` / `stopPicking` / `resetFocalPoint` actions. `Escape` while picking ⇒ `stopPicking`. Entering picker mode also exits alt-editing (and vice-versa) so the two tracked-state modes are mutually exclusive.
+  - `onPickerPointerDown` captures `clientX/Y` against `imageElement.getBoundingClientRect()`, `clamp(0, 100)`, rounds to one decimal, attaches `pointermove` / `pointerup` to `window`. On `pointerup` commits to the model via `args.updateFocalPoint`, with a `collapseCenter` helper that turns exact `{50, 50}` → `null` so the GET response after save matches the visible state with no flicker. Clicks on the Reset / Done overlay buttons are filtered out via `event.target.closest('.image-action')` so they don't double as focal-point placements.
+  - `willDestroy` cleans up the global pointer + keydown listeners so navigation while picking doesn't leak handlers.
+- `ghost/admin/app/components/gh-editor-feature-image.hbs` —
+  - The image wrapper gets an `is-picking` class and a `pointerdown` handler when picking. `<img>` registers itself as `imageElement` for the bounding-rect math.
+  - When `displayFocalPoint` is set, a `<span class="gh-editor-feature-image-focal-marker">` renders at `left: X%; top: Y%;` (relative to the wrapper, which is exactly the image size — no padding/border on the wrapper).
+  - When `isPickingFocalPoint`, the trash + KoenigImageEditor + focal-point-entry buttons are swapped for Reset (`close` icon) + Done (`check` icon) in the same top-right action stack. When not picking, the entry button gets `.is-active` purple tint if a focal point is set.
+
+### Icon
+
+- `ghost/admin/public/assets/icons/koenig/kg-focal-point.svg` — new 24×24 viewBox crosshair (four cardinal tick marks + outer circle + filled centre dot), all `currentColor`, matching the visual weight of `kg-trash.svg` and `kg-wand.svg`. Loaded via `{{svg-jar "koenig/kg-focal-point"}}`.
+
+### Styles
+
+- `ghost/admin/app/styles/layouts/editor.css` — extended the existing `.gh-editor-feature-image` block:
+  - **Action-stack ordering**: `.image-focal-point` gets `margin-right: 8.4rem` so the entry button sits left of the existing `.image-edit` (4.2rem) and `.image-delete` (rightmost). `.image-focal-point-reset` gets `margin-right: 4.2rem` so Reset sits left of Done in picking mode.
+  - **`.is-active`** on the entry button → `opacity: 1` (overrides the `.image-action` default of opacity 0 so the active state is glanceable without hovering) + `color: var(--green)` (Atlas purple via `currentColor`-inheriting SVG strokes/fills, dark-mode-aware via §10).
+  - **`.is-picking`** on the wrapper → `cursor: crosshair`, `user-select: none`, suppresses the dark hover gradient overlay so the marker is unobstructed.
+  - **`.gh-editor-feature-image-focal-marker`** — 1.8rem circle, `var(--green)` fill, white border, double box-shadow for legibility against any image, `transform: translate(-50%, -50%)` to centre on the coordinate, `pointer-events: none`. Default `opacity: 0`, fades in on `.gh-editor-feature-image:hover` (matches the existing `.image-action` hover-fade pattern), always visible while picking. The muted variant `&.is-muted` swaps the fill to white at 50% opacity.
+
+### UX decisions (from spec clarification)
+
+- **Picker controls placement**: Reset + Done replace the trash + edit buttons in the same top-right action stack while picking. No floating toolbar; identical hover-fade visual language.
+- **Static marker visibility**: hidden by default, fades in on image hover when a focal point is set. The entry-point button itself carries an `.is-active` purple tint at rest so the "this image has a focal point" state is glanceable without hovering.
+
+### Out of scope
+
+- Translating the picker's tooltip strings — falls under the broader admin i18n sweep.
+- React-side picker (the post editor feature-image surface is Ember; switching it to React is unrelated and large).
+- OG / Twitter card preview-with-crop — backend doesn't crop those (see §22 Out of scope), so a UI preview would be misleading.
+- Body-image picker — already shipped in the `@iliad.dev/koenig-lexical` fork (see §21).
+
+### Upgrade guidance
+
+- All touched files are admin-only. The model attr is additive; merge conflicts on Ghost upgrades are unlikely but two specific places to watch:
+  - `ghost/admin/app/controllers/lexical-editor.js` — `setFeatureImage*` block and `clearFeatureImage` evolve upstream as Ghost adds new feature-image-adjacent fields. Reapply the `featureImageFocalPoint` line to whichever shape `clearFeatureImage` ends up in, and keep `setFeatureImageFocalPoint` next to its siblings.
+  - `ghost/admin/app/components/gh-editor-feature-image.{js,hbs}` — if upstream Ghost replaces this Ember component with a React equivalent (the long-term direction per CLAUDE.md), the picker has to be re-implemented in React using the same `@focalPoint` / `@updateFocalPoint` prop contract. The model attr and controller setter survive that migration unchanged.
+- The new SVG icon and CSS rules don't conflict with anything upstream: file names and class names are all `focal-point` or `focal-marker`-prefixed and don't appear in vanilla Ghost.
+- Behaviour is fully gated by the model attr being present on the API response — if upstream removes the §22 backend wiring (it shouldn't, since this is whitelabel-internal), the picker would silently no-op rather than crash.
+
+### Verification
+
+1. `pnpm dev`, open a draft post with a feature image. Hover the image — the new crosshair button appears alongside trash + edit. No marker (no focal point set yet).
+2. Click the crosshair → enters picking mode. Trash + edit swap to Reset + Done. Cursor is crosshair over the image.
+3. Click off-centre. Atlas-purple marker appears at the click. Drag the marker — it follows live. Release — marker stays at the dropped point.
+4. Click Done. Picker exits. Hover the image — marker fades in (subtle hover-fade) at the chosen point. Crosshair entry button at rest now carries the `.is-active` purple tint.
+5. Wait for autosave (~2 s), then `curl http://localhost:2368/ghost/api/admin/posts/<id>?formats=html&include=...` (admin auth). Confirm `feature_image_focal_point: { x: NN.N, y: NN.N }` at top level.
+6. Reload editor. Marker re-renders at the saved coordinate.
+7. Send the post as a newsletter (Mailpit `http://localhost:8025`). View HTML — confirm `style="object-position: NN.N% NN.N%"` on the feature-image `<img>`. (Confirms the §22 backend wire-up is being driven by the new UI.)
+8. Re-enter picker, click Reset. Marker disappears. Save. GET → `feature_image_focal_point: null`.
+9. Re-enter picker, click as close to dead-centre as possible. If the rounded value is exactly `{x: 50, y: 50}`, save → GET returns `null` (collapse-to-null applied client-side and re-applied server-side).
+10. Set `disableWebsiteFeatures=true` (env or config) and reload. Picker entry button is still present and functional (per spec — focal point matters for newsletter emails too).
+11. Delete the image (trash). Focal point is cleared in tandem; uploading a new image starts with no focal point.
+
 ---
 
 ## Upgrade Checklist
@@ -736,7 +947,7 @@ When upgrading to a new Ghost version:
     - `apps/shade/theme-variables.css` — `--focus-ring` override (both light + dark blocks)
     - `ghost/admin/app/index.html` (postMessage navigation script)
     - `ghost/core/core/built/admin/index.html` (postMessage script in built file — rebuild may overwrite)
-    - `patches/` directory — currently only `ghost-storage-cloudinary@3.0.2.patch` (§20). `pnpm install` will fail loudly if a patch no longer applies. Koenig editor patches moved to the fork (§21) — no longer in `patches/`.
+    - `patches/` directory — currently `ghost-storage-cloudinary@3.0.2.patch` (§20), `@tryghost__kg-default-nodes@2.0.21.patch` (§22), and `@tryghost__admin-api-schema@4.7.2.patch` (§22). `pnpm install` will fail loudly if a patch no longer applies. The Koenig editor patch moved to the fork (§21) — no longer in `patches/`.
 3. **Re-apply domain restriction disable** comment in `JwtSSOAdapter.js` if needed, or re-enable and test.
     - Also verify the email-safe gallery renderer (`ghost/core/core/server/services/koenig/node-renderers/gallery-renderer.js`) still has its `isEmail` table branch, and `card-styles.hbs` still has the `table.kg-gallery-row` / `td.kg-gallery-image` rules (see §12).
 4. **Verify `disableWebsiteFeatures` config key** is still in the serializer allowlist (`config.js`).

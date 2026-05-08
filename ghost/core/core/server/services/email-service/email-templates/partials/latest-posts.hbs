@@ -26,6 +26,9 @@
                                             {{#if featureImage.height }}
                                                 height="{{featureImage.height}}"
                                             {{/if}}
+                                            {{#if featureImage.focalPoint }}
+                                                style="object-position: {{featureImage.focalPoint.x}}% {{featureImage.focalPoint.y}}%"
+                                            {{/if}}
                                         />
                                     </a>
                                 </td>

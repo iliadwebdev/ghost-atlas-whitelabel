@@ -1068,17 +1068,19 @@ class EmailRenderer {
         const latestPosts = [];
         let latestPostsHasImages = false;
         if (newsletter.get('show_latest_posts')) {
-            // Fetch last 3 published posts
+            // Fetch last 3 published posts (with posts_meta so we can read feature_image_focal_point)
             const {data} = await this.#models.Post.findPage({
                 filter: `status:published+id:-'${post.id}'`,
                 order: 'published_at DESC',
-                limit: 3
+                limit: 3,
+                withRelated: ['posts_meta']
             });
 
             for (const latestPost of data) {
                 // Please also adjust email-latest-posts-image if you make changes to the image width (100 x 2 = 200 -> should be in email-latest-posts-image)
                 const {href: featureImage, width: featureImageWidth, height: featureImageHeight} = await this.limitImageWidth(latestPost.get('feature_image'), 100, 100);
                 const {href: featureImageMobile, width: featureImageMobileWidth, height: featureImageMobileHeight} = await this.limitImageWidth(latestPost.get('feature_image'), 600, 480);
+                const featureImageFocalPoint = latestPost.related('posts_meta')?.get('feature_image_focal_point') || null;
 
                 latestPosts.push({
                     title: this.truncateHtml(latestPost.get('title'), featureImage ? 85 : 95, featureImageMobile ? 55 : 75),
@@ -1086,12 +1088,14 @@ class EmailRenderer {
                     featureImage: featureImage ? {
                         src: featureImage,
                         width: featureImageWidth,
-                        height: featureImageHeight
+                        height: featureImageHeight,
+                        focalPoint: featureImageFocalPoint
                     } : null,
                     featureImageMobile: featureImageMobile ? {
                         src: featureImageMobile,
                         width: featureImageMobileWidth,
-                        height: featureImageMobileHeight
+                        height: featureImageMobileHeight,
+                        focalPoint: featureImageFocalPoint
                     } : null,
                     excerpt: this.truncateHtml(latestPost.get('custom_excerpt') || latestPost.get('plaintext'), featureImage ? 120 : 130, featureImageMobile ? 90 : 100)
                 });
@@ -1133,7 +1137,8 @@ class EmailRenderer {
                 feature_image_width: postFeatureImageWidth,
                 feature_image_height: postFeatureImageHeight,
                 feature_image_alt: post.related('posts_meta')?.get('feature_image_alt'),
-                feature_image_caption: post.related('posts_meta')?.get('feature_image_caption')
+                feature_image_caption: post.related('posts_meta')?.get('feature_image_caption'),
+                feature_image_focal_point: post.related('posts_meta')?.get('feature_image_focal_point') || null
             },
 
             newsletter: {

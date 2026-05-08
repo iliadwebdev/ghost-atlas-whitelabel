@@ -1,0 +1,98 @@
+diff --git a/cjs/kg-default-nodes.js b/cjs/kg-default-nodes.js
+index c7fc87251c73f5ff9e19a17854ea12ccaf45febc..df5b3fe21d16b27e71562adc2149eec50f2b763d 100644
+--- a/cjs/kg-default-nodes.js
++++ b/cjs/kg-default-nodes.js
+@@ -974,14 +974,15 @@ class ImageNode extends generateDecoratorNode({
+         {name: 'cardWidth', default: 'regular'},
+         {name: 'width', default: null},
+         {name: 'height', default: null},
+-        {name: 'href', default: '', urlType: 'url'}
++        {name: 'href', default: '', urlType: 'url'},
++        {name: 'focalPoint', default: null}
+     ],
+     defaultRenderFn: renderImageNode
+ }) {
+     /* @override */
+     exportJSON() {
+         // checks if src is a data string
+-        const {src, width, height, title, alt, caption, cardWidth, href} = this;
++        const {src, width, height, title, alt, caption, cardWidth, href, focalPoint} = this;
+         const isBlob = src && src.startsWith('data:');
+ 
+         const dataset = {
+@@ -994,7 +995,8 @@ class ImageNode extends generateDecoratorNode({
+             alt,
+             caption,
+             cardWidth,
+-            href
++            href,
++            focalPoint
+         };
+         return dataset;
+     }
+diff --git a/es/kg-default-nodes.js b/es/kg-default-nodes.js
+index 97875fe2bbc9385694681162885dd477a2e96a21..1c7dd21de3e52252e846e086a41023937c8a5493 100644
+--- a/es/kg-default-nodes.js
++++ b/es/kg-default-nodes.js
+@@ -973,6 +973,9 @@ class ImageNode extends generateDecoratorNode({
+     name: 'href',
+     default: '',
+     urlType: 'url'
++  }, {
++    name: 'focalPoint',
++    default: null
+   }],
+   defaultRenderFn: renderImageNode
+ }) {
+@@ -987,7 +990,8 @@ class ImageNode extends generateDecoratorNode({
+       alt,
+       caption,
+       cardWidth,
+-      href
++      href,
++      focalPoint
+     } = this;
+     const isBlob = src && src.startsWith('data:');
+     const dataset = {
+@@ -1000,7 +1004,8 @@ class ImageNode extends generateDecoratorNode({
+       alt,
+       caption,
+       cardWidth,
+-      href
++      href,
++      focalPoint
+     };
+     return dataset;
+   }
+diff --git a/lib/nodes/image/ImageNode.js b/lib/nodes/image/ImageNode.js
+index 78dacba20a8eaad1f35364732aa8aa4d69556ab3..e34fe8f18faef6c1c9b7cbc328b79cc0e5101bba 100644
+--- a/lib/nodes/image/ImageNode.js
++++ b/lib/nodes/image/ImageNode.js
+@@ -11,14 +11,15 @@ export class ImageNode extends generateDecoratorNode({
+         {name: 'cardWidth', default: 'regular'},
+         {name: 'width', default: null},
+         {name: 'height', default: null},
+-        {name: 'href', default: '', urlType: 'url'}
++        {name: 'href', default: '', urlType: 'url'},
++        {name: 'focalPoint', default: null}
+     ],
+     defaultRenderFn: renderImageNode
+ }) {
+     /* @override */
+     exportJSON() {
+         // checks if src is a data string
+-        const {src, width, height, title, alt, caption, cardWidth, href} = this;
++        const {src, width, height, title, alt, caption, cardWidth, href, focalPoint} = this;
+         const isBlob = src && src.startsWith('data:');
+ 
+         const dataset = {
+@@ -31,7 +32,8 @@ export class ImageNode extends generateDecoratorNode({
+             alt,
+             caption,
+             cardWidth,
+-            href
++            href,
++            focalPoint
+         };
+         return dataset;
+     }

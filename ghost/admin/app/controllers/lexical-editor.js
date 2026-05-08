@@ -478,6 +478,7 @@ export default class LexicalEditorController extends Controller {
         this.post.set('featureImage', null);
         this.post.set('featureImageAlt', null);
         this.post.set('featureImageCaption', null);
+        this.post.set('featureImageFocalPoint', null);
 
         if (this.post.isDraft) {
             this.autosaveTask.perform();
@@ -487,6 +488,15 @@ export default class LexicalEditorController extends Controller {
     @action
     setFeatureImageAlt(text) {
         this.post.set('featureImageAlt', text);
+
+        if (this.post.isDraft) {
+            this.autosaveTask.perform();
+        }
+    }
+
+    @action
+    setFeatureImageFocalPoint(value) {
+        this.post.set('featureImageFocalPoint', value);
 
         if (this.post.isDraft) {
             this.autosaveTask.perform();

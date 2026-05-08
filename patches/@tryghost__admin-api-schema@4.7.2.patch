@@ -1,0 +1,25 @@
+diff --git a/lib/schemas/posts.json b/lib/schemas/posts.json
+index aa46b7115abefd7e4493091c1ab8f67d67fbf8bf..914a0f738b377b91e893347a03cb76cdc0260157 100644
+--- a/lib/schemas/posts.json
++++ b/lib/schemas/posts.json
+@@ -43,6 +43,20 @@
+           "type": ["string", "null"],
+           "maxLength": 65535
+         },
++        "feature_image_focal_point": {
++          "oneOf": [
++            {
++              "type": "object",
++              "additionalProperties": false,
++              "properties": {
++                "x": {"type": "number", "minimum": 0, "maximum": 100},
++                "y": {"type": "number", "minimum": 0, "maximum": 100}
++              },
++              "required": ["x", "y"]
++            },
++            {"type": "null"}
++          ]
++        },
+         "featured": {
+           "type": "boolean"
+         },

@@ -42,6 +42,18 @@ function isAnimatedImage(url = '') {
     }
 }
 
+function readFocalPoint(node) {
+    const fp = node.focalPoint;
+    if (!fp || typeof fp !== 'object') {
+        return null;
+    }
+    const {x, y} = fp;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
+    }
+    return {x, y};
+}
+
 function renderImageNode(node, options = {}) {
     addCreateDocumentOption(options);
 
@@ -72,14 +84,29 @@ function renderImageNode(node, options = {}) {
         figure.setAttribute('data-kg-max-width', String(node.maxWidthPx));
     }
 
+    // iliad fork: focal-point control. Editor stores { x, y } percentages;
+    // server-side we tag the figure for consumers and merge object-position
+    // into the inline style on the <img>.
+    const focalPoint = readFocalPoint(node);
+    if (focalPoint) {
+        figure.setAttribute('data-kg-focal-point', `${focalPoint.x},${focalPoint.y}`);
+    }
+
     const img = document.createElement('img');
     img.setAttribute('src', node.src);
     img.setAttribute('class', 'kg-image');
     img.setAttribute('alt', node.alt);
     img.setAttribute('loading', 'lazy');
 
+    const inlineStyles = [];
     if (hasNumericMaxWidth) {
-        img.setAttribute('style', `max-width: ${node.maxWidthPx}px; margin: 0 auto; display: block;`);
+        inlineStyles.push(`max-width: ${node.maxWidthPx}px`, 'margin: 0 auto', 'display: block');
+    }
+    if (focalPoint) {
+        inlineStyles.push(`object-position: ${focalPoint.x}% ${focalPoint.y}%`);
+    }
+    if (inlineStyles.length) {
+        img.setAttribute('style', `${inlineStyles.join('; ')};`);
     }
 
     if (node.title) {

@@ -16,6 +16,8 @@
             @updateAlt={{@setFeatureImageAlt}}
             @caption={{@featureImageCaption}}
             @updateCaption={{@setFeatureImageCaption}}
+            @focalPoint={{@featureImageFocalPoint}}
+            @updateFocalPoint={{@setFeatureImageFocalPoint}}
             @handleCaptionBlur={{@handleFeatureImageCaptionBlur}}
             @forceButtonDisplay={{or (not @title) (eq @title "(Untitled)") this.titleIsHovered this.titleIsFocused}}
             @isHidden={{or (not @cardOptions.post.showTitleAndFeatureImage) false}}

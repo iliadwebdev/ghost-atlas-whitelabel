@@ -132,6 +132,9 @@
                                                     {{#if post.feature_image_alt }}
                                                         alt="{{post.feature_image_alt}}"
                                                     {{/if}}
+                                                    {{#if post.feature_image_focal_point }}
+                                                        style="object-position: {{post.feature_image_focal_point.x}}% {{post.feature_image_focal_point.y}}%"
+                                                    {{/if}}
                                                 ></td>
                                             </tr>
 

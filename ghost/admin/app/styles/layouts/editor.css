@@ -715,6 +715,82 @@ body[data-user-is-dragging] .gh-editor-feature-image-dropzone {
     stroke-width: 2;
 }
 
+/* Focal-point picker — overlay button stack ordering: focal-point | edit | delete */
+.gh-editor-feature-image .image-focal-point {
+    margin-right: 8.4rem;
+}
+
+/* Active state — focal point is set; show the button always (not just on hover)
+   so authors can see at a glance that this image has a custom focal point. */
+.gh-editor-feature-image .image-focal-point.is-active {
+    color: var(--green);
+    opacity: 1;
+}
+
+.gh-editor-feature-image .image-focal-point.is-active:hover svg {
+    color: var(--green);
+}
+
+.gh-editor-feature-image .image-focal-point-reset {
+    margin-right: 4.2rem;
+}
+
+.gh-editor-feature-image.is-picking {
+    cursor: crosshair;
+    user-select: none;
+}
+
+/* Make the image transparent to pointer events while picking so the wrapper
+   handles all clicks/drags. This also disables the browser's native image-drag
+   behaviour cleanly across browsers. !important guards against Tailwind/Koenig
+   utilities re-enabling pointer-events further down the cascade. */
+.gh-editor-feature-image.is-picking img {
+    cursor: crosshair !important;
+    pointer-events: none !important;
+    -webkit-user-drag: none !important;
+    user-select: none !important;
+}
+
+/* Suppress the dark hover gradient while picking so the marker is unobstructed */
+.gh-editor-feature-image.is-picking .gh-editor-feature-image-overlay {
+    opacity: 0;
+}
+
+/* The marker explicitly clears `transform` because the koenig-lexical Tailwind
+   layer leaks `transform: translate(var(--tw-translate-x), var(--tw-translate-y))…`
+   onto every descendant with the relevant utility classes/CSS-var inheritance,
+   which would otherwise displace the dot off the click point. */
+.gh-editor-feature-image-focal-marker {
+    position: absolute;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: var(--green);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), 0 1px 4px rgba(0, 0, 0, .25);
+    transform: none !important;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .1s ease-in;
+    z-index: 305;
+}
+
+/* Subtle on hover when a focal point is set (matches .image-action hover-fade) */
+.gh-editor-feature-image:hover .gh-editor-feature-image-focal-marker {
+    opacity: 1;
+}
+
+/* Always visible while picking */
+.gh-editor-feature-image.is-picking .gh-editor-feature-image-focal-marker {
+    opacity: 1;
+}
+
+/* Muted centre marker when picking with no chosen point yet */
+.gh-editor-feature-image.is-picking .gh-editor-feature-image-focal-marker.is-muted {
+    background: #fff;
+    opacity: .5;
+}
+
 .gh-editor-feature-image-add {
     display: flex;
     flex-direction: row;

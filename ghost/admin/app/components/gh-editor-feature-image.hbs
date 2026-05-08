@@ -39,16 +39,42 @@
                     {{svg-jar "eye-closed"}}
                 </span>
             {{/if}}
-            <div class="gh-editor-feature-image">
-                <img src={{@image}} alt={{@alt}} role={{if @alt "img" "presentation"}} class="{{if @isHidden "faded"}}">
+            <div class="gh-editor-feature-image {{if this.isPickingFocalPoint "is-picking"}}" {{on "pointerdown" this.onPickerPointerDown}}>
+                <img
+                    src={{@image}}
+                    alt={{@alt}}
+                    role={{if @alt "img" "presentation"}}
+                    class="{{if @isHidden "faded"}}"
+                    {{did-insert this.registerImageElement}}
+                >
                 <div class="gh-editor-feature-image-overlay"></div>
-                <KoenigImageEditor
-                    @imageSrc={{@image}}
-                    @saveImage={{fn this.saveImage uploader.setFiles}}
-                />
-                <button type="button" class="image-action image-delete" data-tooltip="Delete" {{on "click" @clearImage}}>
-                    {{svg-jar "koenig/kg-trash"}}
-                </button>
+                {{#if this.displayFocalPoint}}
+                    <div
+                        class="gh-editor-feature-image-focal-marker {{if this.isFocalMarkerMuted "is-muted"}}"
+                        style={{this.focalMarkerStyle}}
+                        aria-hidden="true"
+                        data-test-feature-image-focal-marker
+                    ></div>
+                {{/if}}
+                {{#if this.isPickingFocalPoint}}
+                    <button type="button" class="image-action image-focal-point-reset" data-tooltip="Reset focal point" {{on "click" this.resetFocalPoint}}>
+                        {{svg-jar "close"}}
+                    </button>
+                    <button type="button" class="image-action image-focal-point-done" data-tooltip="Done" {{on "click" this.stopPicking}}>
+                        {{svg-jar "check"}}
+                    </button>
+                {{else}}
+                    <KoenigImageEditor
+                        @imageSrc={{@image}}
+                        @saveImage={{fn this.saveImage uploader.setFiles}}
+                    />
+                    <button type="button" class="image-action image-focal-point {{if this.hasFocalPoint "is-active"}}" data-tooltip="Set focal point" {{on "click" this.startPicking}}>
+                        {{svg-jar "koenig/kg-focal-point"}}
+                    </button>
+                    <button type="button" class="image-action image-delete" data-tooltip="Delete" {{on "click" @clearImage}}>
+                        {{svg-jar "koenig/kg-trash"}}
+                    </button>
+                {{/if}}
             </div>
             <div class="gh-editor-feature-image-caption-container">
                 {{#if this.isEditingAlt}}

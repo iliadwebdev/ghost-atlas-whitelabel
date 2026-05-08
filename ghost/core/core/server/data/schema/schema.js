@@ -119,6 +119,7 @@ module.exports = {
         frontmatter: {type: 'text', maxlength: 65535, nullable: true},
         feature_image_alt: {type: 'string', maxlength: 2000, nullable: true, validations: {isLength: {max: 191}}},
         feature_image_caption: {type: 'text', maxlength: 65535, nullable: true},
+        feature_image_focal_point: {type: 'text', maxlength: 100, nullable: true},
         email_only: {type: 'boolean', nullable: false, defaultTo: false}
     },
     // NOTE: this is the staff table

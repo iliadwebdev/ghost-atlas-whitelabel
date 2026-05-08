@@ -127,3 +127,14 @@
 .koenig-react-editor-loading {
     color: #AEB7C1;
 }
+
+/* The Koenig fork uses Tailwind v3 utilities that set `transform: translate(...)`.
+   apps/admin's Tailwind v4 build emits unscoped utilities for the same class names
+   that set the modern `translate:` property. Both rules match, and because they
+   target different CSS properties they compound — visibly double-translating
+   elements like the body-image FocalPointPicker marker. Resetting `translate`
+   inside `.koenig-lexical` lets only the v3 `transform:` cascade apply.
+   See .claude/whitelabel-changes.md §21. */
+.koenig-lexical [class*="translate"] {
+    translate: none;
+}
