@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-05-07 — added §22: end-to-end focal-point support for the post `feature_image` (new `posts_meta.feature_image_focal_point` column, validating model layer, email plumbing, body-image renderer extension, a one-property `kg-default-nodes` patch so the editor's body-image focal-point survives server-side lexical→HTML re-rendering, and an `admin-api-schema` patch so the Admin API rejects malformed `{x, y}` payloads at the validator layer rather than the model). Earlier 2026-04-27: §10 added "Admin Signin Button" subsection (hardcoded Atlas purple `#4945FF` on `/ghost/signin`, bypassing the publication's `accent_color`). Same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.4` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
+Last updated: 2026-05-08 — §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.5`; the local `patches/@iliad.dev__koenig-lexical@1.1.4.patch` (drag-interception fix, plus follow-on UI fixes) was merged upstream into 1.1.5 and the patch file + `pnpm.patchedDependencies` entry have been removed. The Tailwind v3↔v4 marker-offset CSS reset in [ghost/admin/app/styles/components/koenig.css](../ghost/admin/app/styles/components/koenig.css) is unchanged. Earlier 2026-05-07 — added §22: end-to-end focal-point support for the post `feature_image` (new `posts_meta.feature_image_focal_point` column, validating model layer, email plumbing, body-image renderer extension, a one-property `kg-default-nodes` patch so the editor's body-image focal-point survives server-side lexical→HTML re-rendering, and an `admin-api-schema` patch so the Admin API rejects malformed `{x, y}` payloads at the validator layer rather than the model). Earlier 2026-04-27: §10 added "Admin Signin Button" subsection (hardcoded Atlas purple `#4945FF` on `/ghost/signin`, bypassing the publication's `accent_color`). Same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.4` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
 
 **Upgrade note — v6.25.1 → v6.32.0:** Ghost migrated the monorepo from yarn v1 to **pnpm 10** in PR #27017 (v6.29.0). All scripts, lockfile, CI configs, and the package-manager rule in `CLAUDE.md` moved to pnpm. `shamefully-hoist` was removed in PR #27343 (v6.29.0). `patch-package` was replaced with pnpm's native `pnpm.patchedDependencies`. See §7, §11, §14 for obsoleted workarounds.
 
@@ -694,7 +694,7 @@ Compare the boot log against a working older-image instance's boot log to find t
 ```json
 "pnpm": {
   "overrides": {
-    "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@1.1.4",
+    "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@1.1.5",
     ...
   }
 }
@@ -702,7 +702,7 @@ Compare the boot log against a working older-image instance's boot log to find t
 
 This makes pnpm install the fork's tarball into the `node_modules/@tryghost/koenig-lexical` directory, so all existing code paths — direct imports in `apps/admin/src/utils/fetch-koenig-lexical.ts`, `apps/admin-x-framework/src/test/render.tsx`; the Ember `app.import('node_modules/@tryghost/koenig-lexical/dist/koenig-lexical.umd.js', ...)` at `ghost/admin/ember-cli-build.js:271`; `require.resolve('@tryghost/koenig-lexical')` in `ghost/admin/lib/asset-delivery/index.js` — transparently pick up the fork. No source imports needed updating.
 
-**Direct deps** remain pinned at `@tryghost/koenig-lexical@1.7.30` in [ghost/admin/package.json](ghost/admin/package.json), [apps/admin-x-framework/package.json](apps/admin-x-framework/package.json), [apps/admin/package.json](apps/admin/package.json). The override supersedes these regardless of the declared version — intentional, so upstream Ghost merges touching those manifests produce no conflicts.
+**Direct deps** in [ghost/admin/package.json](ghost/admin/package.json), [apps/admin-x-framework/package.json](apps/admin-x-framework/package.json), and [apps/admin/package.json](apps/admin/package.json) are also aliased to `npm:@iliad.dev/koenig-lexical@1.1.5`, mirroring the override. The override would supersede a stock `@tryghost/koenig-lexical` declaration regardless, but keeping the manifests aligned makes the lockfile reasoning local. Upstream Ghost merges touching those manifests will conflict-mark the version line, which is the easiest place to spot a drift and reapply the alias.
 
 **Built-asset delivery** is unchanged. The Ember `asset-delivery` addon still copies `dist/` into `ghost/admin/dist/ghost/assets/koenig-lexical/`, `ghost/core/core/built/admin/assets/koenig-lexical/`, and `apps/admin/dist/assets/koenig-lexical/` on each build. Gitignored; regenerated every build.
 
@@ -743,31 +743,11 @@ Verified in DevTools by clicking at picker centre `(720, 384.59)`: marker centre
 
 **Scope:** body-image picker only; the feature-image picker (§23) is plain Ember markup with non-Tailwind CSS and is unaffected.
 
-### Resolution — body-image FocalPointPicker drag interception
+### Resolution — body-image FocalPointPicker drag interception (merged upstream in 1.1.5)
 
-When the user click-and-drags inside the body-image FocalPointPicker, the gesture also triggers the editor's block-drag-and-drop and scoops up the entire image card. The picker is rendered inside the image card's DOM tree, and the koenig fork dynamically sets `draggable="true"` on the card via a `useEffect` (UMD byte ~1847683) so blocks can be repositioned. A native HTML5 `dragstart` originating inside the picker therefore initiates a card drag.
+Previously: click-and-drag inside the body-image FocalPointPicker also triggered Lexical's block-drag (the koenig fork's `useMovableCardCursor` hook started moving the entire image card). The picker's own mousedown handler called `preventDefault()` but not `stopPropagation()`, so React's synthetic event tree walk continued up to the card's drag handler.
 
-**Fix:** A capture-phase `dragstart` listener on `document` in [ghost/admin/app/components/gh-koenig-editor-lexical.js](../ghost/admin/app/components/gh-koenig-editor-lexical.js) calls `preventDefault()` and `stopPropagation()` whenever the event originates inside `[data-testid="focal-point-picker"]`. The listener is attached in `registerElement` and removed in `willDestroy`. Capture phase ensures it runs before the koenig fork's drag handlers.
-
-```js
-@action
-suppressFocalPointPickerDrag(event) {
-    if (event.target?.closest?.('[data-testid="focal-point-picker"]')) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-}
-```
-
-A complementary CSS rule in [ghost/admin/app/styles/components/koenig.css](../ghost/admin/app/styles/components/koenig.css) sets `pointer-events: none` on the picker image so clicks bubble up to the parent `.cursor-crosshair` div (which has the click handler) and the image cannot itself be a pointer-event target — defence in depth, since the dragstart listener already suppresses the editor's drag.
-
-```css
-.koenig-lexical [data-testid="focal-point-picker"] img {
-    pointer-events: none;
-}
-```
-
-Verified end-to-end: synthesising `dragstart` on the picker image or its inner div now sets `defaultPrevented: true`; clicking in the picker continues to update the marker centre to within sub-pixel tolerance.
+Originally fixed locally in `patches/@iliad.dev__koenig-lexical@1.1.4.patch` by adding `e.stopPropagation()` on the picker's mousedown/touchstart handlers. **The fix has since been merged upstream into `@iliad.dev/koenig-lexical@1.1.5`**, and the local patch + `pnpm.patchedDependencies` entry have been removed (see header). No further action required on Ghost upstream bumps; on fork bumps, just bump the override version.
 
 ---
 
@@ -847,7 +827,7 @@ No new helper. Themes opt in. The field is available as a parsed object (`{x, y}
 
 1. Migration: `pnpm dev` and `docker exec ghost-mysql mysql -u root -p<pw> ghost_dev -e 'desc posts_meta' | grep focal` → `feature_image_focal_point | text | YES | NULL`.
 2. Round-trip: PUT `{posts:[{feature_image_focal_point:{x:33.3,y:66.7}}]}` to the Admin API → GET returns `{x:33.3,y:66.7}` at top-level. PUT `{x:50,y:50}` → DB `NULL`, GET returns `null`. PUT `{x:150,y:50}` → 422 ValidationError. PUT `{x:33.34,y:66.78}` → response stores `{x:33.3,y:66.8}` (rounded).
-3. Body image: open the editor (`@iliad.dev/koenig-lexical@1.1.4`), insert an image, set focal point, save. Public site page HTML → `<figure data-kg-focal-point="X,Y">` and `<img style="...; object-position: X% Y%;">`. Send as newsletter → same attributes survive in the email HTML (Mailpit `http://localhost:8025`). Without the §22 `kg-default-nodes` patch this would silently regress to no focal-point on the rendered HTML.
+3. Body image: open the editor (`@iliad.dev/koenig-lexical@1.1.5`), insert an image, set focal point, save. Public site page HTML → `<figure data-kg-focal-point="X,Y">` and `<img style="...; object-position: X% Y%;">`. Send as newsletter → same attributes survive in the email HTML (Mailpit `http://localhost:8025`). Without the §22 `kg-default-nodes` patch this would silently regress to no focal-point on the rendered HTML.
 4. Feature image: until the admin picker exists, set via Admin API directly. Send as newsletter → email HTML has `style="object-position: X% Y%"` on the feature image `<img>`. Render in a theme that opts in → public HTML carries the same style.
 5. Default-state preservation: post with no focal point → DB `NULL`, API `null`, no `style` attribute emitted, no `data-kg-focal-point` on `<figure>`.
 

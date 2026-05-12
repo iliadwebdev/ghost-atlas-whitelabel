@@ -21,7 +21,7 @@ catalogs:
       version: 9.37.0
 
 overrides:
-  '@tryghost/koenig-lexical': npm:@iliad.dev/koenig-lexical@1.1.4
+  '@tryghost/koenig-lexical': npm:@iliad.dev/koenig-lexical@1.1.5
   '@tryghost/errors': ^1.3.7
   '@tryghost/logging': 2.5.5
   jackspeak: 2.3.6
@@ -39,9 +39,6 @@ overrides:
   lodash.template: 4.5.0
 
 patchedDependencies:
-  '@iliad.dev/koenig-lexical@1.1.4':
-    hash: 2403eaa3fee697fe188cd3ed8e163195a1359690100ae6203522421f843a230a
-    path: patches/@iliad.dev__koenig-lexical@1.1.4.patch
   '@tryghost/admin-api-schema@4.7.2':
     hash: 2a10dcd159e6c627dbdd6e3c049ac8513f7fb83b1adee87ce3f817680112f21a
     path: patches/@tryghost__admin-api-schema@4.7.2.patch
@@ -199,8 +196,8 @@ importers:
         specifier: workspace:*
         version: link:../admin-x-settings
       '@tryghost/koenig-lexical':
-        specifier: npm:@iliad.dev/koenig-lexical@1.1.4
-        version: '@iliad.dev/koenig-lexical@1.1.4(patch_hash=2403eaa3fee697fe188cd3ed8e163195a1359690100ae6203522421f843a230a)'
+        specifier: npm:@iliad.dev/koenig-lexical@1.1.5
+        version: '@iliad.dev/koenig-lexical@1.1.5'
       '@tryghost/posts':
         specifier: workspace:*
         version: link:../posts
@@ -532,8 +529,8 @@ importers:
         specifier: 14.3.1
         version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tryghost/koenig-lexical':
-        specifier: npm:@iliad.dev/koenig-lexical@1.1.4
-        version: '@iliad.dev/koenig-lexical@1.1.4(patch_hash=2403eaa3fee697fe188cd3ed8e163195a1359690100ae6203522421f843a230a)'
+        specifier: npm:@iliad.dev/koenig-lexical@1.1.5
+        version: '@iliad.dev/koenig-lexical@1.1.5'
       '@types/react':
         specifier: 18.3.28
         version: 18.3.28
@@ -1676,8 +1673,8 @@ importers:
         specifier: 1.1.21
         version: 1.1.21
       '@tryghost/koenig-lexical':
-        specifier: npm:@iliad.dev/koenig-lexical@1.1.4
-        version: '@iliad.dev/koenig-lexical@1.1.4(patch_hash=2403eaa3fee697fe188cd3ed8e163195a1359690100ae6203522421f843a230a)'
+        specifier: npm:@iliad.dev/koenig-lexical@1.1.5
+        version: '@iliad.dev/koenig-lexical@1.1.5'
       '@tryghost/limit-service':
         specifier: 1.5.2
         version: 1.5.2
@@ -5049,8 +5046,8 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@iliad.dev/koenig-lexical@1.1.4':
-    resolution: {integrity: sha512-waJombiixEDQrmCy6mmunscRYFZLMKxmYR6wQAemUlbRu8oyzmz0nULF2LJdiKmtobROhIXc0eJSSctSwurPvQ==}
+  '@iliad.dev/koenig-lexical@1.1.5':
+    resolution: {integrity: sha512-oRRhLYHS9uMAiLxQAh4vPiapDRuuEUNKHHebP8NBWgswQUJCjTyF8o/OzRWOhzVNskFdR8UfygWWmNX50fH7MQ==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -26201,7 +26198,7 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@iliad.dev/koenig-lexical@1.1.4(patch_hash=2403eaa3fee697fe188cd3ed8e163195a1359690100ae6203522421f843a230a)': {}
+  '@iliad.dev/koenig-lexical@1.1.5': {}
 
   '@img/colour@1.1.0':
     optional: true

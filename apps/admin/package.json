@@ -16,7 +16,7 @@
         "@tryghost/activitypub": "workspace:*",
         "@tryghost/admin-x-framework": "workspace:*",
         "@tryghost/admin-x-settings": "workspace:*",
-        "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@1.1.4",
+        "@tryghost/koenig-lexical": "npm:@iliad.dev/koenig-lexical@1.1.5",
         "@tryghost/posts": "workspace:*",
         "@tryghost/shade": "workspace:*",
         "@tryghost/stats": "workspace:*",
