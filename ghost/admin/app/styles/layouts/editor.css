@@ -756,10 +756,8 @@ body[data-user-is-dragging] .gh-editor-feature-image-dropzone {
     opacity: 0;
 }
 
-/* The marker explicitly clears `transform` because the koenig-lexical Tailwind
-   layer leaks `transform: translate(var(--tw-translate-x), var(--tw-translate-y))…`
-   onto every descendant with the relevant utility classes/CSS-var inheritance,
-   which would otherwise displace the dot off the click point. */
+/* Marker is positioned by `left: X%; top: Y%;` inline, then translated -50% in both
+   axes so the dot's visible centre sits on the focal point coords. */
 .gh-editor-feature-image-focal-marker {
     position: absolute;
     width: 1.8rem;
@@ -768,7 +766,7 @@ body[data-user-is-dragging] .gh-editor-feature-image-dropzone {
     background: var(--green);
     border: 2px solid #fff;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), 0 1px 4px rgba(0, 0, 0, .25);
-    transform: none !important;
+    transform: translate(-50%, -50%);
     pointer-events: none;
     opacity: 0;
     transition: opacity .1s ease-in;

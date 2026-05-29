@@ -1,0 +1,154 @@
+diff --git a/build/transformers/element/aside.js b/build/transformers/element/aside.js
+index 81bfc7230a866d724a5d9e8728686776d49e89c0..749099a8e3ffd6e933d1f90306853501c04e8d51 100644
+--- a/build/transformers/element/aside.js
++++ b/build/transformers/element/aside.js
+@@ -1,19 +1,36 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const kg_default_nodes_1 = require("@tryghost/kg-default-nodes");
++// iliad fork: emit inline text-align so the editor's alignment control
++// survives in email (and other) HTML output.
++const ALIGN_TYPES = new Set(['left', 'center', 'right', 'justify', 'start', 'end']);
++function getAlignmentStyle(node) {
++    if (typeof node.getFormatType !== 'function') {
++        return '';
++    }
++    const formatType = node.getFormatType();
++    if (!formatType || !ALIGN_TYPES.has(formatType)) {
++        return '';
++    }
++    return ` style="text-align: ${formatType};"`;
++}
++// Paragraph children may now arrive as `<p style="text-align: ...">...</p>` so
++// match against the open tag rather than the exact string `<p>`.
++const PARAGRAPH_OPEN_RE = /^<p[\s>]/;
+ module.exports = {
+     export(node, options, exportChildren) {
+         if (!(0, kg_default_nodes_1.$isAsideNode)(node)) {
+             return null;
+         }
++        const alignStyle = getAlignmentStyle(node);
+         if (options.target === 'email') {
+             let children = exportChildren(node);
+-            if (!children.startsWith('<p>')) {
++            if (!PARAGRAPH_OPEN_RE.test(children)) {
+                 children = `<p>${children}</p>`;
+             }
+-            return `<blockquote class="kg-blockquote-alt">${children}</blockquote>`;
++            return `<blockquote class="kg-blockquote-alt"${alignStyle}>${children}</blockquote>`;
+         }
+-        return `<blockquote class="kg-blockquote-alt">${exportChildren(node)}</blockquote>`;
++        return `<blockquote class="kg-blockquote-alt"${alignStyle}>${exportChildren(node)}</blockquote>`;
+     }
+ };
+ //# sourceMappingURL=aside.js.map
+diff --git a/build/transformers/element/blockquote.js b/build/transformers/element/blockquote.js
+index 7d54185fd9e21c1f21c98a90856509dafc179270..a02a902430cdd0bc70f99208455083ff31c42405 100644
+--- a/build/transformers/element/blockquote.js
++++ b/build/transformers/element/blockquote.js
+@@ -1,19 +1,36 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const rich_text_1 = require("@lexical/rich-text");
++// iliad fork: emit inline text-align so the editor's alignment control
++// survives in email (and other) HTML output.
++const ALIGN_TYPES = new Set(['left', 'center', 'right', 'justify', 'start', 'end']);
++function getAlignmentStyle(node) {
++    if (typeof node.getFormatType !== 'function') {
++        return '';
++    }
++    const formatType = node.getFormatType();
++    if (!formatType || !ALIGN_TYPES.has(formatType)) {
++        return '';
++    }
++    return ` style="text-align: ${formatType};"`;
++}
++// Paragraph children may now arrive as `<p style="text-align: ...">...</p>` so
++// match against the open tag rather than the exact string `<p>`.
++const PARAGRAPH_OPEN_RE = /^<p[\s>]/;
+ module.exports = {
+     export(node, options, exportChildren) {
+         if (!(0, rich_text_1.$isQuoteNode)(node)) {
+             return null;
+         }
++        const alignStyle = getAlignmentStyle(node);
+         if (options.target === 'email') {
+             let children = exportChildren(node);
+-            if (!children.startsWith('<p>')) {
++            if (!PARAGRAPH_OPEN_RE.test(children)) {
+                 children = `<p>${children}</p>`;
+             }
+-            return `<blockquote>${children}</blockquote>`;
++            return `<blockquote${alignStyle}>${children}</blockquote>`;
+         }
+-        return `<blockquote>${exportChildren(node)}</blockquote>`;
++        return `<blockquote${alignStyle}>${exportChildren(node)}</blockquote>`;
+     }
+ };
+ //# sourceMappingURL=blockquote.js.map
+diff --git a/build/transformers/element/heading.js b/build/transformers/element/heading.js
+index bae8485ce67bd1ef36d90b37a55cfa994b6fa3ef..499249ffb93cbd6c7d0834d010f831566477ed77 100644
+--- a/build/transformers/element/heading.js
++++ b/build/transformers/element/heading.js
+@@ -5,6 +5,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const rich_text_1 = require("@lexical/rich-text");
+ const generate_id_1 = __importDefault(require("../../utils/generate-id"));
++// iliad fork: emit inline text-align so the editor's alignment control
++// survives in email (and other) HTML output.
++const ALIGN_TYPES = new Set(['left', 'center', 'right', 'justify', 'start', 'end']);
++function getAlignmentStyle(node) {
++    if (typeof node.getFormatType !== 'function') {
++        return '';
++    }
++    const formatType = node.getFormatType();
++    if (!formatType || !ALIGN_TYPES.has(formatType)) {
++        return '';
++    }
++    return ` style="text-align: ${formatType};"`;
++}
+ module.exports = {
+     export(node, options, exportChildren) {
+         if (!(0, rich_text_1.$isHeadingNode)(node)) {
+@@ -12,7 +25,7 @@ module.exports = {
+         }
+         const tag = node.getTag();
+         const id = (0, generate_id_1.default)(node.getTextContent(), options);
+-        return `<${tag} id="${id}">${exportChildren(node)}</${tag}>`;
++        return `<${tag} id="${id}"${getAlignmentStyle(node)}>${exportChildren(node)}</${tag}>`;
+     }
+ };
+ //# sourceMappingURL=heading.js.map
+diff --git a/build/transformers/element/paragraph.js b/build/transformers/element/paragraph.js
+index c06cb4d173d65e8d1d30492ab7131e5a965dc3ef..2e8397c57fc4a815e809082f5c5119e34ca66cbc 100644
+--- a/build/transformers/element/paragraph.js
++++ b/build/transformers/element/paragraph.js
+@@ -1,12 +1,27 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const lexical_1 = require("lexical");
++// iliad fork: emit inline text-align so the editor's alignment control
++// survives in email (and other) HTML output. Lexical's default exportDOM
++// applies the same style, but kg-lexical-html-renderer overrides it with
++// this transformer and would otherwise strip the alignment.
++const ALIGN_TYPES = new Set(['left', 'center', 'right', 'justify', 'start', 'end']);
++function getAlignmentStyle(node) {
++    if (typeof node.getFormatType !== 'function') {
++        return '';
++    }
++    const formatType = node.getFormatType();
++    if (!formatType || !ALIGN_TYPES.has(formatType)) {
++        return '';
++    }
++    return ` style="text-align: ${formatType};"`;
++}
+ module.exports = {
+     export(node, options, exportChildren) {
+         if (!(0, lexical_1.$isParagraphNode)(node)) {
+             return null;
+         }
+-        return `<p>${exportChildren(node)}</p>`;
++        return `<p${getAlignmentStyle(node)}>${exportChildren(node)}</p>`;
+     }
+ };
+ //# sourceMappingURL=paragraph.js.map

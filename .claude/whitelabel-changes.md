@@ -3,7 +3,7 @@
 This file catalogues all custom changes made on top of upstream Ghost for the Atlas CMS whitelabel fork.
 **Update this file whenever new changes are made so upgrades are easier.**
 
-Last updated: 2026-05-08 — §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.5`; the local `patches/@iliad.dev__koenig-lexical@1.1.4.patch` (drag-interception fix, plus follow-on UI fixes) was merged upstream into 1.1.5 and the patch file + `pnpm.patchedDependencies` entry have been removed. The Tailwind v3↔v4 marker-offset CSS reset in [ghost/admin/app/styles/components/koenig.css](../ghost/admin/app/styles/components/koenig.css) is unchanged. Earlier 2026-05-07 — added §22: end-to-end focal-point support for the post `feature_image` (new `posts_meta.feature_image_focal_point` column, validating model layer, email plumbing, body-image renderer extension, a one-property `kg-default-nodes` patch so the editor's body-image focal-point survives server-side lexical→HTML re-rendering, and an `admin-api-schema` patch so the Admin API rejects malformed `{x, y}` payloads at the validator layer rather than the model). Earlier 2026-04-27: §10 added "Admin Signin Button" subsection (hardcoded Atlas purple `#4945FF` on `/ghost/signin`, bypassing the publication's `accent_color`). Same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.4` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
+Last updated: 2026-05-21 — §14 image max-width round-trip closed. The `@tryghost/kg-default-nodes@2.0.21` patch now also registers `maxWidthPx` on `ImageNode` (alongside `focalPoint` added 2026-05-07 in §22), so the editor fork's numeric max-width value survives the lexical→HTML re-render path. Rendered HTML now carries `data-kg-max-width="<px>"` on the `<figure>` and inline `style="max-width: <px>px; margin: 0 auto; display: block;"` on the `<img>` (merged with any §22 `object-position`). The ⚠ stale markers in §14 are removed; the legacy `kg-width-{preset}` CSS rules are retained as back-compat for pre-fork posts. Earlier: 2026-05-08 — §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.5`; the local `patches/@iliad.dev__koenig-lexical@1.1.4.patch` (drag-interception fix, plus follow-on UI fixes) was merged upstream into 1.1.5 and the patch file + `pnpm.patchedDependencies` entry have been removed. The Tailwind v3↔v4 marker-offset CSS reset in [ghost/admin/app/styles/components/koenig.css](../ghost/admin/app/styles/components/koenig.css) is unchanged. Earlier 2026-05-07 — added §22: end-to-end focal-point support for the post `feature_image` (new `posts_meta.feature_image_focal_point` column, validating model layer, email plumbing, body-image renderer extension, a one-property `kg-default-nodes` patch so the editor's body-image focal-point survives server-side lexical→HTML re-rendering, and an `admin-api-schema` patch so the Admin API rejects malformed `{x, y}` payloads at the validator layer rather than the model). Earlier 2026-04-27: §10 added "Admin Signin Button" subsection (hardcoded Atlas purple `#4945FF` on `/ghost/signin`, bypassing the publication's `accent_color`). Same-day: §21 Koenig fork override bumped to `@iliad.dev/koenig-lexical@1.1.4` (lockfile and `node_modules/.pnpm` were stuck on `1.0.3` — pnpm metadata cache prune + reinstall was required to force re-resolution). Earlier: 2026-04-24 (§10 Koenig palette patch and §14 Koenig editor-package patch replaced by the fork via pnpm alias override).
 
 **Upgrade note — v6.25.1 → v6.32.0:** Ghost migrated the monorepo from yarn v1 to **pnpm 10** in PR #27017 (v6.29.0). All scripts, lockfile, CI configs, and the package-manager rule in `CLAUDE.md` moved to pnpm. `shamefully-hoist` was removed in PR #27343 (v6.29.0). `patch-package` was replaced with pnpm's native `pnpm.patchedDependencies`. See §7, §11, §14 for obsoleted workarounds.
 
@@ -426,14 +426,23 @@ If upstream re-adds `caddy add-package` for transform-encoder or any other modul
 
 ## 14. Image Width Control in Koenig Editor
 
-**Purpose:** Give newsletter writers granular control over image sizing. Originally shipped as four percentage presets (25% / 33% / 50% / 75%) on top of upstream's Regular / Wide / Full via a pnpm-native bundle patch. As of 2026-04-24 the editor-package side of this moved to the `@iliad.dev/koenig-lexical` fork (see §21), which replaces the four presets with a **single numeric max-width input** (pixels). The consumer-side backend renderer and CSS below still reflect the old preset contract and are scheduled for migration to the fork's new `data-kg-max-width` attribute contract.
+**Purpose:** Give newsletter writers granular control over image sizing. Originally shipped as four percentage presets (25% / 33% / 50% / 75%) on top of upstream's Regular / Wide / Full via a pnpm-native bundle patch. As of 2026-04-24 the editor-package side moved to the `@iliad.dev/koenig-lexical` fork (see §21), which replaces the four presets with a **single numeric max-width input** (pixels). As of 2026-05-21 the backend renderer + the `kg-default-nodes` round-trip both honor the fork's numeric contract; the legacy preset CSS is retained for back-compat with already-published posts.
 
-**Current mechanism:**
+### Delivered contract (what consumers see)
 
-- **Editor UI + WYSIWYG:** compiled into `@iliad.dev/koenig-lexical` source; no patch in this repo. Installed via pnpm alias override (§21).
-- **Backend renderer + email/site CSS:** still in this repo (see subsections below). ⚠ **Stale:** still keyed on the old `cardWidth` string presets (`quarter`/`third`/`half`/`threequarters`). Leave as-is until the fork's first release; then migrate to read `data-kg-max-width` (or equivalent numeric attribute) from the serialized node.
+For new posts authored with the fork's numeric input, the editor sets `maxWidthPx: <number>` on the lexical image node. Server-side renderer (`image-renderer.js`) emits:
 
-### Legacy `cardWidth` values (retained in backend code pending migration)
+- **`<figure>`**: gains `data-kg-max-width="<number>"` (string pixel value, no unit). Class list unchanged from upstream (`kg-card kg-image-card`, `kg-card-hascaption` when applicable). No `kg-width-*` class — that's reserved for legacy `cardWidth` presets.
+- **`<img>`**: gains inline `style="max-width: <number>px; margin: 0 auto; display: block;"` (merged with any `object-position` if a focal point is also set per §22).
+- **Emails**: same attributes as above, plus the image is resized to `min(maxWidthPx, 600)` via `getResizedImageDimensions`, and the retina-source picker still upgrades to a `≥1200px` `w_NNN/...` variant when available.
+
+For legacy posts (pre-fork `cardWidth: quarter|third|half|threequarters`), the renderer falls back to the `kg-width-<preset>` class on the figure and the corresponding pixel width in email; no inline `<img>` style.
+
+### Round-trip — `kg-default-nodes` patch
+
+`@tryghost/kg-default-nodes@2.0.21` is used to deserialize lexical state for server-side HTML rendering. Its `ImageNode` only registers a fixed set of properties; anything else gets silently dropped on the `importJSON` path (see [generate-decorator-node.js:148-159](ghost/kg-default-nodes/lib/generate-decorator-node.js#L148-L159)). The package patch (`patches/@tryghost__kg-default-nodes@2.0.21.patch` — shared with §22) registers both `focalPoint` and `maxWidthPx` on the `ImageNode` properties array and includes them in the `exportJSON` destructure + dataset, in all three build outputs (`lib/`, `cjs/`, `es/`). Without this, `maxWidthPx` is set in the editor and visible in `posts.lexical`, but lost before the renderer runs, so `posts.html` (and downstream public/email HTML) never carries `data-kg-max-width` or the inline `max-width` style.
+
+### Legacy `cardWidth` values (back-compat path for pre-fork posts)
 
 | Setting       | `cardWidth` value | Email width |
 | ------------- | ----------------- | ----------- |
@@ -442,29 +451,42 @@ If upstream re-adds `caddy add-package` for transform-encoder or any other modul
 | Half          | `half`            | 300px       |
 | Three-quarter | `threequarters`   | 450px       |
 
-### Backend ⚠ stale — pending migration to fork's numeric contract
+### Backend renderer
 
 - `ghost/core/core/server/services/koenig/node-renderers/image-renderer.js`
-    - Added `PERCENT_BY_CARD_WIDTH` map at module top.
-    - Email output path now computes target width from percentage (`Math.round(600 * percent)`) rather than a fixed 600px cap. Non-percentage widths (`regular` / `wide` / `full` / undefined) fall through to the original 600px behavior.
-    - Retina-src logic (`srcWidth >= 1200`) unchanged — higher-resolution source files are still used even when display width is smaller.
-    - Web rendering is already free — the existing `kg-width-${node.cardWidth}` class emission at lines 34-36 handles any string, so `kg-width-half` etc. land on the figure automatically.
+    - `PERCENT_BY_CARD_WIDTH` map handles legacy `cardWidth` presets in email width sizing.
+    - `resolveTargetWidth(node)` prefers numeric `maxWidthPx` (capped at the 600px email shell); falls back to the percentage map for legacy `cardWidth`; defaults to 600px otherwise.
+    - When `maxWidthPx` is set: emits `data-kg-max-width` on the figure and inline `max-width: Npx; margin: 0 auto; display: block;` on the img (style-merged with `object-position` if §22 focal-point is also set).
+    - Retina-src logic (`srcWidth >= 1200`) unchanged.
+    - Web rendering: `kg-width-${node.cardWidth}` class is emitted only when `cardWidth !== 'regular'` — so legacy posts keep their `kg-width-half` etc. class, and new fork-authored posts get the inline-style path with no legacy class.
 
-### Email Styles ⚠ stale — pending migration to fork's numeric contract
+### Email Styles (legacy preset rules — retained)
 
-- `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs` — `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with `width: X% !important`, matching `max-width: {150,200,300,450}px`, centered, `display: block`.
+- `ghost/core/core/server/services/email-rendering/partials/card-styles.hbs` — `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with `width: X% !important`, matching `max-width: {150,200,300,450}px`, centered, `display: block`. Used only by legacy posts; new `data-kg-max-width` posts size via the inline `<img>` style instead.
 
-### Site Frontend Styles ⚠ stale — pending migration to fork's numeric contract
+### Site Frontend Styles (legacy preset rules — retained)
 
-- `ghost/core/core/frontend/src/cards/css/image.css` (**new file**) — `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with plain `width: X%; margin: 0 auto; display: block;`.
+- `ghost/core/core/frontend/src/cards/css/image.css` (**new file**) — `.kg-image-card.kg-width-{quarter,third,half,threequarters}` rules with plain `width: X%; margin: 0 auto; display: block;`. Same legacy back-compat purpose.
 - **Delivery:** Ghost bundles `ghost/core/core/frontend/src/cards/css/*.css` into `cards.min.css` (see `ghost/core/core/frontend/services/assets-minification/card-assets.js`). Themes opt in via `"card_assets": true` in their `package.json`; if a theme uses an explicit `include` list, it must add `"image"` to pick these rules up. Ghost's default Casper/Source themes use `card_assets: true`.
 - **Upstream coordination risk:** Ghost does not currently ship an `image.css` — image card widths have always been theme responsibility. If upstream ever adds their own `image.css` with conflicting rules (e.g. for `.kg-width-full`), expect a file-add conflict on merge; favor concatenating their rules after ours so upstream's `regular`/`wide`/`full` styling wins while our percentage rules remain.
 
+### Theme integration (new posts)
+
+Themes don't need to do anything: the inline `<img style>` carries the size. If a theme wants to hook the figure (e.g. for layout-aware caption styling around narrow images), the `data-kg-max-width` attribute is available as a CSS attribute selector on the `<figure>`.
+
 ### Upgrade guidance
 
-Editor-package upgrades are now owned by the `@iliad.dev/koenig-lexical` fork — see §21. In this repo, bumping is a one-line version change to the `pnpm.overrides` alias. No patch to regenerate, no UMD copy step, no browser cache-bust needed beyond ordinary `pnpm build`.
+- Editor-package upgrades are owned by the `@iliad.dev/koenig-lexical` fork (§21). Bumping is a one-line override change.
+- The `kg-default-nodes` patch covers both `focalPoint` (§22) and `maxWidthPx` (§14). On every upstream bump of `@tryghost/kg-default-nodes`, regenerate: `pnpm patch @tryghost/kg-default-nodes@<new-version>` → re-add both `{name: 'focalPoint', default: null}` and `{name: 'maxWidthPx', default: null}` to the properties array, and both fields to `exportJSON` destructure + dataset → `pnpm patch-commit`. If upstream eventually registers either property themselves, drop the corresponding hunk.
+- Legacy `kg-width-{preset}` CSS rules in `card-styles.hbs` and `image.css` should stay until you're sure no published posts in any tenant still reference them. They're harmless dead weight when only `maxWidthPx` posts exist.
 
-**Follow-up migration** (pending fork's first release): once the fork ships the numeric-width contract, replace the four `kg-width-{preset}` branches in `image-renderer.js`, `card-styles.hbs`, and `image.css` with logic that reads the fork's numeric attribute (expected: `data-kg-max-width` in px on the `<figure>`). Delete this section's ⚠ stale markers after that migration lands.
+### Verification
+
+1. `pnpm dev`, insert an image in the editor, set the max-width input to a value like `350`.
+2. Save (autosave). `curl http://localhost:2368/ghost/api/admin/posts/<id>?formats=lexical,html` (admin auth) → `lexical` JSON contains `"maxWidthPx": 350` on the image node; `html` contains `<figure ... data-kg-max-width="350">` and `<img ... style="max-width: 350px; margin: 0 auto; display: block;...">`.
+3. Send as newsletter → Mailpit (`http://localhost:8025`) → "View HTML": same attributes survive in the email HTML, plus the email-sized retina src.
+4. Reload the editor → max-width input shows `350` (proves round-trip survives the kg-default-nodes serialize/deserialize cycle).
+5. Open a pre-fork post with `cardWidth: half` → renders with `<figure class="... kg-width-half">` and no inline `<img>` style (legacy back-compat path).
 
 ---
 
@@ -711,7 +733,6 @@ This makes pnpm install the fork's tarball into the `node_modules/@tryghost/koen
 - **Ghost version bumps:** no patch regeneration required. Merge upstream, run `pnpm install`, done.
 - **Fork version bumps:** change the version spec inside the override (e.g. `^1.1.0`) and `pnpm install`.
 - **Upstream Koenig bumps:** handled in the fork's repo (merge upstream there, republish). Downstream in this repo, adjust the override version if the fork's major changes.
-- **Follow-up to resolve:** the backend renderer + email/site CSS in §14 still key on the old `kg-width-{preset}` contract. Migrate to the fork's `data-kg-max-width` numeric contract once the fork's first release ships. After migration, drop the ⚠ stale markers in §14.
 
 ### Verification
 
@@ -791,9 +812,9 @@ The input serializer `handlePostsMeta()` ([`api/endpoints/utils/serializers/inpu
 
 The `@iliad.dev/koenig-lexical` editor stores `focalPoint` on its lexical image node, but the upstream `@tryghost/kg-default-nodes@2.0.21` (which ghost-core uses to deserialize lexical state for server-side HTML rendering) only registers 8 known properties on `ImageNode` ([`lib/nodes/image/ImageNode.js`](https://github.com/TryGhost/Ghost/tree/main/ghost/kg-default-nodes/lib/nodes/image/ImageNode.js)). Anything else is silently dropped on the `importJSON` path (see `generateDecoratorNode.importJSON` at [generate-decorator-node.js:148-159](ghost/kg-default-nodes/lib/generate-decorator-node.js#L148-L159) — it iterates only over `properties`).
 
-Without the patch, `focalPoint` is set in the editor but lost the moment Ghost re-renders the post HTML server-side, so neither the public site nor the email ever sees `data-kg-focal-point`.
+Without the patch, `focalPoint` (and `maxWidthPx` — §14) is set in the editor but lost the moment Ghost re-renders the post HTML server-side, so neither the public site nor the email ever sees `data-kg-focal-point` or `data-kg-max-width`.
 
-- `patches/@tryghost__kg-default-nodes@2.0.21.patch` — generated via `pnpm patch @tryghost/kg-default-nodes@2.0.21` → edit → `pnpm patch-commit`. Adds `{name: 'focalPoint', default: null}` to the `properties` array in `ImageNode` (covers `importJSON`/`exportJSON` automatically) and includes `focalPoint` in the `exportJSON` destructure + dataset literal. Patches all three build outputs (`lib/`, `cjs/`, `es/`).
+- `patches/@tryghost__kg-default-nodes@2.0.21.patch` — generated via `pnpm patch @tryghost/kg-default-nodes@2.0.21` → edit → `pnpm patch-commit`. Adds `{name: 'focalPoint', default: null}` **and** `{name: 'maxWidthPx', default: null}` to the `properties` array in `ImageNode` (covers `importJSON`/`exportJSON` automatically) and includes both fields in the `exportJSON` destructure + dataset literal. Patches all three build outputs (`lib/`, `cjs/`, `es/`). The `maxWidthPx` half of this patch was added 2026-05-21 (§14); the `focalPoint` half landed 2026-05-07 (§22).
 - `package.json` (root) — registered under `pnpm.patchedDependencies` alongside the existing `ghost-storage-cloudinary@3.0.2` patch (§20).
 
 ### Theme integration
